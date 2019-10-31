@@ -5,6 +5,7 @@
 #include <functional>
 #include <numeric>
 #include <ostream>
+#include <fstream>
 #include <vector>
 
 namespace vector_ops 

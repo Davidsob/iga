@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <iostream>
 #include <vector>
 
 #ifndef FLT_TOL
@@ -30,8 +31,12 @@ namespace algo
   {
     auto m = knot.size()-1;
     auto n = m-p-1; 
-    if (u < knot[0] || u > knot.back()) return size_t(-1); // special case
+
     if (equal(u,knot[n+1])) return n; // special case
+
+    if (u < knot[0] || u > knot.back()) {
+      return size_t(-1); // special case
+    }
     
     // binary search 
     auto low = p; auto high = n+1; auto mid = (low+high)/2;

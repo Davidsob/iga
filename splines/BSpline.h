@@ -8,6 +8,7 @@
 #include <fstream>
 
 #include <string>
+#include <vector>
 
 
 struct BSplineCurve
@@ -146,11 +147,46 @@ namespace spline_ops
     return Skl;
   }
 
-  template<typename T> void writeToFile;
-
-  template<>
-  void writeToFile(BSplineCurve const &c, std::string const &file, std::string const &dir="../output")
+  void writeToFile(BSplineCurve const &c,std::string const &file_name, int level = 20)
   {
+    using namespace vector_ops;
 
+    // compute mesh
+    std::vector<std::vector<int>> mesh;
+    for (int i = 0; i < level; i++)
+    {
+      mesh.push_back({i,i+1});
+    }
+    // compute points on curve and write to file
+    auto du = (c.knot.back() - c.knot[0])/level;
+    auto u = 0.0;
+    std::vector<std::vector<double>> pts;
+    for (int i = 0; i <= level; i++)
+    {
+      pts.push_back(CurvePoint(u,c));
+      u += du;
+    }
+
+    // write file
+    std::ofstream file;
+    file.open(file_name);
+    file << mesh.size() << std::endl; // number of points in file
+    for (auto &el : mesh) {
+      for (auto &v : el) file << v << " ";
+      file << std::endl;
+    }
+
+    file << pts.size() << std::endl;
+    for (auto &p : pts) {
+      for (auto &x : p) file << x << " ";
+      file << std::endl;
+    }
+
+    file << c.Q.size() << std::endl;
+    for (auto &p : c.Q) {
+      for (auto &x : p) file << x << " ";
+      file << std::endl;
+    }
+    file.close();
   }
 }

@@ -7,7 +7,7 @@
 #include <vector>
 #include <string>
 
-
+#include <bits/stdc++.h> 
 
 void curveTest()
 {
@@ -19,8 +19,8 @@ void curveTest()
   typename decltype(curve)::vector knot{0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0};
   typename decltype(curve)::matrix cpts{
     {0.0, 0.0},
-    {1.0, 1.0},
-    {2.0, 1.2},
+    {0.25, 1.0},
+    {2.0, 0.9},
     {3.0, 0.0}
   };
 
@@ -29,6 +29,10 @@ void curveTest()
   curve.Q = cpts;
   std::cout << "point on curve = " << spline_ops::CurvePoint(0.5, curve) << std::endl;
   std::cout << "derivs = " << spline_ops::CurveDerivatives(0.5, 2, curve) << std::endl;
+
+  std::string file("output/foo.txt");
+  spline_ops::writeToFile(curve,file);
+  std::system(std::string("~/anaconda2/bin/python2.7 python/plot_curve.py " + file).c_str());
 }
 
 void surfaceTest()
