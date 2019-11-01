@@ -180,14 +180,12 @@ void nurbsSurfaceTest()
   surf.vknot = vknot;
   surf.Q = cpts;
 
-  auto S = spline_ops::SurfacePoint(0.7, 0.75, surf);
-  std::cout << "Point on surface = " << S << std::endl;
   auto ders = spline_ops::SurfaceDerivatives(0.7, 0.75, 1, surf);
   auto Su = ders[1][0];
   auto Sv = ders[0][1];
   auto S0  = ders[0][0];
 
-  std::cout << "S0 = " << S << std::endl;
+  std::cout << "S0 = " << S0 << std::endl;
   std::cout << "Su = " << Su << std::endl;
   std::cout << "Sv = " << Sv << std::endl;
 
@@ -236,9 +234,24 @@ void nurbsSurfaceTest2()
   surf.vknot = vknot;
   surf.Q = cpts;
 
+  auto ders = spline_ops::SurfaceDerivatives(0.25, 0.75, 1, surf);
+  auto Su = ders[1][0];
+  auto Sv = ders[0][1];
+  auto S0  = ders[0][0];
+
+  std::cout << "S0 = " << S0 << std::endl;
+  std::cout << "Su = " << Su << std::endl;
+  std::cout << "Sv = " << Sv << std::endl;
+
   std::string file("output/nurbs_surface.txt");
+  std::string uvec_file("output/nurbs_surface_du.txt");
+  std::string vvec_file("output/nurbs_surface_dv.txt");
+  spline_ops::writeVectorData({S0}, {Su}, uvec_file, true, 0.2);
+  spline_ops::writeVectorData({S0}, {Sv}, vvec_file, true, 0.2);
+
+
   spline_ops::writeToFile(surf,file,10,2);
-  std::system(std::string(python + "python/plot_surface.py " + file).c_str());
+  std::system(std::string(python + "python/plot_surface.py " + file + " " + uvec_file + " " + vvec_file).c_str());
 }
 
 int main(int argc, char **argv)
@@ -246,5 +259,6 @@ int main(int argc, char **argv)
   std::cout << "*** B-Spline Main ***" << std::endl;
   // nurbsCurveTest();
   nurbsSurfaceTest();
+  // nurbsSurfaceTest2();
   return 0;
 }

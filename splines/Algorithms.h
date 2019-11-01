@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <vector>
@@ -14,6 +15,14 @@ namespace algo
   bool equal(T const &a, T const &b)
   { 
     return std::abs(a-b) <= FLT_TOL;
+  }
+
+  void normalizeKnot(std::vector<double> &knot)
+  {
+    auto min = knot[0];
+    auto max = knot.back();
+    auto L = max-min; 
+    std::for_each(knot.begin(), knot.end(), [min,L](auto &x) { x = (x-min)/L; });
   }
 
   /**

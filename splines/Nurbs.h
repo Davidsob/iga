@@ -21,6 +21,8 @@ struct NurbsCurve
   int p; //polynomial order
   vector knot, weights;
   matrix Q; 
+
+  friend std::ostream operator<<(std::ostream const &os, NurbsCurve const &curve);
 };
 
 struct NurbsSurface 
@@ -32,10 +34,37 @@ struct NurbsSurface
   int p, q; //polynomial order
   vector uknot, vknot, weights; // knot vectors, weight vector
   matrix Q; // cpts in vector form {c0j, c1j, cij...} 
+
+  friend std::ostream operator<<(std::ostream const &os, NurbsSurface const &surf);
 };
+
+
+std::ostream & operator<<(std::ostream &os, NurbsCurve const &curve)
+{
+  using namespace vector_ops;
+  os << "### NURB-C ###" << std::endl;
+  os << "p = " << curve.p << std::endl;
+  os << "knot   = " << curve.knot << std::endl;
+  os << "weights = " << curve.weights << std::endl;
+  os << "contol  = " << curve.Q << std::endl;
+  return os;
+}
+
+std::ostream & operator<<(std::ostream &os, NurbsSurface const &surf)
+{
+  using namespace vector_ops;
+  os << "### NURB-S ###" << std::endl;
+  os << "{p,q} = " << "{" << surf.p << "," << surf.q << "}" << std::endl;
+  os << "uknot   = " << surf.uknot << std::endl;
+  os << "vknot   = " << surf.vknot << std::endl;
+  os << "weights = " << surf.weights << std::endl;
+  os << "contol  = " << surf.Q << std::endl;
+  return os;
+}
 
 namespace spline_ops
 {
+
 
   template<typename Nurb>
   void weightedControlPoints(Nurb const &c, typename Nurb::matrix &Qw)
@@ -61,7 +90,7 @@ namespace spline_ops
   void weightedBSpline(NurbsSurface const &s, BSplineSurface &b)
   {
     b.p = s.p;
-    b.q = s.p;
+    b.q = s.q;
     b.uknot = s.uknot;
     b.vknot = s.vknot;
     weightedControlPoints(s,b.Q);

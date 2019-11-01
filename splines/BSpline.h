@@ -20,6 +20,8 @@ struct BSplineCurve
   int p; //polynomial order
   vector knot;
   matrix Q; 
+
+  friend std::ostream operator<<(std::ostream const &os, BSplineCurve const &curve);
 };
 
 struct BSplineSurface
@@ -32,7 +34,30 @@ struct BSplineSurface
   int p, q; //polynomial order
   vector uknot, vknot; // knot vectors
   matrix Q; // cpts in vector form {c0j, c1j, cij...} 
+
+  friend std::ostream operator<<(std::ostream const &os, BSplineSurface const &surf);
 };
+
+std::ostream & operator<<(std::ostream &os, BSplineCurve const &curve)
+{
+  using namespace vector_ops;
+  os << "### BSpline-C ###" << std::endl;
+  os << "p = " << curve.p << std::endl;
+  os << "knot   = " << curve.knot << std::endl;
+  os << "contol  = " << curve.Q << std::endl;
+  return os;
+}
+
+std::ostream & operator<<(std::ostream &os, BSplineSurface const &surf)
+{
+  using namespace vector_ops;
+  os << "### BSpline-S ###" << std::endl;
+  os << "{p,q} = " << "{" << surf.p << "," << surf.q << "}" << std::endl;
+  os << "uknot   = " << surf.uknot << std::endl;
+  os << "vknot   = " << surf.vknot << std::endl;
+  os << "contol  = " << surf.Q << std::endl;
+  return os;
+}
 
 namespace spline_ops
 {
