@@ -59,6 +59,37 @@ void annulus(NurbsSurface &surf, double ri, double ro)
   surf.vknot = std::vector<double>({0,0,1,1});
 }
 
+void asolid(NurbsSolid &solid)
+{
+  solid.p = 1;
+  solid.q = 1;
+  solid.r = 2;
+
+  std::vector<double> knot{0,0,1,1};
+  solid.uknot = knot;
+  solid.vknot = knot;
+  solid.wknot = std::vector<double>{0,0,0,1,1,1};
+
+  solid.Q = {
+    {0,0,0},
+    {1,0,0},
+    {0,1,0},
+    {1,1,0},
+
+    {0,0-0.2,0.95},
+    {1,0-0.2,0.95},
+    {0,1-0.2,0.95},
+    {1,1-0.2,0.95},
+
+    {0,0+0.2,1},
+    {1,0+0.2,1},
+    {0,1+0.2,1},
+    {1,1+0.2,1},
+  };
+
+  solid.weights = std::vector<double>(solid.Q.size(),1);
+}
+
 template<typename Curve>
 void CurveTest(Curve const &curve)
 {
@@ -110,12 +141,29 @@ void SurfaceTest(Surface const &surf)
   std::system(std::string(python + "python/plot_surface.py " + file + " " + uvec_file + " " + vvec_file).c_str());
 }
 
+template<typename Solid>
+void SolidTest(Solid const &solid)
+{
+  std::cout << __PRETTY_FUNCTION__ << std::endl;
+  using namespace vector_ops;
+  std::cout << solid << std::endl;
+  std::cout << spline_ops::SolidPoint(0.1, 0.9, 0.5, solid) << std::endl;
+  std::cout << spline_ops::SolidPoint(0.5, 0.5, 0.0, solid) << std::endl;
+  std::cout << spline_ops::SolidPoint(0.78, 1.0, 1.0, solid) << std::endl;
+
+  std::string file("output/nurbs_solid.txt");
+  spline_ops::writeToFile(solid,file,2,2,5);
+  std::system(std::string(python + "python/plot_surface.py " + file).c_str());
+}
+
 int main(int argc, char **argv)
 {
   std::cout << "*** B-Spline Main ***" << std::endl;
   // NurbsCurve curve; circle(curve);
   // CurveTest(curve);
-  NurbsSurface surface; annulus(surface,1.0,1.25);
-  SurfaceTest(surface);
+  // NurbsSurface surface; annulus(surface,1.0,1.25);
+  // SurfaceTest(surface);
+  NurbsSolid solid; asolid(solid);
+  SolidTest(solid);
   return 0;
 }

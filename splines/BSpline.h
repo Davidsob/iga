@@ -38,10 +38,29 @@ struct BSplineSurface
   friend std::ostream operator<<(std::ostream const &os, BSplineSurface const &surf);
 };
 
+struct BSplineSolid
+{
+  using vector = std::vector<double>;
+  using matrix = std::vector<std::vector<double>>; // need a point type
+
+  size_t dim() const { return Q.empty() ? 0 : Q[0].size(); }
+  int qid(int a, int b, int c) const
+  { 
+    auto cols = uknot.size()-p-1;
+    auto rows = vknot.size()-q-1;
+    return a + b*(cols) + c*(cols*rows); 
+  }
+  int p, q, r; //polynomial order
+  vector uknot, vknot, wknot; // knot vectors
+  matrix Q; // cpts in vector form {c0j, c1j, cij...} 
+
+  friend std::ostream operator<<(std::ostream const &os, BSplineSolid const &surf);
+};
+
 std::ostream & operator<<(std::ostream &os, BSplineCurve const &curve)
 {
   using namespace vector_ops;
-  os << "### BSpline-C ###" << std::endl;
+  os << "### BSpline-Curve ###" << std::endl;
   os << "p = " << curve.p << std::endl;
   os << "knot   = " << curve.knot << std::endl;
   os << "contol  = " << curve.Q << std::endl;
@@ -51,11 +70,23 @@ std::ostream & operator<<(std::ostream &os, BSplineCurve const &curve)
 std::ostream & operator<<(std::ostream &os, BSplineSurface const &surf)
 {
   using namespace vector_ops;
-  os << "### BSpline-S ###" << std::endl;
+  os << "### BSpline-Surface ###" << std::endl;
   os << "{p,q} = " << "{" << surf.p << "," << surf.q << "}" << std::endl;
   os << "uknot   = " << surf.uknot << std::endl;
   os << "vknot   = " << surf.vknot << std::endl;
   os << "contol  = " << surf.Q << std::endl;
+  return os;
+}
+
+std::ostream & operator<<(std::ostream &os, BSplineSolid const &solid)
+{
+  using namespace vector_ops;
+  os << "### BSpline-Solid ###" << std::endl;
+  os << "{p,q,r} = " << "{" << solid.p << "," << solid.q << "," << solid.r << "}" << std::endl;
+  os << "uknot   = " << solid.uknot << std::endl;
+  os << "vknot   = " << solid.vknot << std::endl;
+  os << "wknot   = " << solid.wknot << std::endl;
+  os << "contol  = " << solid.Q << std::endl;
   return os;
 }
 
@@ -178,6 +209,50 @@ namespace spline_ops
     }
     return Skl;
   }
+
+  std::vector<double>
+  SolidPoint(double u, double v, double w, BSplineSolid const &solid)
+  {
+    using namespace vector_ops;
+
+    using matrix = typename BSplineSurface::matrix;
+    using point  = typename matrix::value_type;
+
+    auto uSpan = algo::FindSpan(u, solid.p, solid.uknot);
+    auto vSpan = algo::FindSpan(v, solid.q, solid.vknot);
+    auto wSpan = algo::FindSpan(w, solid.r, solid.wknot);
+    std::vector<double> Nu = algo::BasisFunctions(u,uSpan,solid.p, solid.uknot);
+    std::vector<double> Nv = algo::BasisFunctions(v,vSpan,solid.q, solid.vknot);
+    std::vector<double> Nw = algo::BasisFunctions(w,wSpan,solid.r, solid.wknot);
+
+    point S(solid.dim(),0.0);
+    std::vector<matrix> tmp(solid.q+1,matrix(solid.r+1,S));
+
+    for (int k = 0; k <= solid.r; k++)
+    {
+      for (int j = 0; j <= solid.q; j++)
+      {
+        for (int i = 0; i <= solid.p; i++)
+        {
+            auto a = uSpan-solid.p+i;
+            auto b = vSpan-solid.q+j;
+            auto c = wSpan-solid.r+k;
+            auto idx = solid.qid(a,b,c);
+            tmp[j][k] += Nu[i]*solid.Q[idx];
+        }
+      }
+    }
+
+    for (int j = 0; j <= solid.r; j++)
+    {
+      for (int i = 0; i <= solid.q; i++)
+      {
+        S += Nw[j]*Nv[i]*tmp[i][j];
+      }
+    }
+    return S;
+  }
+
 
   void writeToFile(BSplineCurve const &c,std::string const &file_name, int level = 20)
   {

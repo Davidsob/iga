@@ -38,11 +38,23 @@ struct NurbsSurface
   friend std::ostream operator<<(std::ostream const &os, NurbsSurface const &surf);
 };
 
+struct NurbsSolid
+{
+  using vector = std::vector<double>;
+  using matrix = std::vector<std::vector<double>>; // need a point type
+
+  int qid(int iu, int iv) const { return iu + iv*(uknot.size()-p-1); }
+  int p, q, r; //polynomial order
+  vector uknot, vknot, wknot, weights; // knot vectors, weight vector
+  matrix Q; // cpts in vector form {c0j, c1j, cij...} 
+
+  friend std::ostream operator<<(std::ostream const &os, NurbsSolid const &solid);
+};
 
 std::ostream & operator<<(std::ostream &os, NurbsCurve const &curve)
 {
   using namespace vector_ops;
-  os << "### NURB-C ###" << std::endl;
+  os << "### NURB-Curve ###" << std::endl;
   os << "p = " << curve.p << std::endl;
   os << "knot   = " << curve.knot << std::endl;
   os << "weights = " << curve.weights << std::endl;
@@ -53,7 +65,7 @@ std::ostream & operator<<(std::ostream &os, NurbsCurve const &curve)
 std::ostream & operator<<(std::ostream &os, NurbsSurface const &surf)
 {
   using namespace vector_ops;
-  os << "### NURB-S ###" << std::endl;
+  os << "### NURB-Surface ###" << std::endl;
   os << "{p,q} = " << "{" << surf.p << "," << surf.q << "}" << std::endl;
   os << "uknot   = " << surf.uknot << std::endl;
   os << "vknot   = " << surf.vknot << std::endl;
@@ -62,10 +74,21 @@ std::ostream & operator<<(std::ostream &os, NurbsSurface const &surf)
   return os;
 }
 
+std::ostream & operator<<(std::ostream &os, NurbsSolid const &solid)
+{
+  using namespace vector_ops;
+  os << "### NURB-Solid ###" << std::endl;
+  os << "{p,q,r} = " << "{" << solid.p << "," << solid.q << "," << solid.r << "}" << std::endl;
+  os << "uknot   = " << solid.uknot << std::endl;
+  os << "vknot   = " << solid.vknot << std::endl;
+  os << "wknot   = " << solid.vknot << std::endl;
+  os << "weights = " << solid.weights << std::endl;
+  os << "contol  = " << solid.Q << std::endl;
+  return os;
+}
+
 namespace spline_ops
 {
-
-
   template<typename Nurb>
   void weightedControlPoints(Nurb const &c, typename Nurb::matrix &Qw)
   {
@@ -93,6 +116,17 @@ namespace spline_ops
     b.q = s.q;
     b.uknot = s.uknot;
     b.vknot = s.vknot;
+    weightedControlPoints(s,b.Q);
+  }
+
+  void weightedBSpline(NurbsSolid const &s, BSplineSolid &b)
+  {
+    b.p = s.p;
+    b.q = s.q;
+    b.r = s.r;
+    b.uknot = s.uknot;
+    b.vknot = s.vknot;
+    b.wknot = s.wknot;
     weightedControlPoints(s,b.Q);
   }
 
@@ -147,6 +181,16 @@ namespace spline_ops
     using namespace vector_ops;
     BSplineSurface b; weightedBSpline(surf,b);
     auto Sw = spline_ops::SurfacePoint(u,v,b);
+    Sw /= Sw.back(); Sw.pop_back();
+    return Sw;
+  }
+
+  std::vector<double>
+  SolidPoint(double u, double v, double w, NurbsSolid const &solid)
+  {
+    using namespace vector_ops;
+    BSplineSolid b; weightedBSpline(solid,b);
+    auto Sw = spline_ops::SolidPoint(u,v,w,b);
     Sw /= Sw.back(); Sw.pop_back();
     return Sw;
   }
@@ -273,6 +317,114 @@ namespace spline_ops
     std::ofstream file;
     file.open(file_name);
     file << mesh.size() << std::endl; // number of points in file
+    for (auto &el : mesh) {
+      for (auto &v : el) file << v << " ";
+      file << std::endl;
+    }
+
+    file << pts.size() << std::endl;
+    for (auto &p : pts) {
+      for (auto &x : p) file << x << " ";
+      file << std::endl;
+    }
+
+    auto cpts = s.Q.size();
+    file << cpts << std::endl;
+    for (auto &p : s.Q)
+    {
+      for (auto &x : p) file << x << " ";
+      file << std::endl;
+    }
+    file.close();
+  }
+
+  void writeToFile(NurbsSolid const &s,std::string const &file_name, int ulevel = 10, int vlevel=10, int wlevel=10)
+  {
+    using namespace vector_ops;
+
+    // compute mesh
+    std::vector<std::vector<int>> mesh;
+    auto cols = ulevel+1;
+    auto rows = vlevel+1;
+    auto vid = [cols,rows](int i, int j, int k) { return i + j*(cols) + k*(cols*rows); };
+
+    // plot surfaces!
+    // x-
+    for (int j = 0; j < wlevel; j++)
+    {
+      for (int i = 0; i < vlevel; i++)
+      {
+        mesh.push_back({vid(0,i,j), vid(0,i+1,j), vid(0,i+1,j+1), vid(0,i,j+1)});
+      }
+    }
+    // x+
+    for (int j = 0; j < wlevel; j++)
+    {
+      for (int i = 0; i < vlevel; i++)
+      {
+        mesh.push_back({vid(ulevel,i,j), vid(ulevel,i+1,j), vid(ulevel,i+1,j+1), vid(ulevel,i,j+1)});
+      }
+    }
+    // y-
+    for (int j = 0; j < ulevel; j++)
+    {
+      for (int i = 0; i < wlevel; i++)
+      {
+        mesh.push_back({vid(j,0,i), vid(j,0,i+1), vid(j+1,0,i+1), vid(j+1,0,i)});
+      }
+    }
+    // y+
+    for (int j = 0; j < ulevel; j++)
+    {
+      for (int i = 0; i < wlevel; i++)
+      {
+        mesh.push_back({vid(j,vlevel,i), vid(j,vlevel,i+1), vid(j+1,vlevel,i+1), vid(j+1,vlevel,i)});
+      }
+    }
+    // z-
+    for (int j = 0; j < vlevel; j++)
+    {
+      for (int i = 0; i < ulevel; i++)
+      {
+        mesh.push_back({vid(i,j,0), vid(i+1,j,0), vid(i+1,j+1,0), vid(i,j+1,0)});
+      }
+    }
+    // z+
+    for (int j = 0; j < vlevel; j++)
+    {
+      for (int i = 0; i < ulevel; i++)
+      {
+        mesh.push_back({vid(i,j,wlevel), vid(i+1,j,wlevel), vid(i+1,j+1,wlevel), vid(i,j+1,wlevel)});
+      }
+    }
+
+    // compute points on surface 
+    std::vector<std::vector<double>> pts;
+    auto du = (s.uknot.back() - s.uknot[0])/ulevel;
+    auto dv = (s.vknot.back() - s.vknot[0])/vlevel;
+    auto dw = (s.wknot.back() - s.wknot[0])/wlevel;
+    auto u = 0.0; auto v = 0.0; auto w = 0.0;
+
+    for (int k = 0; k <= wlevel; k++)
+    {
+      v = 0.0;
+      for (int j = 0; j <= vlevel; j++)
+      {
+        u = 0.0;
+        for (int i = 0; i <= ulevel; i++)
+        {
+          pts.push_back(SolidPoint(u,v,w,s));
+          u += du;
+        }
+        v += dv;
+      }
+      w += dw;
+    }
+
+    // write file
+    std::ofstream file;
+    file.open(file_name);
+    file << mesh.size() << std::endl; // number of surface elements
     for (auto &el : mesh) {
       for (auto &v : el) file << v << " ";
       file << std::endl;
