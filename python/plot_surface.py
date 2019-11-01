@@ -10,7 +10,7 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 def plot(mesh,verts,cpts,**kwargs):
   cmap = kwargs.get('cmap',color_map.get_cmap('rainbow'))
   size = kwargs.get('size', (10,10))
-  transparancy = kwargs.get('alpha', 1.0)
+  transparancy = kwargs.get('alpha', 0.3)
   # get bounds
   def get_bounds(data,idx):
     mn,mx = 1e8,-1e8
@@ -50,13 +50,27 @@ def plot(mesh,verts,cpts,**kwargs):
   for xb, yb, zb in zip(Xb, Yb, Zb):
     ax.plot([xb], [yb], [zb], 'w')
 
-  # coll = Poly3DCollection(verts, edgecolors=('black',))
   for poly in polys:
     ax.add_collection3d(poly,zs='z')
-  # ax.add_collection3d(coll,zs='z')
+
+  vec_data = kwargs.get("vector_data", None)
+  if vec_data:
+    print "Have vector data"
+    pts,uvec,vvec = vec_data
+    for p,u,v in zip(pts,uvec,vvec):
+      w = np.cross(u,v)
+      w *= np.linalg.norm(u)/np.linalg.norm(w) 
+      x,y,z = p
+      dux,duy,duz = u
+      dvx,dvy,dvz = v
+      dwx,dwy,dwz = w
+      ax.plot3D([x,x+dux],[y,y+duy],[z,z+duz],color='red')
+      ax.plot3D([x,x+dvx],[y,y+dvy],[z,z+dvz],color='green')
+      ax.plot3D([x,x+dwx],[y,y+dwy],[z,z+dwz],color='blue')
 
   for p in cpts:
     ax.scatter(p[0],p[1],p[2],color='red',marker='s')
+
   ax.set_xlabel('x-axis')
   ax.set_ylabel('y-axis')
   ax.set_zlabel('z-axis')
@@ -85,7 +99,27 @@ def open_file(file):
       n -= 1
   return mesh, x, cpts
 
+def open_vector_data(file):
+  x = []
+  vecs = []
+  with open(file) as f:
+    n = map(int,f.readline().split())[0]
+    while n > 0 :
+      x.append(map(float, f.readline().split()))
+      n -= 1
+      
+    n = map(int,f.readline().split())[0]
+    while n > 0 :
+      vecs.append(map(float, f.readline().split()))
+      n -= 1
+  return x, vecs
+
 if __name__ == "__main__":
   if len(sys.argv) > 1:
     m,x,cpt = open_file(sys.argv[1])
-    plot(m,x,cpt)
+    if len(sys.argv) == 4:
+      p,u = open_vector_data(sys.argv[2])
+      p,v = open_vector_data(sys.argv[3])
+      plot(m,x,cpt,vector_data=(p,u,v))
+    else: 
+      plot(m,x,cpt)

@@ -179,21 +179,65 @@ void nurbsSurfaceTest()
   surf.uknot = uknot;
   surf.vknot = vknot;
   surf.Q = cpts;
-  std::cout << "### (" << __LINE__ << ")" << std::endl;
-  auto Sw = spline_ops::SurfacePoint(0.5, 0.5, surf);
-  std::cout << "### (" << __LINE__ << ")" << std::endl;
-  std::cout << "Point on surface = " << Sw << std::endl;
-  // auto ders = spline_ops::SurfaceDerivatives(0.5, 0.5, 1, surf);
-  // auto Su = ders[1][0];
-  // auto Sv = ders[0][1];
-  // auto S  = ders[0][0];
 
-  // std::cout << "S = " << S << std::endl;
-  // std::cout << "Su = " << Su << std::endl;
-  // std::cout << "Sv = " << Sv << std::endl;
+  auto S = spline_ops::SurfacePoint(0.7, 0.75, surf);
+  std::cout << "Point on surface = " << S << std::endl;
+  auto ders = spline_ops::SurfaceDerivatives(0.7, 0.75, 1, surf);
+  auto Su = ders[1][0];
+  auto Sv = ders[0][1];
+  auto S0  = ders[0][0];
+
+  std::cout << "S0 = " << S << std::endl;
+  std::cout << "Su = " << Su << std::endl;
+  std::cout << "Sv = " << Sv << std::endl;
 
   std::string file("output/nurbs_surface.txt");
-  spline_ops::writeToFile(surf,file,50,50);
+  std::string uvec_file("output/nurbs_surface_du.txt");
+  std::string vvec_file("output/nurbs_surface_dv.txt");
+  spline_ops::writeVectorData({S0}, {Su}, uvec_file, true, 0.2);
+  spline_ops::writeVectorData({S0}, {Sv}, vvec_file, true, 0.2);
+  spline_ops::writeToFile(surf,file,10,10);
+  std::system(std::string(python + "python/plot_surface.py " + file + " " + uvec_file + " " + vvec_file).c_str());
+}
+
+void nurbsSurfaceTest2()
+{
+  using namespace vector_ops;
+  std::cout << __PRETTY_FUNCTION__ << std::endl;
+  NurbsSurface surf;
+
+  int p = 2;
+  int q = p;
+  typename decltype(surf)::vector uknot{0.0, 0.0, 0.0, 0.5, 1.0, 1.0, 1.0};
+  typename decltype(surf)::vector vknot{0.0, 0.0, 0.0, 1.0, 1.0, 1.0};
+  typename decltype(surf)::matrix cpts{
+    {0,0,0},
+    {0,1,0},
+    {2,3,0},
+    {3,3,0},
+
+    {0.5,0,0},
+    {0.5,1,0},
+    {2,2.5,0},
+    {3,1.0,0},
+
+    {1.0,0,0},
+    {1.0,0.75,0},
+    {2,1,0},
+    {3,1.0,0},
+  };
+
+  std::vector<double> weights(cpts.size(),1.0);
+
+  surf.p = p;
+  surf.q = q;
+  surf.weights = weights;
+  surf.uknot = uknot;
+  surf.vknot = vknot;
+  surf.Q = cpts;
+
+  std::string file("output/nurbs_surface.txt");
+  spline_ops::writeToFile(surf,file,10,2);
   std::system(std::string(python + "python/plot_surface.py " + file).c_str());
 }
 

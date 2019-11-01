@@ -79,7 +79,6 @@ namespace spline_ops
   std::vector<double>
   SurfacePoint(double u, double v, BSplineSurface const &surf)
   {
-    std::cout << "\n+++ (" << __LINE__ << ") Enter: " << __PRETTY_FUNCTION__ << std::endl;
     using namespace vector_ops;
     using point = typename BSplineSurface::matrix::value_type;
 
@@ -106,7 +105,6 @@ namespace spline_ops
     {
       S += Nv[i]*tmp[i];
     }
-std::cout << "--- (" << __LINE__ << ") Exit: " << __PRETTY_FUNCTION__ << "\n" << std::endl;
     return S;
   }
 

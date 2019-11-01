@@ -18,7 +18,7 @@ def plot(mesh, verts, cpts, **kwargs):
       x,y = p
       dx,dy = v
       plt.arrow(x,y,dx,dy,color='green',head_width=0.05, head_length=0.05)
-      plt.scatter(p[0],p[1],color='green')
+      plt.scatter(x,y,color='green')
 
   plt.grid(True)
   plt.axis('equal')

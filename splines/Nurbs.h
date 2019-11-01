@@ -117,57 +117,52 @@ namespace spline_ops
   {
     using namespace vector_ops;
     BSplineSurface b; weightedBSpline(surf,b);
-    std::cout << b.Q << std::endl;
     auto Sw = spline_ops::SurfacePoint(u,v,b);
     Sw /= Sw.back(); Sw.pop_back();
     return Sw;
   }
 
-  // std::vector<std::vector<std::vector<double>>>
-  // SurfaceDerivatives(double u, double v, int order, BSplineSurface const &surf)
-  // {
-  //   using namespace vector_ops;
-  //   using point = typename BSplineSurface::matrix::value_type;
-  //   using matrix = typename BSplineSurface::matrix;
+  std::vector<std::vector<std::vector<double>>>
+  SurfaceDerivatives(double u, double v, int order, NurbsSurface const &surf)
+  {
+    using namespace vector_ops;
+    BSplineSurface b; weightedBSpline(surf,b);
+    auto Aders = spline_ops::SurfaceDerivatives(u,v,order,b);
 
-  //   auto uspan = algo::FindSpan(u, surf.p, surf.uknot);
-  //   auto vspan = algo::FindSpan(v, surf.q, surf.vknot);
-  //   auto Nu = algo::BasisFunctionDerivatives(u,uspan,surf.p,surf.uknot);
-  //   auto Nv = algo::BasisFunctionDerivatives(v,vspan,surf.q,surf.vknot);
+    size_t nk = Aders.size();
+    size_t nl = Aders[0].size();
+    using matrix = typename NurbsSurface::matrix;
+    using point  = typename matrix::value_type;
 
-  //   auto du = std::min(order,surf.p);
-  //   auto dv = std::min(order,surf.q);
+    std::vector<matrix> Skl(nk, matrix(nl, point(3,0)));
+     
+    for (int k = 0; k <= order; k++)
+    {
+      for (int l = 0; l <= order-k; l++)
+      {
+        auto v = Aders[k][l];
+        for (int j = 1; j <= l; j++)
+        {
+          v -= binomial(l,j)*Aders[0][j].back()*Skl[k][l-j];
+        }
 
-  //   point zero(3,0);
-  //   auto dskl = std::max(du,dv);
-  //   std::vector<matrix> Skl(dskl+1, matrix(dskl+1, zero));
+        for (int i = 1; i <= k; i++)
+        {
+          v -= binomial(k,i)*Aders[i][0].back()*Skl[k-i][l];
+          decltype(v) v2(v.size(),0);
+          for (int j = 1; j <= l; j++)
+          {
+            v2 += binomial(l,j)*Aders[i][j].back()*Skl[k-i][l-j];
+          }
+          v -= binomial(k,i)*v2;
+        }
+        v /= Aders[0][0].back(); v.pop_back();
+        Skl[k][l] = v; 
+      }
+    }
 
-  //   std::vector<point> tmp(surf.q+1,zero);
-  //   for (int k = 0; k <= du; k++)
-  //   {
-  //     for (int s = 0; s <= surf.q; s++)
-  //     {
-  //       tmp[s] = zero;
-  //       for (int r = 0; r <= surf.p; r++)
-  //       {
-  //         int a = uspan-surf.p+r;
-  //         int b = vspan-surf.q+s;
-  //         int idx = surf.qid(a,b);
-  //         tmp[s] += Nu[k][r]*surf.Q[idx];
-  //       }
-  //       auto dd = std::min(order-k,dv);
-  //       for (int l = 0; l <= dd; l++)
-  //       {
-  //         Skl[k][l] = zero;
-  //         for (int s = 0; s <= surf.q; s++)
-  //         {
-  //           Skl[k][l] += Nv[l][s]*tmp[s];
-  //         }
-  //       }
-  //     }
-  //   }
-  //   return Skl;
-  // }
+    return Skl;
+  }
 
   void writeToFile(NurbsCurve const &c,std::string const &file_name, int level = 20)
   {
