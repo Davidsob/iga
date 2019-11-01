@@ -23,3 +23,6 @@ set(EXTERNAL_LIBS
 # set the executable
 add_executable(Main.exe main.cxx)
 target_link_libraries(Main.exe ${EXTERNAL_LIBS})
+
+add_executable(Elbow.exe elbow.cxx)
+target_link_libraries(Elbow.exe ${EXTERNAL_LIBS})

@@ -64,6 +64,7 @@ def plot(mesh,verts,cpts,**kwargs):
       dux,duy,duz = u
       dvx,dvy,dvz = v
       dwx,dwy,dwz = w
+
       ax.plot3D([x,x+dux],[y,y+duy],[z,z+duz],color='red')
       ax.plot3D([x,x+dvx],[y,y+dvy],[z,z+dvz],color='green')
       ax.plot3D([x,x+dwx],[y,y+dwy],[z,z+dwz],color='blue')

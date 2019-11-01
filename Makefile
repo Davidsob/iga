@@ -102,6 +102,19 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named Elbow.exe
+
+# Build rule for target.
+Elbow.exe: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 Elbow.exe
+.PHONY : Elbow.exe
+
+# fast build rule for target.
+Elbow.exe/fast:
+	$(MAKE) -f CMakeFiles/Elbow.exe.dir/build.make CMakeFiles/Elbow.exe.dir/build
+.PHONY : Elbow.exe/fast
+
+#=============================================================================
 # Target rules for targets named Main.exe
 
 # Build rule for target.
@@ -113,6 +126,30 @@ Main.exe: cmake_check_build_system
 Main.exe/fast:
 	$(MAKE) -f CMakeFiles/Main.exe.dir/build.make CMakeFiles/Main.exe.dir/build
 .PHONY : Main.exe/fast
+
+elbow.o: elbow.cxx.o
+.PHONY : elbow.o
+
+# target to build an object file
+elbow.cxx.o:
+	$(MAKE) -f CMakeFiles/Elbow.exe.dir/build.make CMakeFiles/Elbow.exe.dir/elbow.cxx.o
+.PHONY : elbow.cxx.o
+
+elbow.i: elbow.cxx.i
+.PHONY : elbow.i
+
+# target to preprocess a source file
+elbow.cxx.i:
+	$(MAKE) -f CMakeFiles/Elbow.exe.dir/build.make CMakeFiles/Elbow.exe.dir/elbow.cxx.i
+.PHONY : elbow.cxx.i
+
+elbow.s: elbow.cxx.s
+.PHONY : elbow.s
+
+# target to generate assembly for a file
+elbow.cxx.s:
+	$(MAKE) -f CMakeFiles/Elbow.exe.dir/build.make CMakeFiles/Elbow.exe.dir/elbow.cxx.s
+.PHONY : elbow.cxx.s
 
 main.o: main.cxx.o
 .PHONY : main.o
@@ -144,9 +181,13 @@ help:
 	@echo "... all (the default if no target is provided)"
 	@echo "... clean"
 	@echo "... depend"
+	@echo "... Elbow.exe"
 	@echo "... Main.exe"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
+	@echo "... elbow.o"
+	@echo "... elbow.i"
+	@echo "... elbow.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
