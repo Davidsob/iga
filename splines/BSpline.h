@@ -27,9 +27,11 @@ struct BSplineSurface
   using vector = std::vector<double>;
   using matrix = std::vector<std::vector<double>>; // need a point type
 
+  size_t dim() const { return Q.empty() ? 0 : Q[0].size(); }
+  int qid(int iu, int iv) const { return iu + iv*(uknot.size()-p-1); }
   int p, q; //polynomial order
   vector uknot, vknot; // knot vectors
-  std::vector<matrix> Q; // cpts in vector form {c0j, c1j, cij...} 
+  matrix Q; // cpts in vector form {c0j, c1j, cij...} 
 };
 
 namespace spline_ops
@@ -77,6 +79,7 @@ namespace spline_ops
   std::vector<double>
   SurfacePoint(double u, double v, BSplineSurface const &surf)
   {
+    std::cout << "\n+++ (" << __LINE__ << ") Enter: " << __PRETTY_FUNCTION__ << std::endl;
     using namespace vector_ops;
     using point = typename BSplineSurface::matrix::value_type;
 
@@ -85,7 +88,7 @@ namespace spline_ops
     std::vector<double> Nu = algo::BasisFunctions(u,uSpan,surf.p, surf.uknot);
     std::vector<double> Nv = algo::BasisFunctions(v,vSpan,surf.q, surf.vknot);
 
-    point S(3,0.0);
+    point S(surf.dim(),0.0);
     std::vector<point> tmp(surf.q+1,S);
 
     for (int i = 0; i <= surf.q; i++)
@@ -94,13 +97,16 @@ namespace spline_ops
       {
         auto a = uSpan-surf.p+j;
         auto b = vSpan-surf.q+i;
-        tmp[i] += Nu[j]*surf.Q[b][a];
+        auto idx = surf.qid(a,b);
+        tmp[i] += Nu[j]*surf.Q[idx];
       }
     }
 
     for (int i = 0; i <= surf.q; i++)
+    {
       S += Nv[i]*tmp[i];
-
+    }
+std::cout << "--- (" << __LINE__ << ") Exit: " << __PRETTY_FUNCTION__ << "\n" << std::endl;
     return S;
   }
 
@@ -119,7 +125,7 @@ namespace spline_ops
     auto du = std::min(order,surf.p);
     auto dv = std::min(order,surf.q);
 
-    point zero(3,0);
+    point zero(surf.dim(),0);
     auto dskl = std::max(du,dv);
     std::vector<matrix> Skl(dskl+1, matrix(dskl+1, zero));
 
@@ -133,14 +139,17 @@ namespace spline_ops
         {
           int a = uspan-surf.p+r;
           int b = vspan-surf.q+s;
-          tmp[s] += Nu[k][r]*surf.Q[b][a];
+          int idx = surf.qid(a,b);
+          tmp[s] += Nu[k][r]*surf.Q[idx];
         }
         auto dd = std::min(order-k,dv);
         for (int l = 0; l <= dd; l++)
         {
           Skl[k][l] = zero;
           for (int s = 0; s <= surf.q; s++)
+          {
             Skl[k][l] += Nv[l][s]*tmp[s];
+          }
         }
       }
     }
@@ -188,5 +197,85 @@ namespace spline_ops
       file << std::endl;
     }
     file.close();
+  }
+
+  void writeToFile(BSplineSurface const &s,std::string const &file_name, int ulevel = 10, int vlevel=10)
+  {
+    using namespace vector_ops;
+
+    // compute mesh
+    std::vector<std::vector<int>> mesh;
+    auto vid = [ulevel](int i, int j) { return i + j*(ulevel+1); };
+
+    for (int j = 0; j < vlevel; j++)
+    {
+      for (int i = 0; i < ulevel; i++)
+      {
+        mesh.push_back({vid(i,j), vid(i+1,j), vid(i+1,j+1), vid(i,j+1)});
+      }
+    }
+
+    // compute points on surface 
+    std::vector<std::vector<double>> pts;
+    auto du = (s.uknot.back() - s.uknot[0])/ulevel;
+    auto dv = (s.vknot.back() - s.vknot[0])/vlevel;
+    auto u = 0.0; auto v = 0.0;
+
+    for (int j = 0; j <= vlevel; j++)
+    {
+      u = 0.0;
+      for (int i = 0; i <= ulevel; i++)
+      {
+        pts.push_back(SurfacePoint(u,v,s));
+        u += du;
+      }
+      v += dv;
+    }
+
+    // write file
+    std::ofstream file;
+    file.open(file_name);
+    file << mesh.size() << std::endl; // number of points in file
+    for (auto &el : mesh) {
+      for (auto &v : el) file << v << " ";
+      file << std::endl;
+    }
+
+    file << pts.size() << std::endl;
+    for (auto &p : pts) {
+      for (auto &x : p) file << x << " ";
+      file << std::endl;
+    }
+
+    auto cpts = s.Q.size();
+    file << cpts << std::endl;
+    for (auto &p : s.Q)
+    {
+      for (auto &x : p) file << x << " ";
+      file << std::endl;
+    }
+    file.close();
+  }
+
+  void writeVectorData(std::vector<std::vector<double>> const &p,
+                       std::vector<std::vector<double>> const &v,
+                       std::string const &file_name, bool normalize=true, double scale = 1.0)
+  {
+    using namespace vector_ops;
+
+    std::ofstream file;
+    file.open(file_name);
+    file << p.size() << std::endl;
+    for (auto &x : p) {
+      for (auto &xi : x) file << xi << " ";
+      file << std::endl;
+    }
+
+    file << v.size() << std::endl;
+    for (std::vector<double> const &x : v) {
+      auto xn = !normalize ? x : scale*vector_ops::normalize(x);
+      for (auto &xi : xn) file << xi << " ";
+      file << std::endl;
+    }
   }
 }
