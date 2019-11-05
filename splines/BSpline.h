@@ -253,6 +253,95 @@ namespace spline_ops
     return S;
   }
 
+  std::vector<double>
+  SolidDerivative(double u, double v, double w, int order, int direction, BSplineSolid const &solid)
+  {
+    using namespace vector_ops;
+
+    using matrix = typename BSplineSurface::matrix;
+    using point  = typename matrix::value_type;
+
+    auto uspan = algo::FindSpan(u, solid.p, solid.uknot);
+    auto vspan = algo::FindSpan(v, solid.q, solid.vknot);
+    auto wspan = algo::FindSpan(w, solid.r, solid.wknot);
+
+    auto basis = [](double u, double i, double p, auto const &knot)
+    {
+      return algo::BasisFunction(u,i,p,knot);
+    };
+
+    auto derivative = [order](double u, double i, double p, auto const &knot)
+    {
+      return algo::BasisFunctionDerivative(u,i,p,knot)[order];
+    };
+
+    point dS(solid.dim(),0.0);
+    auto p = solid.p;
+    auto q = solid.q;
+    auto r = solid.r;
+
+    switch(direction)
+    {
+      case 1:
+      {
+        for (int k = 0; k <= r; k++)
+        {
+          for (int j = 0; j <= q; j++)
+          {
+            for (int i = 0; i <= p; i++)
+            {
+                auto a = uspan-p+i;
+                auto b = vspan-q+j;
+                auto c = wspan-r+k;
+                auto idx = solid.qid(a,b,c);
+                dS += basis(u,i,p,solid.uknot)*derivative(v,j,q,solid.vknot)*basis(w,k,r,solid.wknot)*solid.Q[idx];
+            }
+          }
+        }
+        break;
+      }
+
+      case 2:
+      {
+        for (int k = 0; k <= r; k++)
+        {
+          for (int j = 0; j <= q; j++)
+          {
+            for (int i = 0; i <= p; i++)
+            {
+                auto a = uspan-p+i;
+                auto b = vspan-q+j;
+                auto c = wspan-r+k;
+                auto idx = solid.qid(a,b,c);
+                dS += basis(u,i,p,solid.uknot)*basis(v,j,q,solid.vknot)*derivative(w,k,r,solid.wknot)*solid.Q[idx];
+            }
+          }
+        }
+        break;
+      }
+
+     default:
+      {
+        for (int k = 0; k <= r; k++)
+        {
+          for (int j = 0; j <= q; j++)
+          {
+            for (int i = 0; i <= p; i++)
+            {
+                auto a = uspan-p+i;
+                auto b = vspan-q+j;
+                auto c = wspan-r+k;
+                auto idx = solid.qid(a,b,c);
+                dS += derivative(u,i,p,solid.uknot)*basis(v,j,q,solid.vknot)*basis(w,k,r,solid.wknot)*solid.Q[idx];
+            }
+          }
+        }
+        break;
+      }
+    }
+
+    return dS;
+  }
 
   void writeToFile(BSplineCurve const &c,std::string const &file_name, int level = 20)
   {
@@ -375,5 +464,113 @@ namespace spline_ops
       for (auto &xi : xn) file << xi << " ";
       file << std::endl;
     }
+  }
+
+  void writeToFile(BSplineSolid const &s,std::string const &file_name, int ulevel = 10, int vlevel=10, int wlevel=10)
+  {
+    using namespace vector_ops;
+
+    // compute mesh
+    std::vector<std::vector<int>> mesh;
+    auto cols = ulevel+1;
+    auto rows = vlevel+1;
+    auto vid = [cols,rows](int i, int j, int k) { return i + j*(cols) + k*(cols*rows); };
+
+    // plot surfaces!
+    // x-
+    for (int j = 0; j < wlevel; j++)
+    {
+      for (int i = 0; i < vlevel; i++)
+      {
+        mesh.push_back({vid(0,i,j), vid(0,i+1,j), vid(0,i+1,j+1), vid(0,i,j+1)});
+      }
+    }
+    // x+
+    for (int j = 0; j < wlevel; j++)
+    {
+      for (int i = 0; i < vlevel; i++)
+      {
+        mesh.push_back({vid(ulevel,i,j), vid(ulevel,i+1,j), vid(ulevel,i+1,j+1), vid(ulevel,i,j+1)});
+      }
+    }
+    // y-
+    for (int j = 0; j < ulevel; j++)
+    {
+      for (int i = 0; i < wlevel; i++)
+      {
+        mesh.push_back({vid(j,0,i), vid(j,0,i+1), vid(j+1,0,i+1), vid(j+1,0,i)});
+      }
+    }
+    // y+
+    for (int j = 0; j < ulevel; j++)
+    {
+      for (int i = 0; i < wlevel; i++)
+      {
+        mesh.push_back({vid(j,vlevel,i), vid(j,vlevel,i+1), vid(j+1,vlevel,i+1), vid(j+1,vlevel,i)});
+      }
+    }
+    // z-
+    for (int j = 0; j < vlevel; j++)
+    {
+      for (int i = 0; i < ulevel; i++)
+      {
+        mesh.push_back({vid(i,j,0), vid(i+1,j,0), vid(i+1,j+1,0), vid(i,j+1,0)});
+      }
+    }
+    // z+
+    for (int j = 0; j < vlevel; j++)
+    {
+      for (int i = 0; i < ulevel; i++)
+      {
+        mesh.push_back({vid(i,j,wlevel), vid(i+1,j,wlevel), vid(i+1,j+1,wlevel), vid(i,j+1,wlevel)});
+      }
+    }
+
+    // compute points on surface 
+    std::vector<std::vector<double>> pts;
+    auto du = (s.uknot.back() - s.uknot[0])/ulevel;
+    auto dv = (s.vknot.back() - s.vknot[0])/vlevel;
+    auto dw = (s.wknot.back() - s.wknot[0])/wlevel;
+    auto u = 0.0; auto v = 0.0; auto w = 0.0;
+
+    for (int k = 0; k <= wlevel; k++)
+    {
+      v = 0.0;
+      for (int j = 0; j <= vlevel; j++)
+      {
+        u = 0.0;
+        for (int i = 0; i <= ulevel; i++)
+        {
+          pts.push_back(SolidPoint(u,v,w,s));
+          u += du;
+        }
+        v += dv;
+      }
+      w += dw;
+    }
+
+    // write file
+    std::ofstream file;
+    file.open(file_name);
+    file << mesh.size() << std::endl; // number of surface elements
+    for (auto &el : mesh) {
+      for (auto &v : el) file << v << " ";
+      file << std::endl;
+    }
+
+    file << pts.size() << std::endl;
+    for (auto &p : pts) {
+      for (auto &x : p) file << x << " ";
+      file << std::endl;
+    }
+
+    auto cpts = s.Q.size();
+    file << cpts << std::endl;
+    for (auto &p : s.Q)
+    {
+      for (auto &x : p) file << x << " ";
+      file << std::endl;
+    }
+    file.close();
   }
 }

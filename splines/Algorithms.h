@@ -238,7 +238,7 @@ namespace algo
     return N[0];
   }
 
- std::vector<double> 
+  std::vector<double> 
   BasisFunctionDerivative(double u, int i, int p, std::vector<double> const &knot)
   {
     using matrix = std::vector<std::vector<double>>;
@@ -246,11 +246,13 @@ namespace algo
     int m = knot.size()-1;
     int n = m-p-1;
 
+    std::vector<double> ders(n+1,0);
     if (u < knot[i] || u >= knot[i+p+1]) // local property
     {
-
+      return ders;
     }
-    matrix N(p+1,std::vector<double>(p+1));
+
+    matrix N(p+1,std::vector<double>(p+1,0.0));
     for (int j = 0; j <= p; j++)
     {
       if (u >= knot[i+j] && u < knot[i+j+1])
@@ -276,7 +278,7 @@ namespace algo
         auto right = knot[i+j+k+1];
         if (equal(N[j+1][k-1],0.0))
         {
-          N[j][k] = 0.0;
+          N[j][k] = saved;
           saved = 0.0; 
         } else {
           auto tmp = N[j+1][k-1]/(right-left);
@@ -286,8 +288,7 @@ namespace algo
       }
     }
 
-    std::vector<double> ders(n+1,0);
-    std::vector<double> Nd(ders);
+    std::vector<double> Nd(ders.size(), 0.0);
     ders[0] = N[0][p]; // function value
     for (int k = 1; k <= n; k++)
     {

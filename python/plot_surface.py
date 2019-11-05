@@ -10,7 +10,7 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 def plot(mesh,verts,cpts,**kwargs):
   cmap = kwargs.get('cmap',color_map.get_cmap('rainbow'))
   size = kwargs.get('size', (10,10))
-  transparancy = kwargs.get('alpha', 0.9)
+  transparancy = kwargs.get('alpha', 1)
   # get bounds
   def get_bounds(data,idx):
     mn,mx = 1e8,-1e8
