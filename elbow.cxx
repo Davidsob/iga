@@ -136,7 +136,7 @@ void elbow(double ri, double ro, double re, NurbsSolid &solid)
 
   {
     auto ders = spline_ops::CurveDerivatives(1.0,1,curve);
-    auto section = transform::rotate(surf,{0,0,-1}, ders[0], ders[1]);
+    auto section = transform::rotate(surf,{0,0,1}, ders[0], ders[1]);
     addPoints(curve.weights[4],section);
   }
 }
@@ -259,26 +259,24 @@ void SolidTest(Solid const &solid)
   std::cout << __PRETTY_FUNCTION__ << std::endl;
   using namespace vector_ops;
   // std::cout << solid << std::endl;
-  // auto p0 = spline_ops::SolidPoint(0.1, 0.9, 0.0, solid);
-  // auto p0u = spline_ops::SolidDerivative(0.1, 0.9, 0.0, 1, 0, solid);
-  // auto p0v = spline_ops::SolidDerivative(0.1, 0.9, 0.0, 1, 1, solid);
-
-  // auto p1  = spline_ops::SolidPoint     (0.0, 0.9, 0.5, solid);
-  // auto p1v = spline_ops::SolidDerivative(0.0, 0.9, 0.5, 1, 1, solid);
-  // auto p1w = spline_ops::SolidDerivative(0.0, 0.9, 0.5, 1, 2, solid);
-
-  // auto p2  = spline_ops::SolidPoint     (0.5, 1.0, 0.95, solid);
-  // auto p2u = spline_ops::SolidDerivative(0.5, 1.0, 0.95, 1, 0, solid);
-  // auto p2w = spline_ops::SolidDerivative(0.5, 1.0, 0.95, 1, 2, solid);
-
+  double u,v,w,dw;
+  u = 0.8; v = 0.0; w = 0.0; dw = 1.0/20;
+  std::vector<std::vector<double>> p, du, dv;
+  for (int i = 0; i <= 20; i++)
+  {
+    p.push_back(spline_ops::SolidPoint(u,v,w,solid));
+    du.push_back(spline_ops::SolidDerivative(u,v,w,1,0,solid));
+    dv.push_back(spline_ops::SolidDerivative(u,v,w,1,1,solid));
+    w += dw;
+  }
   std::string file("output/nurbs_solid.txt");
-  // std::string uvec_file("output/nurbs_solid_du.txt");
-  // std::string vvec_file("output/nurbs_solid_dv.txt");
-  // spline_ops::writeVectorData({p0, p1, p2}, {p0u, p1v, p2w}, uvec_file, true, 0.2);
-  // spline_ops::writeVectorData({p0, p1, p2}, {p0v, p1w, p2u}, vvec_file, true, 0.2);
-  spline_ops::writeToFile(solid,file,20,3,20);
-  std::system(std::string(python + "python/plot_surface.py " + file + " ").c_str());
-  // std::system(std::string(python + "python/plot_surface.py " + file + " " + uvec_file + " " + vvec_file).c_str());
+  std::string uvec_file("output/nurbs_solid_du.txt");
+  std::string vvec_file("output/nurbs_solid_dv.txt");
+  spline_ops::writeVectorData(p,du, uvec_file, true, 1.0);
+  spline_ops::writeVectorData(p,dv, vvec_file, true, 1.0);
+  spline_ops::writeToFile(solid,file,10,1,10);
+  // std::system(std::string(python + "python/plot_surface.py " + file + " ").c_str());
+  std::system(std::string(python + "python/plot_surface.py " + file + " " + uvec_file + " " + vvec_file).c_str());
 }
 
 int main(int argc, char **argv)
@@ -286,5 +284,7 @@ int main(int argc, char **argv)
   std::cout << "*** B-Spline Main ***" << std::endl;
   NurbsSolid solid; elbow(0.3, 1.0, 2.0, solid);
   SolidTest(solid);
+  // 
+  // BSplineSolid solid; bsolid(solid); SolidTest(solid);
   return 0;
 }

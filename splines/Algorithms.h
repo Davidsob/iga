@@ -5,9 +5,14 @@
 #include <iostream>
 #include <vector>
 
+#include "utils/VectorOperations.h"
+
 #ifndef FLT_TOL
 #define FLT_TOL 1e-8
 #endif
+
+using namespace vector_ops;
+
 
 namespace algo
 {
@@ -243,8 +248,9 @@ namespace algo
   {
     using matrix = std::vector<std::vector<double>>;
 
-    int m = knot.size()-1;
-    int n = m-p-1;
+    // int m = knot.size()-1;
+    // int n = m-p-1;
+    int n = p;
 
     std::vector<double> ders(n+1,0);
     if (u < knot[i] || u >= knot[i+p+1]) // local property
@@ -320,7 +326,7 @@ namespace algo
           }
         }
       }
-      ders[k] = Nd[0];
+      ders[k] = Nd[0]; // the kth derivative
     }
 
     return ders;

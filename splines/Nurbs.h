@@ -195,6 +195,16 @@ namespace spline_ops
     return Sw;
   }
 
+  std::vector<double>
+  SolidPoint2(double u, double v, double w, NurbsSolid const &solid)
+  {
+    using namespace vector_ops;
+    BSplineSolid b; weightedBSpline(solid,b);
+    auto Sw = spline_ops::SolidPoint2(u,v,w,b);
+    Sw /= Sw.back(); Sw.pop_back();
+    return Sw;
+  }
+
   std::vector<std::vector<std::vector<double>>>
   SurfaceDerivatives(double u, double v, int order, NurbsSurface const &surf)
   {
@@ -235,6 +245,18 @@ namespace spline_ops
     }
 
     return Skl;
+  }
+
+  std::vector<double>
+  SolidDerivative(double u, double v, double w, int order, int direction, NurbsSolid const &solid)
+  {
+    using namespace vector_ops;
+    BSplineSolid b; weightedBSpline(solid,b);
+    auto P = spline_ops::SolidPoint(u,v,w,b);
+    auto Aders = spline_ops::SolidDerivative(u,v,w,order,direction,b);
+    auto dP = (Aders - binomial(1,1)*Aders.back()*P)/P.back();
+    dP.pop_back();
+    return dP;
   }
 
   void writeToFile(NurbsCurve const &c,std::string const &file_name, int level = 20)

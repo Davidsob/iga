@@ -24,7 +24,7 @@ namespace transform
   {
     // make quaternion for roatation
     auto C = dot(n0,n)/(norm(n0)*norm(n));
-    auto th = std::acos(C);
+    auto th = -std::acos(C);
     auto qv = cross(n0,n); qv = normalize(qv);
     Quaternion q(std::cos(0.5*th), std::sin(0.5*th)*qv);
 

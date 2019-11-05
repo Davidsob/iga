@@ -230,15 +230,15 @@ namespace spline_ops
 
     for (int k = 0; k <= solid.r; k++)
     {
+      auto c = wSpan-solid.r+k;
       for (int j = 0; j <= solid.q; j++)
       {
+        auto b = vSpan-solid.q+j;
         for (int i = 0; i <= solid.p; i++)
         {
-            auto a = uSpan-solid.p+i;
-            auto b = vSpan-solid.q+j;
-            auto c = wSpan-solid.r+k;
-            auto idx = solid.qid(a,b,c);
-            tmp[j][k] += Nu[i]*solid.Q[idx];
+          auto a = uSpan-solid.p+i;
+          auto idx = solid.qid(a,b,c);
+          tmp[j][k] += Nu[i]*solid.Q[idx];
         }
       }
     }
@@ -254,16 +254,44 @@ namespace spline_ops
   }
 
   std::vector<double>
-  SolidDerivative(double u, double v, double w, int order, int direction, BSplineSolid const &solid)
+  SolidPoint2(double u, double v, double w, BSplineSolid const &solid)
   {
     using namespace vector_ops;
 
     using matrix = typename BSplineSurface::matrix;
     using point  = typename matrix::value_type;
 
-    auto uspan = algo::FindSpan(u, solid.p, solid.uknot);
-    auto vspan = algo::FindSpan(v, solid.q, solid.vknot);
-    auto wspan = algo::FindSpan(w, solid.r, solid.wknot);
+    point S(solid.dim(),0.0);
+
+    int n = solid.uknot.size()-solid.p-2;
+    int m = solid.vknot.size()-solid.q-2;
+    int o = solid.wknot.size()-solid.r-2;
+
+    for (int k = 0; k <= o; k++)
+    {
+      auto Nw = algo::BasisFunction(w,k,solid.r,solid.wknot);
+      for (int j = 0; j <= m; j++)
+      {
+        auto Nv = algo::BasisFunction(v,j,solid.q,solid.vknot);
+        for (int i = 0; i <= n; i++)
+        {
+          auto idx = solid.qid(i,j,k);
+          auto Nu = algo::BasisFunction(u,i,solid.p,solid.uknot);
+          S += Nu*Nv*Nw*solid.Q[idx];
+        }
+      }
+    }
+
+    return S;
+  }
+
+  std::vector<double>
+  SolidDerivative(double u, double v, double w, int order, int direction, BSplineSolid const &solid)
+  {
+    using namespace vector_ops;
+
+    using matrix = typename BSplineSurface::matrix;
+    using point  = typename matrix::value_type;
 
     auto basis = [](double u, double i, double p, auto const &knot)
     {
@@ -276,25 +304,25 @@ namespace spline_ops
     };
 
     point dS(solid.dim(),0.0);
-    auto p = solid.p;
-    auto q = solid.q;
-    auto r = solid.r;
+    int n = solid.uknot.size()-solid.p-2;
+    int m = solid.vknot.size()-solid.q-2;
+    int o = solid.wknot.size()-solid.r-2;
 
     switch(direction)
     {
       case 1:
       {
-        for (int k = 0; k <= r; k++)
+        for (int k = 0; k <= o; k++)
         {
-          for (int j = 0; j <= q; j++)
+          auto Nw = basis(w,k,solid.r,solid.wknot);
+          for (int j = 0; j <= m; j++)
           {
-            for (int i = 0; i <= p; i++)
+            auto dNv = derivative(v,j,solid.q,solid.vknot);
+            for (int i = 0; i <= n; i++)
             {
-                auto a = uspan-p+i;
-                auto b = vspan-q+j;
-                auto c = wspan-r+k;
-                auto idx = solid.qid(a,b,c);
-                dS += basis(u,i,p,solid.uknot)*derivative(v,j,q,solid.vknot)*basis(w,k,r,solid.wknot)*solid.Q[idx];
+              auto idx = solid.qid(i,j,k);
+              auto Nu = basis(u,i,solid.p,solid.uknot);
+              dS += Nu*dNv*Nw*solid.Q[idx];
             }
           }
         }
@@ -303,17 +331,17 @@ namespace spline_ops
 
       case 2:
       {
-        for (int k = 0; k <= r; k++)
+        for (int k = 0; k <= o; k++)
         {
-          for (int j = 0; j <= q; j++)
+          auto dNw = derivative(w,k,solid.r,solid.vknot);
+          for (int j = 0; j <= m; j++)
           {
-            for (int i = 0; i <= p; i++)
+            auto Nv = basis(v,j,solid.q,solid.wknot);
+            for (int i = 0; i <= n; i++)
             {
-                auto a = uspan-p+i;
-                auto b = vspan-q+j;
-                auto c = wspan-r+k;
-                auto idx = solid.qid(a,b,c);
-                dS += basis(u,i,p,solid.uknot)*basis(v,j,q,solid.vknot)*derivative(w,k,r,solid.wknot)*solid.Q[idx];
+              auto idx = solid.qid(i,j,k);
+              auto Nu = basis(u,i,solid.p,solid.uknot);
+              dS += Nu*Nv*dNw*solid.Q[idx];
             }
           }
         }
@@ -322,17 +350,17 @@ namespace spline_ops
 
      default:
       {
-        for (int k = 0; k <= r; k++)
+        for (int k = 0; k <= o; k++)
         {
-          for (int j = 0; j <= q; j++)
+          auto Nw = basis(w,k,solid.r,solid.wknot);
+          for (int j = 0; j <= m; j++)
           {
-            for (int i = 0; i <= p; i++)
+            auto Nv = basis(v,j,solid.q,solid.vknot);
+            for (int i = 0; i <= n; i++)
             {
-                auto a = uspan-p+i;
-                auto b = vspan-q+j;
-                auto c = wspan-r+k;
-                auto idx = solid.qid(a,b,c);
-                dS += derivative(u,i,p,solid.uknot)*basis(v,j,q,solid.vknot)*basis(w,k,r,solid.wknot)*solid.Q[idx];
+              auto idx = solid.qid(i,j,k);
+              auto dNu = derivative(u,i,solid.p,solid.uknot);
+              dS += dNu*Nv*Nw*solid.Q[idx];
             }
           }
         }

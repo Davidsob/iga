@@ -10,7 +10,7 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 def plot(mesh,verts,cpts,**kwargs):
   cmap = kwargs.get('cmap',color_map.get_cmap('rainbow'))
   size = kwargs.get('size', (10,10))
-  transparancy = kwargs.get('alpha', 1)
+  transparancy = kwargs.get('alpha', 0.3)
   # get bounds
   def get_bounds(data,idx):
     mn,mx = 1e8,-1e8
@@ -32,6 +32,7 @@ def plot(mesh,verts,cpts,**kwargs):
     for i in el:
       vert.append(verts[i])
     poly_verts.append(vert)
+
   polys.append(Poly3DCollection(poly_verts,edgecolors=('black',),facecolors=(color,)))
 
   xmin,xmax = get_bounds(verts,0)
@@ -64,6 +65,9 @@ def plot(mesh,verts,cpts,**kwargs):
       dux,duy,duz = u
       dvx,dvy,dvz = v
       dwx,dwy,dwz = w
+      print '\nu = ', u
+      print 'v = ', v
+      print 'w = ', w
 
       ax.plot3D([x,x+dux],[y,y+duy],[z,z+duz],color='red')
       ax.plot3D([x,x+dvx],[y,y+dvy],[z,z+dvz],color='green')
