@@ -81,7 +81,7 @@ std::ostream & operator<<(std::ostream &os, NurbsSolid const &solid)
   os << "{p,q,r} = " << "{" << solid.p << "," << solid.q << "," << solid.r << "}" << std::endl;
   os << "uknot   = " << solid.uknot << std::endl;
   os << "vknot   = " << solid.vknot << std::endl;
-  os << "wknot   = " << solid.vknot << std::endl;
+  os << "wknot   = " << solid.wknot << std::endl;
   os << "weights = " << solid.weights << std::endl;
   os << "contol  = " << solid.Q << std::endl;
   return os;

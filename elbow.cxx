@@ -3,9 +3,12 @@
 #include "splines/Nurbs.h"
 #include "splines/utils/VectorOperations.h"
 #include "splines/utils/Transformations.h"
+#include "splines/utils/Converters.h"
 #include "splines/utils/Quaternion.h"
 
 #include "iga/ShapeFunctions.h"
+#include "iga/IntegrationPoints.h"
+#include "iga/ParametricMesh.h"
 
 #include <iostream>
 #include <vector>
@@ -16,6 +19,10 @@
 #include <type_traits>
 
 static std::string const python{"~/anaconda2/bin/python2.7 "};
+
+#include <Eigen/Dense>
+
+using namespace Eigen;
 
 void circle(NurbsCurve &curve, double radius=1.0)
 {
@@ -289,22 +296,37 @@ void shapeFunctionTest(Solid const &solid)
   u = 0.413; v = 0.555; w = 0.9;
   auto N = iga::ShapeFunctions(u,v,w,solid);
   std::cout << "P = " << spline_ops::SolidPoint(u,v,w,solid) << std::endl;
-  std::cout << "P* = " << dot(N,solid.Q) << std::endl;
+  auto Q = convert::to<MatrixXd>(solid.Q);
+  std::cout << "P* = " << N*Q << std::endl;
   std::cout << "dP = " << spline_ops::SolidDerivative(u,v,w,1,0,solid) << std::endl;
   std::cout << "dP = " << spline_ops::SolidDerivative(u,v,w,1,1,solid) << std::endl;
   std::cout << "dP = " << spline_ops::SolidDerivative(u,v,w,1,2,solid) << std::endl;
-  auto dN = iga::ShapeFunctionDerivatives(u,v,w,solid);
-  for (auto const &dni : dN)
-    std::cout << "dP* = " << dot(dni,solid.Q) << std::endl;
+  // auto dN = iga::ShapeFunctionDerivatives(u,v,w,solid);
+  // for (auto const &dni : dN)
+  //   std::cout << "dP* = " << dot(dni,solid.Q) << std::endl;
+  std::cout << "--- (" << __LINE__ << ") Exit: " << __PRETTY_FUNCTION__ << "\n" << std::endl;
+}
+
+void integrationPointTest()
+{
+  std::cout << "\n+++ (" << __LINE__ << ") Enter: " << __PRETTY_FUNCTION__ << std::endl;
+  std::cout << iga::integrationPoints(1,1,1) << std::endl;
   std::cout << "--- (" << __LINE__ << ") Exit: " << __PRETTY_FUNCTION__ << "\n" << std::endl;
 }
 
 int main(int argc, char **argv)
 {
   std::cout << "*** B-Spline Main ***" << std::endl;
-  NurbsSolid solid; elbow(0.3, 1.0, 2.0, solid);
-  shapeFunctionTest(solid);
-  // SolidTest(solid);
+  std::cout << iga::parametricShapeFunctionDerivatives(0,0.5, 0.5) << std::endl;
+
+  NurbsSolid solid; asolid(solid);
+  auto const pmesh = iga::parametricMesh(solid);
+  std::cout << pmesh << std::endl;
+  std::cout << "emesh = \n" << iga::parametricElementMesh(0,0,0,solid,pmesh) << std::endl;
+  // NurbsSolid solid; elbow(0.3, 1.0, 2.0, solid);
+  // shapeFunctionTest(solid);
+  // integrationPointTest();
+  SolidTest(solid);
   // 
   return 0;
 }

@@ -4,13 +4,18 @@
 #include "splines/BSpline.h"
 #include "splines/Nurbs.h"
 
+#include "splines/utils/Converters.h"
 #include "splines/utils/VectorOperations.h"
+
+#include <Eigen/Dense>
+
+using namespace Eigen;
 
 namespace iga
 {
-  std::vector<double> ShapeFunctions(double u, double v, double w, BSplineSolid const &solid)
+  RowVectorXd ShapeFunctions(double u, double v, double w, BSplineSolid const &solid)
   {
-    std::vector<double> shapeFun(solid.Q.size(),0.0);
+    RowVectorXd shape(VectorXd::Zero(solid.Q.size()));
 
     int n = solid.uknot.size()-solid.p-2;
     int m = solid.vknot.size()-solid.q-2;
@@ -26,14 +31,14 @@ namespace iga
         {
           auto idx = solid.qid(i,j,k);
           auto Nu = algo::BasisFunction(u,i,solid.p,solid.uknot);
-          shapeFun[idx] += Nu*Nv*Nw;
+          shape[idx] += Nu*Nv*Nw;
         }
       }
     }
-    return shapeFun;
+    return shape;
   }
 
-  std::vector<double> ShapeFunctions(double u, double v, double w, NurbsSolid const &solid)
+  RowVectorXd ShapeFunctions(double u, double v, double w, NurbsSolid const &solid)
   {
     auto gen = [&solid]()
     {
@@ -51,10 +56,11 @@ namespace iga
       return b;
     };
 
-    std::vector<double> shapeFun{ShapeFunctions(u,v,w,gen())};
-    std::vector<double> nurbsShapeFun((shapeFun*solid.weights)/dot(shapeFun,solid.weights));
+    auto const shape{ShapeFunctions(u,v,w,gen())};
+    auto const weights{convert::to<decltype(shape)>(solid.weights)};
+    auto nrbN((shape.array()*weights.array())/shape.dot(weights));
 
-    return  nurbsShapeFun;
+    return  nrbN;
   }
 
   std::vector<double> ShapeFunctionDerivative(double u, double v, double w, int order, int direction, BSplineSolid const &solid)
@@ -163,15 +169,16 @@ namespace iga
     };
 
     auto const b = gen();
-    std::vector<double> const shape{ShapeFunctions(u,v,w,b)};
+    // auto const shape{ShapeFunctions(u,v,w,b)};
     std::vector<double> const dshape{ShapeFunctionDerivative(u,v,w,order,direction,b)};
 
-    auto const wgt  = dot(shape,solid.weights);
-    auto const wgt2 = std::pow(wgt,2);
-    auto const dwgt = dot(dshape,solid.weights);
+    // auto const wgt  = dot(shape,solid.weights);
+    // auto const wgt2 = std::pow(wgt,2);
+    // auto const dwgt = dot(dshape,solid.weights);
 
-    std::vector<double> dN{(solid.weights*(wgt*dshape - wgt*dwgt*shape)/wgt2)};
-    return dN;
+    // std::vector<double> dN{(solid.weights*(wgt*dshape - wgt*dwgt*shape)/wgt2)};
+    // return dN;
+    return dshape;
   }
 
   std::vector<std::vector<double>> ShapeFunctionDerivatives(double u, double v, double w, NurbsSolid const &solid)
@@ -182,5 +189,58 @@ namespace iga
     dN.push_back(ShapeFunctionDerivative(u,v,w,1,2,solid));
 
     return dN;
+  }
+
+  Eigen::RowVectorXd parametricShapeFunction(double u, double v, double w)
+  {
+    Eigen::RowVectorXd N(8);
+    N << (1.0 - u)*(1.0 - v)*(1.0 - w),
+         (1.0 + u)*(1.0 - v)*(1.0 - w),
+         (1.0 + u)*(1.0 + v)*(1.0 - w),
+         (1.0 - u)*(1.0 + v)*(1.0 - w),
+         (1.0 - u)*(1.0 - v)*(1.0 + w),
+         (1.0 + u)*(1.0 - v)*(1.0 + w),
+         (1.0 + u)*(1.0 + v)*(1.0 + w),
+         (1.0 - u)*(1.0 + v)*(1.0 + w);
+
+    return 0.125*N;
+  }
+
+  Eigen::MatrixXd parametricShapeFunctionDerivatives(double u, double v, double w)
+  {
+    Eigen::RowVectorXd dN1(8), dN2(8), dN3(8);
+    dN1 << -(1.0 - v)*(1.0 - w),
+            (1.0 - v)*(1.0 - w),
+            (1.0 + v)*(1.0 - w),
+           -(1.0 + v)*(1.0 - w),
+           -(1.0 - v)*(1.0 + w),
+            (1.0 - v)*(1.0 + w),
+            (1.0 + v)*(1.0 + w),
+           -(1.0 + v)*(1.0 + w);
+
+    dN2 << -(1.0 - u)*(1.0 - w),
+           -(1.0 + u)*(1.0 - w),
+            (1.0 + u)*(1.0 - w),
+            (1.0 - u)*(1.0 - w),
+           -(1.0 - u)*(1.0 + w),
+           -(1.0 + u)*(1.0 + w),
+            (1.0 + u)*(1.0 + w),
+            (1.0 - u)*(1.0 + w);
+
+    dN3 << -(1.0 - u)*(1.0 - v),
+           -(1.0 + u)*(1.0 - v),
+           -(1.0 + u)*(1.0 + v),
+           -(1.0 - u)*(1.0 + v),
+            (1.0 - u)*(1.0 - v),
+            (1.0 + u)*(1.0 - v),
+            (1.0 + u)*(1.0 + v),
+            (1.0 - u)*(1.0 + v);
+
+    Eigen::MatrixXd dN(3,8);
+    dN.row(0) = dN1;
+    dN.row(1) = dN2;
+    dN.row(2) = dN3;
+    
+    return 0.125*dN;
   }
 }

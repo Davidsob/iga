@@ -7,10 +7,13 @@ add_subdirectory(iga) # get down in the weeds and build/link other dirs
 
 include_directories(
 ${CMAKE_SOURCE_DIR}
+${TPL_DIR}/eigen-3.3.5
 )
 
 link_directories(
 )
+
+message(STATUS "${TPL_DIR}/eigen-3.3.5")
 
 set(EXTERNAL_LIBS
 #"/usr/lib64/libblas.so.3"
