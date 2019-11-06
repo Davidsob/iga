@@ -60,6 +60,14 @@ namespace vector_ops
     std::transform(a.begin(), a.end(), b.begin(),a.begin(),minus);
   }
 
+  template<typename T>
+  std::vector<T> operator*(std::vector<T> const &x, std::vector<T> const &y)
+  {
+    std::vector<T> out(x);
+    std::transform(out.begin(), out.end(), y.begin(),out.begin(),std::multiplies<T>());
+    return out;
+  }
+
   template<typename T, typename U>
   std::vector<T> operator*(U const &c, std::vector<T> const &x)
   {
@@ -102,6 +110,27 @@ namespace vector_ops
     T zero(0);
     T sum = std::accumulate(c.begin(), c.end(), zero);
     return sum;
+  }
+
+  template<typename T>
+  std::vector<T> dot(std::vector<T> const &a, std::vector<std::vector<T>> const &b)
+  {
+    std::vector<std::vector<T>> c(a.size(), std::vector<T>(b[0].size(),0));
+    std::transform(a.begin(), a.end(), b.begin(),c.begin(),
+      [](T const &a, std::vector<T> const &b)
+      {
+        return a*b;
+      }
+    );
+
+    std::vector<T> zero(b[0].size(),0);
+    auto sum = std::accumulate(c.begin(), c.end(), zero,
+      [](auto const &a, auto const &b)
+      {
+        return a+b;
+      }
+    );
+    return sum ;
   }
 
   template<typename T>

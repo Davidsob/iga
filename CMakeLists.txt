@@ -1,16 +1,16 @@
 project(bsplines)
 cmake_minimum_required(VERSION 2.8)
 
-# include libraries
-include_directories(
-)
-
 # subdirectories
-#add_subdirectory(math)
+add_subdirectory(splines) # get down in the weeds and build/link other dirs
+add_subdirectory(iga) # get down in the weeds and build/link other dirs
+
+include_directories(
+${CMAKE_SOURCE_DIR}
+)
 
 link_directories(
 )
-
 
 set(EXTERNAL_LIBS
 #"/usr/lib64/libblas.so.3"
@@ -19,6 +19,9 @@ set(EXTERNAL_LIBS
 #grids
 #materials
 )
+
+
+
 
 # set the executable
 add_executable(Main.exe main.cxx)

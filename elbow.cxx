@@ -5,6 +5,8 @@
 #include "splines/utils/Transformations.h"
 #include "splines/utils/Quaternion.h"
 
+#include "iga/ShapeFunctions.h"
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -279,12 +281,30 @@ void SolidTest(Solid const &solid)
   std::system(std::string(python + "python/plot_surface.py " + file + " " + uvec_file + " " + vvec_file).c_str());
 }
 
+template<typename Solid>
+void shapeFunctionTest(Solid const &solid)
+{
+  std::cout << "\n+++ (" << __LINE__ << ") Enter: " << __PRETTY_FUNCTION__ << std::endl;
+  double u,v,w;
+  u = 0.413; v = 0.555; w = 0.9;
+  auto N = iga::ShapeFunctions(u,v,w,solid);
+  std::cout << "P = " << spline_ops::SolidPoint(u,v,w,solid) << std::endl;
+  std::cout << "P* = " << dot(N,solid.Q) << std::endl;
+  std::cout << "dP = " << spline_ops::SolidDerivative(u,v,w,1,0,solid) << std::endl;
+  std::cout << "dP = " << spline_ops::SolidDerivative(u,v,w,1,1,solid) << std::endl;
+  std::cout << "dP = " << spline_ops::SolidDerivative(u,v,w,1,2,solid) << std::endl;
+  auto dN = iga::ShapeFunctionDerivatives(u,v,w,solid);
+  for (auto const &dni : dN)
+    std::cout << "dP* = " << dot(dni,solid.Q) << std::endl;
+  std::cout << "--- (" << __LINE__ << ") Exit: " << __PRETTY_FUNCTION__ << "\n" << std::endl;
+}
+
 int main(int argc, char **argv)
 {
   std::cout << "*** B-Spline Main ***" << std::endl;
   NurbsSolid solid; elbow(0.3, 1.0, 2.0, solid);
-  SolidTest(solid);
+  shapeFunctionTest(solid);
+  // SolidTest(solid);
   // 
-  // BSplineSolid solid; bsolid(solid); SolidTest(solid);
   return 0;
 }

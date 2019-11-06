@@ -333,10 +333,10 @@ namespace spline_ops
       {
         for (int k = 0; k <= o; k++)
         {
-          auto dNw = derivative(w,k,solid.r,solid.vknot);
+          auto dNw = derivative(w,k,solid.r,solid.wknot);
           for (int j = 0; j <= m; j++)
           {
-            auto Nv = basis(v,j,solid.q,solid.wknot);
+            auto Nv = basis(v,j,solid.q,solid.vknot);
             for (int i = 0; i <= n; i++)
             {
               auto idx = solid.qid(i,j,k);
