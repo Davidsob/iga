@@ -57,7 +57,7 @@ struct BSplineSolid
   friend std::ostream operator<<(std::ostream const &os, BSplineSolid const &surf);
 };
 
-std::ostream & operator<<(std::ostream &os, BSplineCurve const &curve)
+inline std::ostream & operator<<(std::ostream &os, BSplineCurve const &curve)
 {
   using namespace vector_ops;
   os << "### BSpline-Curve ###" << std::endl;
@@ -67,7 +67,7 @@ std::ostream & operator<<(std::ostream &os, BSplineCurve const &curve)
   return os;
 }
 
-std::ostream & operator<<(std::ostream &os, BSplineSurface const &surf)
+inline std::ostream & operator<<(std::ostream &os, BSplineSurface const &surf)
 {
   using namespace vector_ops;
   os << "### BSpline-Surface ###" << std::endl;
@@ -78,7 +78,7 @@ std::ostream & operator<<(std::ostream &os, BSplineSurface const &surf)
   return os;
 }
 
-std::ostream & operator<<(std::ostream &os, BSplineSolid const &solid)
+inline std::ostream & operator<<(std::ostream &os, BSplineSolid const &solid)
 {
   using namespace vector_ops;
   os << "### BSpline-Solid ###" << std::endl;
@@ -93,7 +93,7 @@ std::ostream & operator<<(std::ostream &os, BSplineSolid const &solid)
 namespace spline_ops
 {
   std::vector<double>
-  CurvePoint(double u, BSplineCurve const &curve)
+  inline CurvePoint(double u, BSplineCurve const &curve)
   {
     using namespace vector_ops;
     using point = typename BSplineCurve::matrix::value_type;
@@ -111,7 +111,7 @@ namespace spline_ops
   }
 
   std::vector<std::vector<double>>
-  CurveDerivatives(double u, int order, BSplineCurve const &curve)
+  inline CurveDerivatives(double u, int order, BSplineCurve const &curve)
   {
     using namespace vector_ops;
     using point = typename BSplineCurve::matrix::value_type;
@@ -133,7 +133,7 @@ namespace spline_ops
   }
 
   std::vector<double>
-  SurfacePoint(double u, double v, BSplineSurface const &surf)
+  inline SurfacePoint(double u, double v, BSplineSurface const &surf)
   {
     using namespace vector_ops;
     using point = typename BSplineSurface::matrix::value_type;
@@ -165,7 +165,7 @@ namespace spline_ops
   }
 
   std::vector<std::vector<std::vector<double>>>
-  SurfaceDerivatives(double u, double v, int order, BSplineSurface const &surf)
+  inline SurfaceDerivatives(double u, double v, int order, BSplineSurface const &surf)
   {
     using namespace vector_ops;
     using point = typename BSplineSurface::matrix::value_type;
@@ -211,7 +211,7 @@ namespace spline_ops
   }
 
   std::vector<double>
-  SolidPoint(double u, double v, double w, BSplineSolid const &solid)
+  inline SolidPoint(double u, double v, double w, BSplineSolid const &solid)
   {
     using namespace vector_ops;
 
@@ -254,7 +254,7 @@ namespace spline_ops
   }
 
   std::vector<double>
-  SolidPoint2(double u, double v, double w, BSplineSolid const &solid)
+  inline SolidPoint2(double u, double v, double w, BSplineSolid const &solid)
   {
     using namespace vector_ops;
 
@@ -286,7 +286,7 @@ namespace spline_ops
   }
 
   std::vector<double>
-  SolidDerivative(double u, double v, double w, int order, int direction, BSplineSolid const &solid)
+  inline SolidDerivative(double u, double v, double w, int order, int direction, BSplineSolid const &solid)
   {
     using namespace vector_ops;
 
@@ -371,7 +371,7 @@ namespace spline_ops
     return dS;
   }
 
-  void writeToFile(BSplineCurve const &c,std::string const &file_name, int level = 20)
+  inline void writeToFile(BSplineCurve const &c,std::string const &file_name, int level = 20)
   {
     using namespace vector_ops;
 
@@ -414,7 +414,7 @@ namespace spline_ops
     file.close();
   }
 
-  void writeToFile(BSplineSurface const &s,std::string const &file_name, int ulevel = 10, int vlevel=10)
+  inline void writeToFile(BSplineSurface const &s,std::string const &file_name, int ulevel = 10, int vlevel=10)
   {
     using namespace vector_ops;
 
@@ -472,7 +472,7 @@ namespace spline_ops
     file.close();
   }
 
-  void writeVectorData(std::vector<std::vector<double>> const &p,
+  inline void writeVectorData(std::vector<std::vector<double>> const &p,
                        std::vector<std::vector<double>> const &v,
                        std::string const &file_name, bool normalize=true, double scale = 1.0)
   {
@@ -494,7 +494,7 @@ namespace spline_ops
     }
   }
 
-  void writeToFile(BSplineSolid const &s,std::string const &file_name, int ulevel = 10, int vlevel=10, int wlevel=10)
+  inline void writeToFile(BSplineSolid const &s,std::string const &file_name, int ulevel = 10, int vlevel=10, int wlevel=10)
   {
     using namespace vector_ops;
 

@@ -8,23 +8,16 @@ add_subdirectory(iga) # get down in the weeds and build/link other dirs
 include_directories(
 ${CMAKE_SOURCE_DIR}
 ${TPL_DIR}/eigen-3.3.5
+${CMAKE_SOURCE_DIR}/iga
 )
 
-link_directories(
-)
-
+message(STATUS "Include Directories:")
+message(STATUS "${CMAKE_SOURCE_DIR}")
 message(STATUS "${TPL_DIR}/eigen-3.3.5")
 
-set(EXTERNAL_LIBS
-#"/usr/lib64/libblas.so.3"
-#"/usr/lib64/liblapack.so.3"
-#utils
-#grids
-#materials
-)
+link_directories()
 
-
-
+set(EXTERNAL_LIBS iga)
 
 # set the executable
 add_executable(Main.exe main.cxx)

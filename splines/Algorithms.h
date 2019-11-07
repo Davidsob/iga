@@ -17,12 +17,12 @@ using namespace vector_ops;
 namespace algo
 {
   template<typename T>
-  bool equal(T const &a, T const &b)
+  inline bool equal(T const &a, T const &b)
   { 
     return std::abs(a-b) <= FLT_TOL;
   }
 
-  void normalizeKnot(std::vector<double> &knot)
+  inline void normalizeKnot(std::vector<double> &knot)
   {
     auto min = knot[0];
     auto max = knot.back();
@@ -41,7 +41,7 @@ namespace algo
    *               If the coordinate is not contained in the know vector then returns size_t(-1)
    *              }
    */
-  size_t FindSpan(double u, size_t p, std::vector<double> const &knot)
+  inline size_t FindSpan(double u, size_t p, std::vector<double> const &knot)
   {
     auto m = knot.size()-1;
     auto n = m-p-1; 
@@ -76,7 +76,7 @@ namespace algo
    * @return     { non-zero basis functions}
    */
   std::vector<double>
-  BasisFunctions(double u, int i, int p, std::vector<double> const &knot)
+  inline BasisFunctions(double u, int i, int p, std::vector<double> const &knot)
   {
     std::vector<double> N(p+1,0);
     if (i < p) return N;
@@ -104,7 +104,7 @@ namespace algo
   }
 
   std::vector<std::vector<double>>
-  BasisFunctionDerivatives(double u, int i, int p, std::vector<double> const &knot)
+  inline BasisFunctionDerivatives(double u, int i, int p, std::vector<double> const &knot)
   {
     using matrix = std::vector<std::vector<double>>;
 
@@ -191,7 +191,7 @@ namespace algo
   }
 
   double
-  BasisFunction(double u, int i, int p, std::vector<double> const &knot)
+  inline BasisFunction(double u, int i, int p, std::vector<double> const &knot)
   {
     int m = knot.size()-1;
     // compute the basis function Nip
@@ -244,7 +244,7 @@ namespace algo
   }
 
   std::vector<double> 
-  BasisFunctionDerivative(double u, int i, int p, std::vector<double> const &knot)
+  inline BasisFunctionDerivative(double u, int i, int p, std::vector<double> const &knot)
   {
     using matrix = std::vector<std::vector<double>>;
 
@@ -332,4 +332,3 @@ namespace algo
     return ders;
   }
 }
-

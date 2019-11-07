@@ -1,1 +1,1 @@
-message(STATUS "==> Processing splines directory")
+message(STATUS "Processing splines directory...")

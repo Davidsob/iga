@@ -127,6 +127,19 @@ Main.exe/fast:
 	$(MAKE) -f CMakeFiles/Main.exe.dir/build.make CMakeFiles/Main.exe.dir/build
 .PHONY : Main.exe/fast
 
+#=============================================================================
+# Target rules for targets named iga
+
+# Build rule for target.
+iga: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 iga
+.PHONY : iga
+
+# fast build rule for target.
+iga/fast:
+	$(MAKE) -f iga/CMakeFiles/iga.dir/build.make iga/CMakeFiles/iga.dir/build
+.PHONY : iga/fast
+
 elbow.o: elbow.cxx.o
 .PHONY : elbow.o
 
@@ -185,6 +198,7 @@ help:
 	@echo "... Main.exe"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
+	@echo "... iga"
 	@echo "... elbow.o"
 	@echo "... elbow.i"
 	@echo "... elbow.s"

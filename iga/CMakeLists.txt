@@ -1,15 +1,22 @@
-message(STATUS "==> Processing iga directory")
+set(library iga)
 
-set(HEADERS ShapeFunctions.h)
-set(SOURCES)
+file(GLOB HEADERS "*.h")
+file(GLOB SOURCES "*.cpp")
 
 include_directories(
 ${CMAKE_SOURCE_DIR}
+${TPL_DIR}/eigen-3.3.5
+${CMAKE_SOURCE_DIR}/bsplines/
+${CMAKE_SOURCE_DIR}/bsplines/utils
 )
 
-set(EXTERNAL_LIBRARIES)
+set(EXTERNAL_LIBS)
 
-# add_library(iga ${HEADERS} ${SOURCES})
-# target_link_libraries(iga ${EXTERNAL_LIBRARIES})
+message(STATUS "Processing iga directory...")
+message(STATUS "library named: ${library}")
+message(STATUS "library headers: ${HEADERS}")
+message(STATUS "library sources: ${SOURCES}")
 
-message(STATUS "yo, ${CMAKE_SOURCE_DIR}")
+add_library(${library} ${HEADERS} ${SOURCES})
+target_link_libraries(${library} ${EXTERNAL_LIBS})
+

@@ -51,7 +51,7 @@ struct NurbsSolid
   friend std::ostream operator<<(std::ostream const &os, NurbsSolid const &solid);
 };
 
-std::ostream & operator<<(std::ostream &os, NurbsCurve const &curve)
+inline std::ostream & operator<<(std::ostream &os, NurbsCurve const &curve)
 {
   using namespace vector_ops;
   os << "### NURB-Curve ###" << std::endl;
@@ -62,7 +62,7 @@ std::ostream & operator<<(std::ostream &os, NurbsCurve const &curve)
   return os;
 }
 
-std::ostream & operator<<(std::ostream &os, NurbsSurface const &surf)
+inline std::ostream & operator<<(std::ostream &os, NurbsSurface const &surf)
 {
   using namespace vector_ops;
   os << "### NURB-Surface ###" << std::endl;
@@ -74,7 +74,7 @@ std::ostream & operator<<(std::ostream &os, NurbsSurface const &surf)
   return os;
 }
 
-std::ostream & operator<<(std::ostream &os, NurbsSolid const &solid)
+inline std::ostream & operator<<(std::ostream &os, NurbsSolid const &solid)
 {
   using namespace vector_ops;
   os << "### NURB-Solid ###" << std::endl;
@@ -90,7 +90,7 @@ std::ostream & operator<<(std::ostream &os, NurbsSolid const &solid)
 namespace spline_ops
 {
   template<typename Nurb>
-  void weightedControlPoints(Nurb const &c, typename Nurb::matrix &Qw)
+  inline void weightedControlPoints(Nurb const &c, typename Nurb::matrix &Qw)
   {
     using namespace vector_ops;
     // create weighted control points
@@ -103,14 +103,14 @@ namespace spline_ops
     }
   }
 
-  void weightedBSpline(NurbsCurve const &c, BSplineCurve &b)
+  inline void weightedBSpline(NurbsCurve const &c, BSplineCurve &b)
   {
     b.p = c.p;
     b.knot = c.knot;
     weightedControlPoints(c,b.Q);
   }
 
-  void weightedBSpline(NurbsSurface const &s, BSplineSurface &b)
+  inline void weightedBSpline(NurbsSurface const &s, BSplineSurface &b)
   {
     b.p = s.p;
     b.q = s.q;
@@ -119,7 +119,7 @@ namespace spline_ops
     weightedControlPoints(s,b.Q);
   }
 
-  void weightedBSpline(NurbsSolid const &s, BSplineSolid &b)
+  inline void weightedBSpline(NurbsSolid const &s, BSplineSolid &b)
   {
     b.p = s.p;
     b.q = s.q;
@@ -131,7 +131,7 @@ namespace spline_ops
   }
 
   std::vector<double>
-  CurvePoint(double u, NurbsCurve const &curve)
+  inline CurvePoint(double u, NurbsCurve const &curve)
   {
     using namespace vector_ops;
     BSplineCurve b; weightedBSpline(curve, b);
@@ -152,7 +152,7 @@ namespace spline_ops
   }
 
   std::vector<std::vector<double>>
-  CurveDerivatives(double u, int order, NurbsCurve const &curve)
+  inline CurveDerivatives(double u, int order, NurbsCurve const &curve)
   {
     using namespace vector_ops;
     BSplineCurve b; weightedBSpline(curve, b);
@@ -176,7 +176,7 @@ namespace spline_ops
   }
 
   std::vector<double>
-  SurfacePoint(double u, double v, NurbsSurface const &surf)
+  inline SurfacePoint(double u, double v, NurbsSurface const &surf)
   {
     using namespace vector_ops;
     BSplineSurface b; weightedBSpline(surf,b);
@@ -186,7 +186,7 @@ namespace spline_ops
   }
 
   std::vector<double>
-  SolidPoint(double u, double v, double w, NurbsSolid const &solid)
+  inline SolidPoint(double u, double v, double w, NurbsSolid const &solid)
   {
     using namespace vector_ops;
     BSplineSolid b; weightedBSpline(solid,b);
@@ -196,7 +196,7 @@ namespace spline_ops
   }
 
   std::vector<double>
-  SolidPoint2(double u, double v, double w, NurbsSolid const &solid)
+  inline SolidPoint2(double u, double v, double w, NurbsSolid const &solid)
   {
     using namespace vector_ops;
     BSplineSolid b; weightedBSpline(solid,b);
@@ -206,7 +206,7 @@ namespace spline_ops
   }
 
   std::vector<std::vector<std::vector<double>>>
-  SurfaceDerivatives(double u, double v, int order, NurbsSurface const &surf)
+  inline SurfaceDerivatives(double u, double v, int order, NurbsSurface const &surf)
   {
     using namespace vector_ops;
     BSplineSurface b; weightedBSpline(surf,b);
@@ -248,7 +248,7 @@ namespace spline_ops
   }
 
   std::vector<double>
-  SolidDerivative(double u, double v, double w, int order, int direction, NurbsSolid const &solid)
+  inline SolidDerivative(double u, double v, double w, int order, int direction, NurbsSolid const &solid)
   {
     using namespace vector_ops;
     BSplineSolid b; weightedBSpline(solid,b);
@@ -259,7 +259,7 @@ namespace spline_ops
     return dP;
   }
 
-  void writeToFile(NurbsCurve const &c,std::string const &file_name, int level = 20)
+  inline void writeToFile(NurbsCurve const &c,std::string const &file_name, int level = 20)
   {
     using namespace vector_ops;
 
@@ -302,7 +302,7 @@ namespace spline_ops
     file.close();
   }
 
-  void writeToFile(NurbsSurface const &s,std::string const &file_name, int ulevel = 10, int vlevel=10)
+  inline void writeToFile(NurbsSurface const &s,std::string const &file_name, int ulevel = 10, int vlevel=10)
   {
     using namespace vector_ops;
 
@@ -360,7 +360,7 @@ namespace spline_ops
     file.close();
   }
 
-  void writeToFile(NurbsSolid const &s,std::string const &file_name, int ulevel = 10, int vlevel=10, int wlevel=10)
+  inline void writeToFile(NurbsSolid const &s,std::string const &file_name, int ulevel = 10, int vlevel=10, int wlevel=10)
   {
     using namespace vector_ops;
 

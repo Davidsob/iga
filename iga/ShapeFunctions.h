@@ -13,7 +13,7 @@ using namespace Eigen;
 
 namespace iga
 {
-  RowVectorXd ShapeFunctions(double u, double v, double w, BSplineSolid const &solid)
+  inline RowVectorXd ShapeFunctions(double u, double v, double w, BSplineSolid const &solid)
   {
     RowVectorXd shape(VectorXd::Zero(solid.Q.size()));
 
@@ -38,7 +38,7 @@ namespace iga
     return shape;
   }
 
-  RowVectorXd ShapeFunctions(double u, double v, double w, NurbsSolid const &solid)
+  inline RowVectorXd ShapeFunctions(double u, double v, double w, NurbsSolid const &solid)
   {
     auto gen = [&solid]()
     {
@@ -63,9 +63,9 @@ namespace iga
     return  nrbN;
   }
 
-  std::vector<double> ShapeFunctionDerivative(double u, double v, double w, int order, int direction, BSplineSolid const &solid)
+  inline RowVectorXd ShapeFunctionDerivative(double u, double v, double w, int order, int direction, BSplineSolid const &solid)
   {
-    std::vector<double> dShape(solid.Q.size(),0.0);
+    RowVectorXd dshape(VectorXd::Zero(solid.Q.size()));
 
     using namespace vector_ops;
 
@@ -101,7 +101,7 @@ namespace iga
             {
               auto idx = solid.qid(i,j,k);
               auto Nu = basis(u,i,solid.p,solid.uknot);
-              dShape[idx] += Nu*dNv*Nw;
+              dshape[idx] += Nu*dNv*Nw;
             }
           }
         }
@@ -120,7 +120,7 @@ namespace iga
             {
               auto idx = solid.qid(i,j,k);
               auto Nu = basis(u,i,solid.p,solid.uknot);
-              dShape[idx] += Nu*Nv*dNw;
+              dshape[idx] += Nu*Nv*dNw;
             }
           }
         }
@@ -139,7 +139,7 @@ namespace iga
             {
               auto idx = solid.qid(i,j,k);
               auto dNu = derivative(u,i,solid.p,solid.uknot);
-              dShape[idx] += dNu*Nv*Nw;
+              dshape[idx] += dNu*Nv*Nw;
             }
           }
         }
@@ -147,10 +147,10 @@ namespace iga
       }
     }
 
-    return dShape;
+    return dshape;
   }
 
-  std::vector<double> ShapeFunctionDerivative(double u, double v, double w, int order, int direction, NurbsSolid const &solid)
+  inline RowVectorXd ShapeFunctionDerivative(double u, double v, double w, int order, int direction, NurbsSolid const &solid)
   {
     auto gen = [&solid]()
     {
@@ -169,29 +169,27 @@ namespace iga
     };
 
     auto const b = gen();
-    // auto const shape{ShapeFunctions(u,v,w,b)};
-    std::vector<double> const dshape{ShapeFunctionDerivative(u,v,w,order,direction,b)};
+    auto const shape{ShapeFunctions(u,v,w,b)};
+    auto const dshape{ShapeFunctionDerivative(u,v,w,order,direction,b)};
 
-    // auto const wgt  = dot(shape,solid.weights);
-    // auto const wgt2 = std::pow(wgt,2);
-    // auto const dwgt = dot(dshape,solid.weights);
+    auto const weights{convert::to<RowVectorXd>(solid.weights)};
+    auto const wgt  = shape.dot(weights);
+    auto const wgt2 = std::pow(wgt,2);
+    auto const dwgt = dshape.dot(weights);
 
-    // std::vector<double> dN{(solid.weights*(wgt*dshape - wgt*dwgt*shape)/wgt2)};
-    // return dN;
-    return dshape;
+    return (weights.array()*(wgt*dshape.array() - wgt*dwgt*shape.array())/wgt2);
   }
 
-  std::vector<std::vector<double>> ShapeFunctionDerivatives(double u, double v, double w, NurbsSolid const &solid)
+  inline MatrixXd ShapeFunctionDerivatives(double u, double v, double w, NurbsSolid const &solid)
   {
-    std::vector<std::vector<double>> dN;
-    dN.push_back(ShapeFunctionDerivative(u,v,w,1,0,solid));
-    dN.push_back(ShapeFunctionDerivative(u,v,w,1,1,solid));
-    dN.push_back(ShapeFunctionDerivative(u,v,w,1,2,solid));
-
+    MatrixXd dN(3,solid.Q.size());
+    dN.row(0) = ShapeFunctionDerivative(u,v,w,1,0,solid);
+    dN.row(1) = ShapeFunctionDerivative(u,v,w,1,1,solid);
+    dN.row(2) = ShapeFunctionDerivative(u,v,w,1,2,solid);
     return dN;
   }
 
-  Eigen::RowVectorXd parametricShapeFunction(double u, double v, double w)
+  inline Eigen::RowVectorXd parametricShapeFunction(double u, double v, double w)
   {
     Eigen::RowVectorXd N(8);
     N << (1.0 - u)*(1.0 - v)*(1.0 - w),
@@ -206,7 +204,7 @@ namespace iga
     return 0.125*N;
   }
 
-  Eigen::MatrixXd parametricShapeFunctionDerivatives(double u, double v, double w)
+  inline Eigen::MatrixXd parametricShapeFunctionDerivatives(double u, double v, double w)
   {
     Eigen::RowVectorXd dN1(8), dN2(8), dN3(8);
     dN1 << -(1.0 - v)*(1.0 - w),

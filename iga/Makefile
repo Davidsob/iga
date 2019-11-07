@@ -101,6 +101,44 @@ depend:
 	cd /u/xeons08/people/bdavidson/programming/cpp/bsplines && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
+# Convenience name for target.
+iga/CMakeFiles/iga.dir/rule:
+	cd /u/xeons08/people/bdavidson/programming/cpp/bsplines && $(MAKE) -f CMakeFiles/Makefile2 iga/CMakeFiles/iga.dir/rule
+.PHONY : iga/CMakeFiles/iga.dir/rule
+
+# Convenience name for target.
+iga: iga/CMakeFiles/iga.dir/rule
+.PHONY : iga
+
+# fast build rule for target.
+iga/fast:
+	cd /u/xeons08/people/bdavidson/programming/cpp/bsplines && $(MAKE) -f iga/CMakeFiles/iga.dir/build.make iga/CMakeFiles/iga.dir/build
+.PHONY : iga/fast
+
+SolidElementMapper.o: SolidElementMapper.cpp.o
+.PHONY : SolidElementMapper.o
+
+# target to build an object file
+SolidElementMapper.cpp.o:
+	cd /u/xeons08/people/bdavidson/programming/cpp/bsplines && $(MAKE) -f iga/CMakeFiles/iga.dir/build.make iga/CMakeFiles/iga.dir/SolidElementMapper.cpp.o
+.PHONY : SolidElementMapper.cpp.o
+
+SolidElementMapper.i: SolidElementMapper.cpp.i
+.PHONY : SolidElementMapper.i
+
+# target to preprocess a source file
+SolidElementMapper.cpp.i:
+	cd /u/xeons08/people/bdavidson/programming/cpp/bsplines && $(MAKE) -f iga/CMakeFiles/iga.dir/build.make iga/CMakeFiles/iga.dir/SolidElementMapper.cpp.i
+.PHONY : SolidElementMapper.cpp.i
+
+SolidElementMapper.s: SolidElementMapper.cpp.s
+.PHONY : SolidElementMapper.s
+
+# target to generate assembly for a file
+SolidElementMapper.cpp.s:
+	cd /u/xeons08/people/bdavidson/programming/cpp/bsplines && $(MAKE) -f iga/CMakeFiles/iga.dir/build.make iga/CMakeFiles/iga.dir/SolidElementMapper.cpp.s
+.PHONY : SolidElementMapper.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -108,7 +146,11 @@ help:
 	@echo "... clean"
 	@echo "... depend"
 	@echo "... edit_cache"
+	@echo "... iga"
 	@echo "... rebuild_cache"
+	@echo "... SolidElementMapper.o"
+	@echo "... SolidElementMapper.i"
+	@echo "... SolidElementMapper.s"
 .PHONY : help
 
 

@@ -4,15 +4,15 @@
 
 #include <vector>
 
+#include "ShapeFunctions.h"
 #include "splines/utils/Converters.h"
 
 namespace iga
 {
+
   template<typename Solid>
   Eigen::MatrixXd parametricMesh(Solid const &solid)
   {
-    std::cout << solid << std::endl;
-    
     auto const &uknot = solid.uknot;
     auto const &vknot = solid.vknot;
     auto const &wknot = solid.wknot;

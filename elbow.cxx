@@ -8,7 +8,7 @@
 
 #include "iga/ShapeFunctions.h"
 #include "iga/IntegrationPoints.h"
-#include "iga/ParametricMesh.h"
+#include "iga/SolidElementMapper.h"
 
 #include <iostream>
 #include <vector>
@@ -301,32 +301,44 @@ void shapeFunctionTest(Solid const &solid)
   std::cout << "dP = " << spline_ops::SolidDerivative(u,v,w,1,0,solid) << std::endl;
   std::cout << "dP = " << spline_ops::SolidDerivative(u,v,w,1,1,solid) << std::endl;
   std::cout << "dP = " << spline_ops::SolidDerivative(u,v,w,1,2,solid) << std::endl;
-  // auto dN = iga::ShapeFunctionDerivatives(u,v,w,solid);
-  // for (auto const &dni : dN)
-  //   std::cout << "dP* = " << dot(dni,solid.Q) << std::endl;
+  auto dN = iga::ShapeFunctionDerivatives(u,v,w,solid);
+  std::cout << dN*Q << std::endl;
   std::cout << "--- (" << __LINE__ << ") Exit: " << __PRETTY_FUNCTION__ << "\n" << std::endl;
 }
+
+struct Mapper {};
 
 void integrationPointTest()
 {
   std::cout << "\n+++ (" << __LINE__ << ") Enter: " << __PRETTY_FUNCTION__ << std::endl;
-  std::cout << iga::integrationPoints(1,1,1) << std::endl;
+  Mapper map;
+  std::cout << iga::integrationPoints(map,1,1,1) << std::endl;
+  std::cout << "--- (" << __LINE__ << ") Exit: " << __PRETTY_FUNCTION__ << "\n" << std::endl;
+}
+
+template<typename Solid>
+void mapperTest(Solid const &solid)
+{
+  std::cout << "\n+++ (" << __LINE__ << ") Enter: " << __PRETTY_FUNCTION__ << std::endl;
+  SolidElementMapper mapper(solid);
+  mapper.updateElementMesh(0);
+
+  auto ip = iga::integrationPoints(mapper,solid.p,solid.q,solid.r);
+  std::cout << ip << std::endl;
+  for (auto &p : ip) p.update();
+  std::cout << ip << std::endl;
   std::cout << "--- (" << __LINE__ << ") Exit: " << __PRETTY_FUNCTION__ << "\n" << std::endl;
 }
 
 int main(int argc, char **argv)
 {
   std::cout << "*** B-Spline Main ***" << std::endl;
-  std::cout << iga::parametricShapeFunctionDerivatives(0,0.5, 0.5) << std::endl;
-
   NurbsSolid solid; asolid(solid);
-  auto const pmesh = iga::parametricMesh(solid);
-  std::cout << pmesh << std::endl;
-  std::cout << "emesh = \n" << iga::parametricElementMesh(0,0,0,solid,pmesh) << std::endl;
-  // NurbsSolid solid; elbow(0.3, 1.0, 2.0, solid);
+  mapperTest(solid);
   // shapeFunctionTest(solid);
+  // NurbsSolid solid; elbow(0.3, 1.0, 2.0, solid);
   // integrationPointTest();
-  SolidTest(solid);
+  // SolidTest(solid);
   // 
   return 0;
 }
