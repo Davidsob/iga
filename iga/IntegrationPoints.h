@@ -11,16 +11,16 @@ class IntegrationPoint
 {
 public:
   explicit IntegrationPoint(ElementMapper const &mapper)
-    : _mapper(mapper), id(-1) {}
+    : mapper(mapper), id(-1) {}
 
   ~IntegrationPoint() = default;
 
   void update()
   {
-    _mapper.mapIntegrationPoint(*this);
+    mapper.mapIntegrationPoint(*this);
   }
 
-  ElementMapper const &_mapper;
+  ElementMapper const &mapper;
   int id;
   std::array<double,3> gauss, para; // gauss integration points,parametric integration points
   double jdet,weight; // element jacobian determinant and weight for mapping

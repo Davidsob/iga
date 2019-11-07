@@ -8,7 +8,9 @@
 
 #include "iga/ShapeFunctions.h"
 #include "iga/IntegrationPoints.h"
+#include "iga/IgaIO.h"
 #include "iga/SolidElementMapper.h"
+#include "iga/Quadrature.h"
 
 #include <iostream>
 #include <vector>
@@ -21,6 +23,8 @@
 static std::string const python{"~/anaconda2/bin/python2.7 "};
 
 #include <Eigen/Dense>
+#include <Eigen/Sparse>
+#include <Eigen/SparseLU>
 
 using namespace Eigen;
 
@@ -330,15 +334,134 @@ void mapperTest(Solid const &solid)
   std::cout << "--- (" << __LINE__ << ") Exit: " << __PRETTY_FUNCTION__ << "\n" << std::endl;
 }
 
+struct Plane
+{
+  std::vector<double> x;
+  std::vector<double> n;
+};
+
+template<typename Shape>
+std::vector<size_t> pointsOnPlane(Shape const &shape, Plane const &plane)
+{
+  auto on_plane = [&plane](auto const &p)
+  {
+    return algo::equal(dot(plane.n,p-plane.x),0.0);
+  };
+
+  std::vector<size_t> found;
+  for (size_t i = 0; i < shape.Q.size(); i++)
+  {
+    if (on_plane(shape.Q[i])) found.push_back(i);
+  }
+
+  return found;
+}
+
+template<typename Solid>
+void heatCondution(Solid const &solid)
+{
+  std::cout << "\n+++ (" << __LINE__ << ") Enter: " << __PRETTY_FUNCTION__ << std::endl;
+// #################################
+// Weak forms 
+// #################################
+  auto stiffness = [](auto const &p)->Eigen::MatrixXd
+  {
+    auto const grad = p.mapper.grad(p.para);
+    auto kel = grad.transpose()*grad;
+    return kel;
+  };
+
+  SolidElementMapper mapper(solid);
+  auto ip = iga::integrationPoints(mapper,solid.p,solid.q,solid.r);
+  // initialize for first element
+  mapper.updateElementMesh(0);
+  for (auto &p : ip) p.update();
+
+  // Compute stiffness
+  size_t dof = solid.Q.size();
+  Eigen::MatrixXd K(Eigen::MatrixXd::Zero(dof,dof));
+
+  quadrature::gauss(ip,K,stiffness);
+
+// #################################
+// Boundary conditions
+// #################################
+  // compute constraints
+  double Thot,Tcold;
+  Thot = 500; Tcold = 300;
+  Plane xy;
+  xy.x = {0,0,0};
+  xy.n = {-1,0,0};
+  // x- plane
+  auto bc_hot = pointsOnPlane(solid,xy);
+  // x+ plane
+  xy.x = {1,0,0};
+  xy.n = {1,0,0};
+  auto bc_cold = pointsOnPlane(solid,xy);
+
+  auto C = bc_hot.size() + bc_cold.size();
+  Eigen::MatrixXd Kc(C,dof); Kc.setZero();
+  Eigen::VectorXd Rc(C); Rc.setZero();
+
+  size_t k = 0;
+  for (auto idx : bc_hot)
+  {
+    Kc(k,idx) = 1;
+    Rc[k] = Thot;
+    k++;
+  }
+
+  for (auto idx : bc_cold)
+  {
+    Kc(k,idx) = 1;
+    Rc[k] = Tcold;
+    k++;
+  }
+
+// #################################
+// compose matrix 
+// #################################
+  Eigen::MatrixXd A(dof+C,dof+C); A.setZero();
+  Eigen::VectorXd F(dof+C); F.setZero();
+
+  F.tail(C) = Rc;
+  A.block(0,0,dof,dof) = K;
+  A.block(C,0,C,dof) = Kc;
+  A.block(0,dof,dof,C) = Kc.transpose();
+
+// #################################
+// solve 
+// #################################
+  Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
+  solver.compute(A.sparseView());
+  if(solver.info()!=Eigen::ComputationInfo::Success)
+  {
+    std::cout << "decomposition failed" << std::endl;
+    return;
+  }
+
+  Eigen::VectorXd const T = solver.solve(F).head(dof);
+  if(solver.info()!=Eigen::ComputationInfo::Success)
+  {
+    std::cout << "Solve failed" << std::endl;
+    return;
+  }
+
+// #################################
+// write solution 
+// #################################
+  std::string file("output/nurbs_heat_conduction.txt");
+  IO::writeSolutionToFile(solid,convert::to<std::vector<double>>(T),file,10,1,10);
+  // std::system(std::string(python + "python/plot_surface.py " + file + " ").c_str());
+  std::system(std::string(python + "python/plot_surface.py " + file).c_str());
+  std::cout << "--- (" << __LINE__ << ") Exit: " << __PRETTY_FUNCTION__ << "\n" << std::endl;
+}
+
 int main(int argc, char **argv)
 {
   std::cout << "*** B-Spline Main ***" << std::endl;
   NurbsSolid solid; asolid(solid);
-  mapperTest(solid);
-  // shapeFunctionTest(solid);
-  // NurbsSolid solid; elbow(0.3, 1.0, 2.0, solid);
-  // integrationPointTest();
+  heatCondution(solid);
   // SolidTest(solid);
-  // 
   return 0;
 }

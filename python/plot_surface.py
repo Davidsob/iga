@@ -10,6 +10,7 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 def plot(mesh,verts,cpts,**kwargs):
   cmap = kwargs.get('cmap',color_map.get_cmap('rainbow'))
   size = kwargs.get('size', (10,10))
+  has_field = kwargs.get('has_field',False)
   transparancy = kwargs.get('alpha', 0.3)
   # get bounds
   def get_bounds(data,idx):
@@ -25,15 +26,27 @@ def plot(mesh,verts,cpts,**kwargs):
   polys = []
   poly_verts = []
   k = 0
-  color = [0,0,0,transparancy]
-  color[:3] = cmap(0.5)[:3]
+  field = []
   for el in mesh:
     vert = []
+    tmp = []
     for i in el:
-      vert.append(verts[i])
+      vert.append(verts[i][:3])
+      if has_field:
+        tmp.append(verts[i][3])
     poly_verts.append(vert)
+    field.append(np.mean(tmp))
 
-  polys.append(Poly3DCollection(poly_verts,edgecolors=('black',),facecolors=(color,)))
+  if has_field == False:
+    color = [0,0,0,transparancy]
+    color[:3] = cmap(0.5)[:3]
+    polys.append(Poly3DCollection(poly_verts,edgecolors=('black',),facecolors=(color,)))
+  else:
+    # scale field
+    a,b = min(field),max(field)
+    colors = map(lambda c: cmap((c-a)/(b-a)), field)
+    polys.append(Poly3DCollection(poly_verts,edgecolors=('black',),facecolors=colors))
+
 
   xmin,xmax = get_bounds(verts,0)
   ymin,ymax = get_bounds(verts,1)
@@ -52,7 +65,8 @@ def plot(mesh,verts,cpts,**kwargs):
     ax.plot([xb], [yb], [zb], 'w')
 
   for poly in polys:
-    ax.add_collection3d(poly,zs='z')
+    ax.add_collection3d(poly)
+    # ax.add_collection3d(poly,zs='z')
 
   vec_data = kwargs.get("vector_data", None)
   if vec_data:
@@ -65,9 +79,6 @@ def plot(mesh,verts,cpts,**kwargs):
       dux,duy,duz = u
       dvx,dvy,dvz = v
       dwx,dwy,dwz = w
-      print '\nu = ', u
-      print 'v = ', v
-      print 'w = ', w
 
       ax.plot3D([x,x+dux],[y,y+duy],[z,z+duz],color='red')
       ax.plot3D([x,x+dvx],[y,y+dvy],[z,z+dvz],color='green')
@@ -122,9 +133,10 @@ def open_vector_data(file):
 if __name__ == "__main__":
   if len(sys.argv) > 1:
     m,x,cpt = open_file(sys.argv[1])
+    has_field = (len(x[0]) > 3)
     if len(sys.argv) == 4:
       p,u = open_vector_data(sys.argv[2])
       p,v = open_vector_data(sys.argv[3])
-      plot(m,x,cpt,vector_data=(p,u,v))
-    else: 
-      plot(m,x,cpt)
+      plot(m,x,cpt,vector_data=(p,u,v),has_field=has_field)
+    else:
+      plot(m,x,cpt,has_field=has_field)

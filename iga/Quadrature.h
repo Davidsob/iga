@@ -2,21 +2,28 @@
 
 #include <Eigen/Dense>
 
+#include <type_traits>
+
 namespace quadrature
 {
 
   template<typename T>
-  T zero();
+  inline T zero(T const &);
 
   template<>
-  Eigen::MatrixXd zero() { return Eigen::MatrixXd::Zero(); }
+  inline Eigen::MatrixXd zero(Eigen::MatrixXd const &mat) { return Eigen::MatrixXd::Zero(mat.rows(),mat.cols()); }
+
+  template<>
+  inline Eigen::VectorXd zero(Eigen::VectorXd const &vec) { return Eigen::VectorXd::Zero(vec.size()); }
 
   template<typename IntegrationPoint, typename Output, typename Operator>
-  void gauss(std::vector<IntegrationPoint> const &ips, Output &out, Operator && op)
+  inline void gauss(std::vector<IntegrationPoint> const &ips, Output &out, Operator && op)
   {
-    out = zero<Output>();
+    Output sum = zero(out);
     for (auto const &ip : ips)
-      sum += op(ip)*ip.w*ip.jac;
-    return sum;
+    {
+      sum += ip.weight*ip.jdet*op(ip);
+    }
+    out += sum;
   }
 }
