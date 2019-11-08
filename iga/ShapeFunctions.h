@@ -15,26 +15,31 @@ namespace iga
 {
   inline RowVectorXd ShapeFunctions(double u, double v, double w, BSplineSolid const &solid)
   {
-    RowVectorXd shape(VectorXd::Zero(solid.Q.size()));
+    RowVectorXd shape(solid.Q.size()); shape.setZero();
 
-    int n = solid.uknot.size()-solid.p-2;
-    int m = solid.vknot.size()-solid.q-2;
-    int o = solid.wknot.size()-solid.r-2;
+    auto const uSpan = algo::FindSpan(u, solid.p, solid.uknot);
+    auto const vSpan = algo::FindSpan(v, solid.q, solid.vknot);
+    auto const wSpan = algo::FindSpan(w, solid.r, solid.wknot);
 
-    for (int k = 0; k <= o; k++)
+    auto const Nu = algo::BasisFunctions(u,uSpan,solid.p, solid.uknot);
+    auto const Nv = algo::BasisFunctions(v,vSpan,solid.q, solid.vknot);
+    auto const Nw = algo::BasisFunctions(w,wSpan,solid.r, solid.wknot);
+
+    for (int k = 0; k <= solid.r; k++)
     {
-      auto Nw = algo::BasisFunction(w,k,solid.r,solid.wknot);
-      for (int j = 0; j <= m; j++)
+      auto c = k+wSpan-solid.r;
+      for (int j = 0; j <= solid.q; j++)
       {
-        auto Nv = algo::BasisFunction(v,j,solid.q,solid.vknot);
-        for (int i = 0; i <= n; i++)
+        auto b = j+vSpan-solid.q;
+        for (int i = 0; i <= solid.p; i++)
         {
-          auto idx = solid.qid(i,j,k);
-          auto Nu = algo::BasisFunction(u,i,solid.p,solid.uknot);
-          shape[idx] += Nu*Nv*Nw;
+          auto a = i+uSpan-solid.p;
+          auto idx = solid.qid(a,b,c);
+          shape[idx] += Nu[i]*Nv[j]*Nw[k];
         }
       }
     }
+
     return shape;
   }
 
@@ -63,94 +68,111 @@ namespace iga
     return  nrbN;
   }
 
-  inline RowVectorXd ShapeFunctionDerivative(double u, double v, double w, int order, int direction, BSplineSolid const &solid)
+  Eigen::RowVectorXd
+  inline _derivativeWrtU(double u, double v, double w, int order, BSplineSolid const &solid)
   {
-    RowVectorXd dshape(VectorXd::Zero(solid.Q.size()));
+    auto const uSpan = algo::FindSpan(u, solid.p, solid.uknot);
+    auto const vSpan = algo::FindSpan(v, solid.q, solid.vknot);
+    auto const wSpan = algo::FindSpan(w, solid.r, solid.wknot);
 
-    using namespace vector_ops;
+    auto const dNu = algo::BasisFunctionDerivatives(u,uSpan,solid.p,solid.uknot);
+    auto const Nv  = algo::BasisFunctions(v,vSpan,solid.q,solid.vknot);
+    auto const Nw  = algo::BasisFunctions(w,wSpan,solid.r,solid.wknot);
 
-    using matrix = typename BSplineSurface::matrix;
-    using point  = typename matrix::value_type;
+    Eigen::RowVectorXd dNdU(solid.Q.size()); dNdU.setZero();
 
-    auto basis = [](double u, double i, double p, auto const &knot)
+    for (int k = 0; k <= solid.r; k++)
     {
-      return algo::BasisFunction(u,i,p,knot);
-    };
-
-    auto derivative = [order](double u, double i, double p, auto const &knot)
-    {
-      return algo::BasisFunctionDerivative(u,i,p,knot)[order];
-    };
-
-    point dS(solid.dim(),0.0);
-    int n = solid.uknot.size()-solid.p-2;
-    int m = solid.vknot.size()-solid.q-2;
-    int o = solid.wknot.size()-solid.r-2;
-
-    switch(direction)
-    {
-      case 1:
+      auto c = k+wSpan-solid.r;
+      for (int j = 0; j <= solid.q; j++)
       {
-        for (int k = 0; k <= o; k++)
+        auto b = j+vSpan-solid.q;
+        for (int i = 0; i <= solid.p; i++)
         {
-          auto Nw = basis(w,k,solid.r,solid.wknot);
-          for (int j = 0; j <= m; j++)
-          {
-            auto dNv = derivative(v,j,solid.q,solid.vknot);
-            for (int i = 0; i <= n; i++)
-            {
-              auto idx = solid.qid(i,j,k);
-              auto Nu = basis(u,i,solid.p,solid.uknot);
-              dshape[idx] += Nu*dNv*Nw;
-            }
-          }
+          auto a = i+uSpan-solid.p;
+          auto idx = solid.qid(a,b,c);
+          dNdU[idx] += dNu[order][i]*Nv[j]*Nw[k];
         }
-        break;
-      }
-
-      case 2:
-      {
-        for (int k = 0; k <= o; k++)
-        {
-          auto dNw = derivative(w,k,solid.r,solid.wknot);
-          for (int j = 0; j <= m; j++)
-          {
-            auto Nv = basis(v,j,solid.q,solid.vknot);
-            for (int i = 0; i <= n; i++)
-            {
-              auto idx = solid.qid(i,j,k);
-              auto Nu = basis(u,i,solid.p,solid.uknot);
-              dshape[idx] += Nu*Nv*dNw;
-            }
-          }
-        }
-        break;
-      }
-
-     default:
-      {
-        for (int k = 0; k <= o; k++)
-        {
-          auto Nw = basis(w,k,solid.r,solid.wknot);
-          for (int j = 0; j <= m; j++)
-          {
-            auto Nv = basis(v,j,solid.q,solid.vknot);
-            for (int i = 0; i <= n; i++)
-            {
-              auto idx = solid.qid(i,j,k);
-              auto dNu = derivative(u,i,solid.p,solid.uknot);
-              dshape[idx] += dNu*Nv*Nw;
-            }
-          }
-        }
-        break;
       }
     }
 
-    return dshape;
+    return dNdU;
   }
 
-  inline RowVectorXd ShapeFunctionDerivative(double u, double v, double w, int order, int direction, NurbsSolid const &solid)
+  Eigen::RowVectorXd
+  inline _derivativeWrtV(double u, double v, double w, int order, BSplineSolid const &solid)
+  {
+    auto const uSpan = algo::FindSpan(u, solid.p, solid.uknot);
+    auto const vSpan = algo::FindSpan(v, solid.q, solid.vknot);
+    auto const wSpan = algo::FindSpan(w, solid.r, solid.wknot);
+
+    auto const Nu  = algo::BasisFunctions(u,uSpan,solid.p,solid.uknot);
+    auto const dNv = algo::BasisFunctionDerivatives(v,vSpan,solid.q,solid.vknot);
+    auto const Nw  = algo::BasisFunctions(w,wSpan,solid.r,solid.wknot);
+
+    Eigen::RowVectorXd dNdV(solid.Q.size()); dNdV.setZero();
+
+    for (int k = 0; k <= solid.r; k++)
+    {
+      auto c = k+wSpan-solid.r;
+      for (int j = 0; j <= solid.q; j++)
+      {
+        auto b = j+vSpan-solid.q;
+        for (int i = 0; i <= solid.p; i++)
+        {
+          auto a = i+uSpan-solid.p;
+          auto idx = solid.qid(a,b,c);
+          dNdV[idx] += Nu[i]*dNv[order][j]*Nw[k];
+        }
+      }
+    }
+
+    return dNdV;
+  }
+
+  Eigen::RowVectorXd
+  inline _derivativeWrtW(double u, double v, double w, int order, BSplineSolid const &solid)
+  {
+    auto const uSpan = algo::FindSpan(u, solid.p, solid.uknot);
+    auto const vSpan = algo::FindSpan(v, solid.q, solid.vknot);
+    auto const wSpan = algo::FindSpan(w, solid.r, solid.wknot);
+
+    auto const Nu  = algo::BasisFunctions(u,uSpan,solid.p,solid.uknot);
+    auto const Nv  = algo::BasisFunctions(v,vSpan,solid.q,solid.vknot);
+    auto const dNw = algo::BasisFunctionDerivatives(w,wSpan,solid.r,solid.wknot);
+
+    Eigen::RowVectorXd dNdW(solid.Q.size()); dNdW.setZero();
+
+    for (int k = 0; k <= solid.r; k++)
+    {
+      auto c = k+wSpan-solid.r;
+      for (int j = 0; j <= solid.q; j++)
+      {
+        auto b = j+vSpan-solid.q;
+        for (int i = 0; i <= solid.p; i++)
+        {
+          auto a = i+uSpan-solid.p;
+          auto idx = solid.qid(a,b,c);
+          dNdW[idx] += Nu[i]*Nv[j]*dNw[order][k];
+        }
+      }
+    }
+
+    return dNdW;
+  }
+
+  Eigen::RowVectorXd
+  inline ShapeFunctionDerivative(double u, double v, double w, int order, int direction, BSplineSolid const &solid)
+  {
+    switch (direction)
+    {
+      case 1:  return _derivativeWrtV(u,v,w,order,solid); break;
+      case 2:  return _derivativeWrtW(u,v,w,order,solid); break;
+      default: return _derivativeWrtU(u,v,w,order,solid); break;
+    }
+  }
+
+  inline Eigen::RowVectorXd ShapeFunctionDerivative(double u, double v, double w, int order, int direction, NurbsSolid const &solid)
   {
     auto gen = [&solid]()
     {

@@ -27,7 +27,35 @@ static std::string const python{"~/anaconda2/bin/python2.7 "};
 #include <Eigen/Sparse>
 #include <Eigen/SparseLU>
 
+#include <random>
+
 using namespace Eigen;
+
+void arc(NurbsCurve &curve, double radius=1.0)
+{
+  using namespace vector_ops;
+  int p = 2;
+  std::vector<double> knot{0.0, 0.0, 0.0, 1, 1, 2,2, 3,3,3};
+  algo::normalizeKnot(knot);
+  typename NurbsCurve::matrix cpts{
+    {radius , 0.0    , 0.0},
+    {radius , radius , 0.0},
+    {0.0    , radius , 0.0},
+    {-radius, radius , 0.0},
+    {-radius, 0.0    , 0.0},
+    {-radius, -radius, 0.0},
+    {0.0, -radius, 0.0},
+  };
+
+  static double const fact{1.0/std::sqrt(2.0)};
+  decltype(knot) weights(cpts.size(),1);
+  for (size_t i = 1; i < weights.size(); i+= 2)
+    weights[i] = fact; 
+  curve.p = p;
+  curve.knot = knot;
+  curve.weights = weights;
+  curve.Q = cpts;
+}
 
 void circle(NurbsCurve &curve, double radius=1.0)
 {
@@ -44,7 +72,7 @@ void circle(NurbsCurve &curve, double radius=1.0)
     {-radius, -radius, 0.0},
     {0.0    , -radius, 0.0},
     {radius , -radius, 0.0},
-    {radius , -0.1    , 0.0},
+    {radius , 0.0    , 0.0},
   };
 
   static double const fact{1.0/std::sqrt(2.0)};
@@ -83,6 +111,25 @@ void sweepCurve(NurbsCurve &curve, double radius=1.0)
   curve.Q = cpts;
 }
 
+void sector(NurbsSurface &surf, double ri, double ro)
+{
+  using namespace spline_ops;
+
+  NurbsCurve ci, co;
+  arc(ci,ri);
+  arc(co,ro);
+
+  surf.p = 2;
+  surf.q = 1;
+  surf.Q = ci.Q;
+  surf.Q.insert(surf.Q.end(), co.Q.begin(), co.Q.end());
+  surf.weights = ci.weights;
+  surf.weights.insert(surf.weights.end(), co.weights.begin(), co.weights.end());
+
+  surf.uknot = co.knot;
+  surf.vknot = std::vector<double>({0,0,1,1});
+}
+
 void annulus(NurbsSurface &surf, double ri, double ro)
 {
   using namespace spline_ops;
@@ -100,6 +147,40 @@ void annulus(NurbsSurface &surf, double ri, double ro)
 
   surf.uknot = co.knot;
   surf.vknot = std::vector<double>({0,0,1,1});
+}
+
+void pipe(double ri, double ro, NurbsSolid &solid)
+{
+  NurbsSurface surf; annulus(surf,ri,ro);
+
+  solid.p = surf.p;
+  solid.q = surf.q;
+  solid.r = 2;
+
+  solid.uknot = surf.uknot;
+  solid.vknot = surf.vknot;
+  solid.wknot = {0,0,0,1,1,1};
+
+  // now the fun part
+  auto addPoints = [&solid](double cw, auto const &section)
+  {
+    solid.Q.insert(solid.Q.end(), section.Q.begin(), section.Q.end());
+    for (auto const &w : section.weights){
+      solid.weights.push_back(w*cw);
+    }
+  };
+
+  addPoints(1.0, surf);// bottom of pipe
+
+  {
+    auto section = transform::translate(surf,{0,0,2});
+    addPoints(1,section);
+  }
+
+  {
+    auto section = transform::translate(surf,{0,0,4});
+    addPoints(1,section);
+  }
 }
 
 void elbow(double ri, double ro, double re, NurbsSolid &solid)
@@ -330,7 +411,7 @@ void heatCondution(Solid const &solid)
 // #################################
   // compute constraints
   double Thot,Tcold;
-  Thot = 500; Tcold = 300;
+  Thot = 300; Tcold = 200;
   Plane plane;
   plane.x = {0,0,4};
   plane.n = {0,0,1};
@@ -391,6 +472,16 @@ void heatCondution(Solid const &solid)
     return;
   }
 
+
+  // check solution
+  // NurbsSolid wsolution; IO::geometryWithSolution(solid,convert::to<std::vector<double>>(T),wsolution);
+  // std::vector<double> u(11); std::iota(u.begin(),u.end(),0); u/= 10.0;
+  // double v = 1.0; double w = 0.25;
+  // for (auto ui : u)
+  // {
+  //   auto s = spline_ops::SolidPoint(ui,v,w,wsolution);
+  //   std::printf("T(%f,%f,%f) = %f\n",ui,v,w,s.back());
+  // }
 // #################################
 // write solution 
 // #################################
@@ -401,12 +492,73 @@ void heatCondution(Solid const &solid)
   std::cout << "--- (" << __LINE__ << ") Exit: " << __PRETTY_FUNCTION__ << "\n" << std::endl;
 }
 
+template<typename Solid>
+void shapeFunctionTest(Solid const &solid, size_t n)
+{
+  std::cout << "\n+++ (" << __LINE__ << ") Enter: " << __PRETTY_FUNCTION__ << std::endl;
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_real_distribution<> dis(0, 1);//uniform distribution between 0 and 1
+
+  auto rand_point = [&dis,&gen]()->std::vector<double>
+  { return {dis(gen),dis(gen),dis(gen)}; };
+
+  auto const Q = convert::to<Eigen::MatrixXd>(solid.Q);
+  for (size_t i = 0; i < n; i++) {
+    auto p = rand_point();
+    auto S1 = spline_ops::SolidPoint(p[0],p[1],p[2],solid);
+    auto N = iga::ShapeFunctions(p[0],p[1],p[2],solid);
+    auto S2 = N*Q;
+    auto dS = S2-convert::to<RowVectorXd>(S1);
+
+    if (!algo::equal(dS.norm(),0.0))
+      std::cout << "POINT EVALUATION FAILED!" << std::endl;
+    if (!algo::equal(N.sum(),1.0))
+      std::cout << "PARTITION OF UNITY FAILED!" << std::endl;
+  }
+  std::cout << "--- (" << __LINE__ << ") Exit: " << __PRETTY_FUNCTION__ << "\n" << std::endl;
+}
+
+template<typename Solid>
+void derivativeTest(Solid const &solid, size_t n)
+{
+  std::cout << "\n+++ (" << __LINE__ << ") Enter: " << __PRETTY_FUNCTION__ << std::endl;
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_real_distribution<> dis(0, 1);//uniform distribution between 0 and 1
+
+  auto rand_point = [&dis,&gen]()->std::vector<double>
+  { return {dis(gen),dis(gen),dis(gen)}; };
+
+  auto const Q = convert::to<Eigen::MatrixXd>(solid.Q);
+  for (size_t i = 0; i < n; i++) {
+    auto p = rand_point();
+    auto Su = spline_ops::SolidDerivative(p[0],p[1],p[2],1,0,solid);
+    auto Sv = spline_ops::SolidDerivative(p[0],p[1],p[2],1,1,solid);
+    auto Sw = spline_ops::SolidDerivative(p[0],p[1],p[2],1,2,solid);
+    std::vector<std::vector<double>> tmp{Su,Sv,Sw};
+    auto grad1 = convert::to<Eigen::MatrixXd>(tmp);
+
+    auto dN = iga::ShapeFunctionDerivatives(p[0],p[1],p[2],solid);
+    auto grad = dN*Q;
+
+
+    auto dg = grad-grad1;
+    if (!algo::equal(dg.norm(),0.0))
+      std::cout << "POINT EVALUATION FAILED!" << std::endl;
+  }
+  std::cout << "--- (" << __LINE__ << ") Exit: " << __PRETTY_FUNCTION__ << "\n" << std::endl;
+}
+
 int main(int argc, char **argv)
 {
-  std::cout << "*** B-Spline Main ***" << std::endl;
   NurbsSolid solid;
   // bsolid(solid);
+  // pipe(1,2,solid);
   elbow(1,2,3,solid);
+  // shapeFunctionTest(solid,10000);
+  // derivativeTest(solid,10000);
   heatCondution(solid);
+  // SolidTest(solid);
   return 0;
 }
