@@ -28,3 +28,6 @@ target_link_libraries(Elbow.exe ${EXTERNAL_LIBS})
 
 add_executable(Heat.exe heat_conduction.cxx)
 target_link_libraries(Heat.exe ${EXTERNAL_LIBS})
+
+add_executable(Stress.exe solid_mechanics.cxx)
+target_link_libraries(Stress.exe ${EXTERNAL_LIBS})
