@@ -357,20 +357,6 @@ std::vector<size_t> pointsOnPlane(Shape const &shape, Plane const &plane)
   return found;
 }
 
-template<typename Matrix>
-void spy(Matrix const &A)
-{
-  std::cout << "\nSPY ..." <<std::endl;
-  for (int i = 0; i < A.rows(); i++)
-  {
-    for (int j = 0; j < A.cols(); j++)
-    {
-      std::cout << !algo::equal(A(i,j),0.0); 
-    }
-    std::cout << std::endl;
-  }
-}
-
 template<typename Solid>
 void heatCondution(Solid const &solid)
 {
@@ -411,15 +397,17 @@ void heatCondution(Solid const &solid)
 // #################################
   // compute constraints
   double Thot,Tcold;
-  Thot = 300; Tcold = 200;
+  Thot = 500; Tcold = 200;
   Plane plane;
   plane.x = {0,0,4};
   plane.n = {0,0,1};
   // x- plane
   auto bc_hot = pointsOnPlane(solid,plane);
   // x+ plane
-  plane.x = {3,0,0};
-  plane.n = {1,0,0};
+  // plane.x = {3,0,0};
+  // plane.n = {1,0,0};
+  plane.x = {0,0,0};
+  plane.n = {0,0,-1};
   auto bc_cold = pointsOnPlane(solid,plane);
 
   std::printf("Applying boundary conditions for hot surface to %lu cpts\n",bc_hot.size());
@@ -473,22 +461,28 @@ void heatCondution(Solid const &solid)
   }
 
 
-  // check solution
-  // NurbsSolid wsolution; IO::geometryWithSolution(solid,convert::to<std::vector<double>>(T),wsolution);
-  // std::vector<double> u(11); std::iota(u.begin(),u.end(),0); u/= 10.0;
-  // double v = 1.0; double w = 0.25;
-  // for (auto ui : u)
-  // {
-  //   auto s = spline_ops::SolidPoint(ui,v,w,wsolution);
-  //   std::printf("T(%f,%f,%f) = %f\n",ui,v,w,s.back());
-  // }
 // #################################
 // write solution 
 // #################################
-  std::string file("output/nurbs_heat_conduction.txt");
-  IO::writeSolutionToFile(solid,convert::to<std::vector<double>>(T),file,20,3,20);
-  // std::system(std::string(python + "python/plot_surface.py " + file + " ").c_str());
-  std::system(std::string(python + "python/plot_surface.py " + file).c_str());
+  // std::string file("output/nurbs_heat_conduction.txt");
+  // IO::writeSolutionToFile(solid,convert::to<std::vector<double>>(T),file,30,5,50);
+  // std::system(std::string(python + "python/plot_surface.py " + file).c_str());
+
+  // check along u=v=const
+  NurbsSolid wsolution; IO::geometryWithSolution(solid,convert::to<std::vector<double>>(T),wsolution);
+  size_t N = 100;
+  std::vector<double> w(N+1); std::iota(w.begin(),w.end(),0); w/= N;
+  double u = 0.5; double v = 1.0;
+  std::vector<double> isoline;
+  for (auto x : w)
+  {
+    auto s = spline_ops::SolidPoint(u,v,x,wsolution);
+    isoline.push_back(s.back());
+  }
+
+  std::string isofile("output/nurbs_heat_iso.txt");
+  IO::writeXYdata(w,isoline,isofile);
+  std::system(std::string(python + "python/plot_xy.py " + isofile).c_str());
   std::cout << "--- (" << __LINE__ << ") Exit: " << __PRETTY_FUNCTION__ << "\n" << std::endl;
 }
 
@@ -542,7 +536,6 @@ void derivativeTest(Solid const &solid, size_t n)
     auto dN = iga::ShapeFunctionDerivatives(p[0],p[1],p[2],solid);
     auto grad = dN*Q;
 
-
     auto dg = grad-grad1;
     if (!algo::equal(dg.norm(),0.0))
       std::cout << "POINT EVALUATION FAILED!" << std::endl;
@@ -554,10 +547,10 @@ int main(int argc, char **argv)
 {
   NurbsSolid solid;
   // bsolid(solid);
-  // pipe(1,2,solid);
-  elbow(1,2,3,solid);
+  pipe(1,2,solid);
+  // elbow(1,2,3,solid);
   // shapeFunctionTest(solid,10000);
-  // derivativeTest(solid,10000);
+  // derivativeTest(solid,25);
   heatCondution(solid);
   // SolidTest(solid);
   return 0;

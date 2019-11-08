@@ -49,6 +49,18 @@ namespace convert
   }
 
   template<>
+  inline std::vector<double> _converter(Eigen::RowVectorXd const &in)
+  {
+    return std::vector<double>(in.data(), in.data()+in.size());
+  }
+
+  template<>
+  inline std::vector<double> const _converter(Eigen::RowVectorXd const &in)
+  {
+    return std::vector<double>(in.data(), in.data()+in.size());
+  }
+
+  template<>
   inline Eigen::MatrixXd _converter(std::vector<std::vector<double>> const &in)
   {
     Eigen::MatrixXd out(in.size(),in[0].size());

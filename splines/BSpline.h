@@ -481,6 +481,7 @@ namespace spline_ops
       for (auto &xi : xn) file << xi << " ";
       file << std::endl;
     }
+    file.close();
   }
 
   inline void writeToFile(BSplineSolid const &s,std::string const &file_name, int ulevel = 10, int vlevel=10, int wlevel=10)

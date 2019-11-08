@@ -7,6 +7,19 @@
 
 namespace IO
 {
+  template<typename Matrix>
+  inline void spy(Matrix const &A)
+  {
+    std::cout << "\nSPY ..." <<std::endl;
+    for (int i = 0; i < A.rows(); i++)
+    {
+      for (int j = 0; j < A.cols(); j++)
+      {
+        std::cout << !algo::equal(A(i,j),0.0); 
+      }
+      std::cout << std::endl;
+    }
+  }
 
   template<typename Shape, typename Solution>
   void geometryWithSolution(Shape const &solid, Solution const &solution, Shape &out)
@@ -17,13 +30,25 @@ namespace IO
       x.push_back(solution[i++]);
   }
 
-  template<typename Solid>
+  template<typename Solid, typename Solution>
   inline void writeSolutionToFile(Solid const &solid,
-                                  std::vector<double> const &solution,
+                                  Solution const &solution,
                                   std::string const &file_name,
                                   int ulevel = 10, int vlevel=10, int wlevel=10)
   {
     Solid s; geometryWithSolution(solid,solution,s);
     spline_ops::writeToFile(s,file_name,ulevel,vlevel,wlevel);
+  }
+
+  inline void writeXYdata(std::vector<double> const &x, std::vector<double> const &y, std::string const &file_name)
+  {
+    std::ofstream file;
+    file.open(file_name);
+    file << x.size() << std::endl;
+    size_t k = 0;
+    for (auto &xi : x) {
+      file << xi << " " << y[k++] << std::endl;
+    }
+    file.close();
   }
 }

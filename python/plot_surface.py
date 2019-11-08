@@ -47,6 +47,7 @@ def plot(mesh,verts,cpts,**kwargs):
     a,b = min(field),max(field)
     colors = map(lambda c: cmap((c-a)/(b-a)), field)
     polys.append(Poly3DCollection(poly_verts,edgecolors=('black',),facecolors=colors))
+    print 'Field range: [%g, %g]'%(a,b)
 
 
   xmin,xmax = get_bounds(verts,0)
