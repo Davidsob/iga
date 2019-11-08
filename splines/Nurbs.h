@@ -195,16 +195,6 @@ namespace spline_ops
     return Sw;
   }
 
-  std::vector<double>
-  inline SolidPoint2(double u, double v, double w, NurbsSolid const &solid)
-  {
-    using namespace vector_ops;
-    BSplineSolid b; weightedBSpline(solid,b);
-    auto Sw = spline_ops::SolidPoint2(u,v,w,b);
-    Sw /= Sw.back(); Sw.pop_back();
-    return Sw;
-  }
-
   std::vector<std::vector<std::vector<double>>>
   inline SurfaceDerivatives(double u, double v, int order, NurbsSurface const &surf)
   {

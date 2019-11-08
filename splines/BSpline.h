@@ -138,10 +138,10 @@ namespace spline_ops
     using namespace vector_ops;
     using point = typename BSplineSurface::matrix::value_type;
 
-    auto uSpan = algo::FindSpan(u, surf.p, surf.uknot);
-    auto vSpan = algo::FindSpan(v, surf.q, surf.vknot);
-    std::vector<double> Nu = algo::BasisFunctions(u,uSpan,surf.p, surf.uknot);
-    std::vector<double> Nv = algo::BasisFunctions(v,vSpan,surf.q, surf.vknot);
+    auto uspan = algo::FindSpan(u, surf.p, surf.uknot);
+    auto vspan = algo::FindSpan(v, surf.q, surf.vknot);
+    std::vector<double> Nu = algo::BasisFunctions(u,uspan,surf.p, surf.uknot);
+    std::vector<double> Nv = algo::BasisFunctions(v,vspan,surf.q, surf.vknot);
 
     point S(surf.dim(),0.0);
     std::vector<point> tmp(surf.q+1,S);
@@ -150,8 +150,8 @@ namespace spline_ops
     {
       for (int j = 0; j <= surf.p; j++)
       {
-        auto a = uSpan-surf.p+j;
-        auto b = vSpan-surf.q+i;
+        auto a = uspan-surf.p+j;
+        auto b = vspan-surf.q+i;
         auto idx = surf.qid(a,b);
         tmp[i] += Nu[j]*surf.Q[idx];
       }
@@ -218,157 +218,146 @@ namespace spline_ops
     using matrix = typename BSplineSurface::matrix;
     using point  = typename matrix::value_type;
 
-    auto uSpan = algo::FindSpan(u, solid.p, solid.uknot);
-    auto vSpan = algo::FindSpan(v, solid.q, solid.vknot);
-    auto wSpan = algo::FindSpan(w, solid.r, solid.wknot);
-    std::vector<double> Nu = algo::BasisFunctions(u,uSpan,solid.p, solid.uknot);
-    std::vector<double> Nv = algo::BasisFunctions(v,vSpan,solid.q, solid.vknot);
-    std::vector<double> Nw = algo::BasisFunctions(w,wSpan,solid.r, solid.wknot);
+    auto const uSpan = algo::FindSpan(u, solid.p, solid.uknot);
+    auto const vSpan = algo::FindSpan(v, solid.q, solid.vknot);
+    auto const wSpan = algo::FindSpan(w, solid.r, solid.wknot);
+    std::vector<double> const Nu = algo::BasisFunctions(u,uSpan,solid.p, solid.uknot);
+    std::vector<double> const Nv = algo::BasisFunctions(v,vSpan,solid.q, solid.vknot);
+    std::vector<double> const Nw = algo::BasisFunctions(w,wSpan,solid.r, solid.wknot);
 
     point S(solid.dim(),0.0);
-    std::vector<matrix> tmp(solid.q+1,matrix(solid.r+1,S));
 
     for (int k = 0; k <= solid.r; k++)
     {
-      auto c = wSpan-solid.r+k;
+      auto c = k+wSpan-solid.r;
       for (int j = 0; j <= solid.q; j++)
       {
-        auto b = vSpan-solid.q+j;
+        auto b = j+vSpan-solid.q;
         for (int i = 0; i <= solid.p; i++)
         {
-          auto a = uSpan-solid.p+i;
+          auto a = i+uSpan-solid.p;
           auto idx = solid.qid(a,b,c);
-          tmp[j][k] += Nu[i]*solid.Q[idx];
+          S += Nu[i]*Nv[j]*Nw[k]*solid.Q[idx];
         }
       }
     }
 
-    for (int j = 0; j <= solid.r; j++)
-    {
-      for (int i = 0; i <= solid.q; i++)
-      {
-        S += Nw[j]*Nv[i]*tmp[i][j];
-      }
-    }
     return S;
   }
 
-  std::vector<double>
-  inline SolidPoint2(double u, double v, double w, BSplineSolid const &solid)
-  {
-    using namespace vector_ops;
 
+
+  std::vector<double>
+  inline _SolidDerivativeWrtU(double u, double v, double w, int order, BSplineSolid const &solid)
+  {
     using matrix = typename BSplineSurface::matrix;
     using point  = typename matrix::value_type;
 
-    point S(solid.dim(),0.0);
+    auto const uSpan = algo::FindSpan(u, solid.p, solid.uknot);
+    auto const vSpan = algo::FindSpan(v, solid.q, solid.vknot);
+    auto const wSpan = algo::FindSpan(w, solid.r, solid.wknot);
 
-    int n = solid.uknot.size()-solid.p-2;
-    int m = solid.vknot.size()-solid.q-2;
-    int o = solid.wknot.size()-solid.r-2;
+    auto const dNu = algo::BasisFunctionDerivatives(u,uSpan,solid.p,solid.uknot);
+    auto const Nv = algo::BasisFunctions(v,vSpan,solid.q,solid.vknot);
+    auto const Nw = algo::BasisFunctions(w,wSpan,solid.r,solid.wknot);
 
-    for (int k = 0; k <= o; k++)
+    point dSdU(solid.dim(),0.0);
+
+    for (int k = 0; k <= solid.r; k++)
     {
-      auto Nw = algo::BasisFunction(w,k,solid.r,solid.wknot);
-      for (int j = 0; j <= m; j++)
+      auto c = k+wSpan-solid.r;
+      for (int j = 0; j <= solid.q; j++)
       {
-        auto Nv = algo::BasisFunction(v,j,solid.q,solid.vknot);
-        for (int i = 0; i <= n; i++)
+        auto b = j+vSpan-solid.q;
+        for (int i = 0; i <= solid.p; i++)
         {
-          auto idx = solid.qid(i,j,k);
-          auto Nu = algo::BasisFunction(u,i,solid.p,solid.uknot);
-          S += Nu*Nv*Nw*solid.Q[idx];
+          auto a = i+uSpan-solid.p;
+          auto idx = solid.qid(a,b,c);
+          dSdU += dNu[order][i]*Nv[j]*Nw[k]*solid.Q[idx];
         }
       }
     }
 
-    return S;
+    return dSdU;
+  }
+
+  std::vector<double>
+  inline _SolidDerivativeWrtV(double u, double v, double w, int order, BSplineSolid const &solid)
+  {
+    using matrix = typename BSplineSurface::matrix;
+    using point  = typename matrix::value_type;
+
+    auto const uSpan = algo::FindSpan(u, solid.p, solid.uknot);
+    auto const vSpan = algo::FindSpan(v, solid.q, solid.vknot);
+    auto const wSpan = algo::FindSpan(w, solid.r, solid.wknot);
+
+    auto const Nu = algo::BasisFunctions(u,uSpan,solid.p,solid.uknot);
+    auto const dNv = algo::BasisFunctionDerivatives(v,vSpan,solid.q,solid.vknot);
+    auto const Nw = algo::BasisFunctions(w,wSpan,solid.r,solid.wknot);
+
+    point dSdV(solid.dim(),0.0);
+
+    for (int k = 0; k <= solid.r; k++)
+    {
+      auto c = k+wSpan-solid.r;
+      for (int j = 0; j <= solid.q; j++)
+      {
+        auto b = j+vSpan-solid.q;
+        for (int i = 0; i <= solid.p; i++)
+        {
+          auto a = i+uSpan-solid.p;
+          auto idx = solid.qid(a,b,c);
+          dSdV += Nu[i]*dNv[order][j]*Nw[k]*solid.Q[idx];
+        }
+      }
+    }
+
+    return dSdV;
+  }
+
+  std::vector<double>
+  inline _SolidDerivativeWrtW(double u, double v, double w, int order, BSplineSolid const &solid)
+  {
+    using matrix = typename BSplineSurface::matrix;
+    using point  = typename matrix::value_type;
+
+    auto const uSpan = algo::FindSpan(u, solid.p, solid.uknot);
+    auto const vSpan = algo::FindSpan(v, solid.q, solid.vknot);
+    auto const wSpan = algo::FindSpan(w, solid.r, solid.wknot);
+
+    auto const Nu = algo::BasisFunctions(u,uSpan,solid.p,solid.uknot);
+    auto const Nv = algo::BasisFunctions(v,vSpan,solid.q,solid.vknot);
+    auto const dNw = algo::BasisFunctionDerivatives(w,wSpan,solid.r,solid.wknot);
+
+    point dSdW(solid.dim(),0.0);
+
+    for (int k = 0; k <= solid.r; k++)
+    {
+      auto c = k+wSpan-solid.r;
+      for (int j = 0; j <= solid.q; j++)
+      {
+        auto b = j+vSpan-solid.q;
+        for (int i = 0; i <= solid.p; i++)
+        {
+          auto a = i+uSpan-solid.p;
+          auto idx = solid.qid(a,b,c);
+          dSdW += Nu[i]*Nv[j]*dNw[order][k]*solid.Q[idx];
+        }
+      }
+    }
+
+    return dSdW;
   }
 
   std::vector<double>
   inline SolidDerivative(double u, double v, double w, int order, int direction, BSplineSolid const &solid)
   {
-    using namespace vector_ops;
-
-    using matrix = typename BSplineSurface::matrix;
-    using point  = typename matrix::value_type;
-
-    auto basis = [](double u, double i, double p, auto const &knot)
+    switch (direction)
     {
-      return algo::BasisFunction(u,i,p,knot);
-    };
-
-    auto derivative = [order](double u, double i, double p, auto const &knot)
-    {
-      return algo::BasisFunctionDerivative(u,i,p,knot)[order];
-    };
-
-    point dS(solid.dim(),0.0);
-    int n = solid.uknot.size()-solid.p-2;
-    int m = solid.vknot.size()-solid.q-2;
-    int o = solid.wknot.size()-solid.r-2;
-
-    switch(direction)
-    {
-      case 1:
-      {
-        for (int k = 0; k <= o; k++)
-        {
-          auto Nw = basis(w,k,solid.r,solid.wknot);
-          for (int j = 0; j <= m; j++)
-          {
-            auto dNv = derivative(v,j,solid.q,solid.vknot);
-            for (int i = 0; i <= n; i++)
-            {
-              auto idx = solid.qid(i,j,k);
-              auto Nu = basis(u,i,solid.p,solid.uknot);
-              dS += Nu*dNv*Nw*solid.Q[idx];
-            }
-          }
-        }
-        break;
-      }
-
-      case 2:
-      {
-        for (int k = 0; k <= o; k++)
-        {
-          auto dNw = derivative(w,k,solid.r,solid.wknot);
-          for (int j = 0; j <= m; j++)
-          {
-            auto Nv = basis(v,j,solid.q,solid.vknot);
-            for (int i = 0; i <= n; i++)
-            {
-              auto idx = solid.qid(i,j,k);
-              auto Nu = basis(u,i,solid.p,solid.uknot);
-              dS += Nu*Nv*dNw*solid.Q[idx];
-            }
-          }
-        }
-        break;
-      }
-
-     default:
-      {
-        for (int k = 0; k <= o; k++)
-        {
-          auto Nw = basis(w,k,solid.r,solid.wknot);
-          for (int j = 0; j <= m; j++)
-          {
-            auto Nv = basis(v,j,solid.q,solid.vknot);
-            for (int i = 0; i <= n; i++)
-            {
-              auto idx = solid.qid(i,j,k);
-              auto dNu = derivative(u,i,solid.p,solid.uknot);
-              dS += dNu*Nv*Nw*solid.Q[idx];
-            }
-          }
-        }
-        break;
-      }
+      case 1:  return _SolidDerivativeWrtV(u,v,w,order,solid); break;
+      case 2:  return _SolidDerivativeWrtW(u,v,w,order,solid); break;
+      default: return _SolidDerivativeWrtU(u,v,w,order,solid); break;
     }
-
-    return dS;
   }
 
   inline void writeToFile(BSplineCurve const &c,std::string const &file_name, int level = 20)

@@ -6,25 +6,14 @@
 #include "splines/utils/Converters.h"
 #include "splines/utils/Quaternion.h"
 
-#include "iga/ShapeFunctions.h"
-#include "iga/IntegrationPoints.h"
-#include "iga/IgaIO.h"
-#include "iga/SolidElementMapper.h"
-#include "iga/Quadrature.h"
-
 #include <iostream>
 #include <vector>
 #include <string>
 
-// #include <bits/stdc++.h> 
 #include <cmath> 
 #include <type_traits>
 
 static std::string const python{"~/anaconda2/bin/python2.7 "};
-
-#include <Eigen/Dense>
-#include <Eigen/Sparse>
-#include <Eigen/SparseLU>
 
 using namespace Eigen;
 
@@ -92,12 +81,12 @@ void annulus(NurbsSurface &surf, double ri, double ro)
 
   surf.p = 2;
   surf.q = 1;
-  surf.Q = co.Q;
-  surf.Q.insert(surf.Q.end(), ci.Q.begin(), ci.Q.end());
+  surf.Q = ci.Q;
+  surf.Q.insert(surf.Q.end(), co.Q.begin(), co.Q.end());
   surf.weights = ci.weights;
   surf.weights.insert(surf.weights.end(), co.weights.begin(), co.weights.end());
 
-  surf.uknot = ci.knot;
+  surf.uknot = co.knot;
   surf.vknot = std::vector<double>({0,0,1,1});
 }
 
@@ -185,7 +174,7 @@ void asolid(NurbsSolid &solid)
   solid.weights = std::vector<double>(solid.Q.size(),1);
 }
 
-void bsolid(BSplineSolid &solid)
+void bsolid(NurbsSolid &solid)
 {
   solid.p = 1;
   solid.q = 1;
@@ -194,8 +183,7 @@ void bsolid(BSplineSolid &solid)
   std::vector<double> knot{0,0,1,1};
   solid.uknot = knot;
   solid.vknot = knot;
-  // solid.wknot = knot;
-  solid.wknot = std::vector<double>{0,0,0,1,1,1};
+  solid.wknot = std::vector<double>{0,0,0,0.5,0.5,1,1,1};
 
   solid.Q = {
     {0,0,0},
@@ -203,16 +191,28 @@ void bsolid(BSplineSolid &solid)
     {0,1,0},
     {1,1,0},
 
-    {0,0-0.1,0.5},
-    {1,0-0.1,0.5},
-    {0,1-0.1,0.5},
-    {1,1-0.1,0.5},
+    {0,0,0.9},
+    {1,0,0.9},
+    {0,1,0.9},
+    {1,1,0.9},
 
-    {0,0+0.25,1},
-    {1,0+0.25,1},
-    {0,1+0.25,1},
-    {1,1+0.25,1},
+    {0,0,1},
+    {1,0,1},
+    {0,1,1},
+    {1,1,1},
+
+    {0,0,1.4},
+    {1,0,1.4},
+    {0,1,1.4},
+    {1,1,1.4},
+
+    {0,0,2},
+    {1,0,2},
+    {0,1,2},
+    {1,1,2},
   };
+
+  solid.weights = std::vector<double>(solid.Q.size(),1);
 }
 
 template<typename Curve>
@@ -271,9 +271,9 @@ void SolidTest(Solid const &solid)
 {
   std::cout << __PRETTY_FUNCTION__ << std::endl;
   using namespace vector_ops;
-  // std::cout << solid << std::endl;
+
   double u,v,w,dw;
-  u = 0.8; v = 0.0; w = 0.0; dw = 1.0/20;
+  u = 1.0; v = 0.0; w = 0.0; dw = 1.0/20;
   std::vector<std::vector<double>> p, du, dv;
   for (int i = 0; i <= 20; i++)
   {
@@ -282,6 +282,7 @@ void SolidTest(Solid const &solid)
     dv.push_back(spline_ops::SolidDerivative(u,v,w,1,1,solid));
     w += dw;
   }
+
   std::string file("output/nurbs_solid.txt");
   std::string uvec_file("output/nurbs_solid_du.txt");
   std::string vvec_file("output/nurbs_solid_dv.txt");
@@ -292,176 +293,10 @@ void SolidTest(Solid const &solid)
   std::system(std::string(python + "python/plot_surface.py " + file + " " + uvec_file + " " + vvec_file).c_str());
 }
 
-template<typename Solid>
-void shapeFunctionTest(Solid const &solid)
-{
-  std::cout << "\n+++ (" << __LINE__ << ") Enter: " << __PRETTY_FUNCTION__ << std::endl;
-  double u,v,w;
-  u = 0.413; v = 0.555; w = 0.9;
-  auto N = iga::ShapeFunctions(u,v,w,solid);
-  std::cout << "P = " << spline_ops::SolidPoint(u,v,w,solid) << std::endl;
-  auto Q = convert::to<MatrixXd>(solid.Q);
-  std::cout << "P* = " << N*Q << std::endl;
-  std::cout << "dP = " << spline_ops::SolidDerivative(u,v,w,1,0,solid) << std::endl;
-  std::cout << "dP = " << spline_ops::SolidDerivative(u,v,w,1,1,solid) << std::endl;
-  std::cout << "dP = " << spline_ops::SolidDerivative(u,v,w,1,2,solid) << std::endl;
-  auto dN = iga::ShapeFunctionDerivatives(u,v,w,solid);
-  std::cout << dN*Q << std::endl;
-  std::cout << "--- (" << __LINE__ << ") Exit: " << __PRETTY_FUNCTION__ << "\n" << std::endl;
-}
-
-struct Mapper {};
-
-void integrationPointTest()
-{
-  std::cout << "\n+++ (" << __LINE__ << ") Enter: " << __PRETTY_FUNCTION__ << std::endl;
-  Mapper map;
-  std::cout << iga::integrationPoints(map,1,1,1) << std::endl;
-  std::cout << "--- (" << __LINE__ << ") Exit: " << __PRETTY_FUNCTION__ << "\n" << std::endl;
-}
-
-template<typename Solid>
-void mapperTest(Solid const &solid)
-{
-  std::cout << "\n+++ (" << __LINE__ << ") Enter: " << __PRETTY_FUNCTION__ << std::endl;
-  SolidElementMapper mapper(solid);
-  mapper.updateElementMesh(0);
-
-  auto ip = iga::integrationPoints(mapper,solid.p,solid.q,solid.r);
-  std::cout << ip << std::endl;
-  for (auto &p : ip) p.update();
-  std::cout << ip << std::endl;
-  std::cout << "--- (" << __LINE__ << ") Exit: " << __PRETTY_FUNCTION__ << "\n" << std::endl;
-}
-
-struct Plane
-{
-  std::vector<double> x;
-  std::vector<double> n;
-};
-
-template<typename Shape>
-std::vector<size_t> pointsOnPlane(Shape const &shape, Plane const &plane)
-{
-  auto on_plane = [&plane](auto const &p)
-  {
-    return algo::equal(dot(plane.n,p-plane.x),0.0);
-  };
-
-  std::vector<size_t> found;
-  for (size_t i = 0; i < shape.Q.size(); i++)
-  {
-    if (on_plane(shape.Q[i])) found.push_back(i);
-  }
-
-  return found;
-}
-
-template<typename Solid>
-void heatCondution(Solid const &solid)
-{
-  std::cout << "\n+++ (" << __LINE__ << ") Enter: " << __PRETTY_FUNCTION__ << std::endl;
-// #################################
-// Weak forms 
-// #################################
-  auto stiffness = [](auto const &p)->Eigen::MatrixXd
-  {
-    auto const grad = p.mapper.grad(p.para);
-    auto kel = grad.transpose()*grad;
-    return kel;
-  };
-
-  SolidElementMapper mapper(solid);
-  auto ip = iga::integrationPoints(mapper,solid.p,solid.q,solid.r);
-  // initialize for first element
-  mapper.updateElementMesh(0);
-  for (auto &p : ip) p.update();
-
-  // Compute stiffness
-  size_t dof = solid.Q.size();
-  Eigen::MatrixXd K(Eigen::MatrixXd::Zero(dof,dof));
-
-  quadrature::gauss(ip,K,stiffness);
-
-// #################################
-// Boundary conditions
-// #################################
-  // compute constraints
-  double Thot,Tcold;
-  Thot = 500; Tcold = 300;
-  Plane xy;
-  xy.x = {0,0,0};
-  xy.n = {-1,0,0};
-  // x- plane
-  auto bc_hot = pointsOnPlane(solid,xy);
-  // x+ plane
-  xy.x = {1,0,0};
-  xy.n = {1,0,0};
-  auto bc_cold = pointsOnPlane(solid,xy);
-
-  auto C = bc_hot.size() + bc_cold.size();
-  Eigen::MatrixXd Kc(C,dof); Kc.setZero();
-  Eigen::VectorXd Rc(C); Rc.setZero();
-
-  size_t k = 0;
-  for (auto idx : bc_hot)
-  {
-    Kc(k,idx) = 1;
-    Rc[k] = Thot;
-    k++;
-  }
-
-  for (auto idx : bc_cold)
-  {
-    Kc(k,idx) = 1;
-    Rc[k] = Tcold;
-    k++;
-  }
-
-// #################################
-// compose matrix 
-// #################################
-  Eigen::MatrixXd A(dof+C,dof+C); A.setZero();
-  Eigen::VectorXd F(dof+C); F.setZero();
-
-  F.tail(C) = Rc;
-  A.block(0,0,dof,dof) = K;
-  A.block(C,0,C,dof) = Kc;
-  A.block(0,dof,dof,C) = Kc.transpose();
-
-// #################################
-// solve 
-// #################################
-  Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
-  solver.compute(A.sparseView());
-  if(solver.info()!=Eigen::ComputationInfo::Success)
-  {
-    std::cout << "decomposition failed" << std::endl;
-    return;
-  }
-
-  Eigen::VectorXd const T = solver.solve(F).head(dof);
-  if(solver.info()!=Eigen::ComputationInfo::Success)
-  {
-    std::cout << "Solve failed" << std::endl;
-    return;
-  }
-
-// #################################
-// write solution 
-// #################################
-  std::string file("output/nurbs_heat_conduction.txt");
-  IO::writeSolutionToFile(solid,convert::to<std::vector<double>>(T),file,10,1,10);
-  // std::system(std::string(python + "python/plot_surface.py " + file + " ").c_str());
-  std::system(std::string(python + "python/plot_surface.py " + file).c_str());
-  std::cout << "--- (" << __LINE__ << ") Exit: " << __PRETTY_FUNCTION__ << "\n" << std::endl;
-}
-
 int main(int argc, char **argv)
 {
-  std::cout << "*** B-Spline Main ***" << std::endl;
-  NurbsSolid solid; asolid(solid);
-  heatCondution(solid);
-  // SolidTest(solid);
+  NurbsSolid solid;
+  elbow(1,2,3,solid);
+  SolidTest(solid);
   return 0;
 }
