@@ -35,7 +35,8 @@ def plot(mesh,verts,cpts,**kwargs):
       if has_field:
         tmp.append(verts[i][3])
     poly_verts.append(vert)
-    field.append(np.mean(tmp))
+    if has_field:
+      field.append(np.mean(tmp))
 
   if has_field == False:
     color = [0,0,0,transparancy]

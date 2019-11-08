@@ -310,9 +310,9 @@ void heatCondution(Solid const &solid)
   SolidElementMapper mapper(solid);
   auto ip = iga::integrationPoints(mapper,solid.p,solid.q,solid.r);
 
-  auto elu = iga::uniqueSpans(solid.uknot)-1;
-  auto elv = iga::uniqueSpans(solid.vknot)-1;
-  auto elw = iga::uniqueSpans(solid.wknot)-1;
+  auto elu = iga::meshFromSpan(solid.uknot).size()-1;
+  auto elv = iga::meshFromSpan(solid.vknot).size()-1;
+  auto elw = iga::meshFromSpan(solid.wknot).size()-1;
   std::printf("Default mesh has {%lu, %lu, %lu} elements\n",elu,elv,elw);
   for (size_t k = 0; k < elw; k++)
     for (size_t j = 0; j < elv; j++)
@@ -391,8 +391,6 @@ void heatCondution(Solid const &solid)
     return;
   }
 
-  for (auto i : bc_hot) std::printf("hot bc: pt %lu = %f\n",i,T[i]);
-  for (auto i : bc_cold) std::printf("cold bc: pt %lu = %f\n",i,T[i]);
 // #################################
 // write solution 
 // #################################
@@ -409,7 +407,6 @@ int main(int argc, char **argv)
   NurbsSolid solid;
   // bsolid(solid);
   elbow(1,2,3,solid);
-  SolidTest(solid);
   heatCondution(solid);
   return 0;
 }
