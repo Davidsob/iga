@@ -404,10 +404,10 @@ void heatCondution(Solid const &solid)
   // x- plane
   auto bc_hot = pointsOnPlane(solid,plane);
   // x+ plane
-  // plane.x = {3,0,0};
-  // plane.n = {1,0,0};
-  plane.x = {0,0,0};
-  plane.n = {0,0,-1};
+  plane.x = {3,0,0};
+  plane.n = {1,0,0};
+  // plane.x = {0,0,0};
+  // plane.n = {0,0,-1};
   auto bc_cold = pointsOnPlane(solid,plane);
 
   std::printf("Applying boundary conditions for hot surface to %lu cpts\n",bc_hot.size());
@@ -464,15 +464,15 @@ void heatCondution(Solid const &solid)
 // #################################
 // write solution 
 // #################################
-  // std::string file("output/nurbs_heat_conduction.txt");
-  // IO::writeSolutionToFile(solid,convert::to<std::vector<double>>(T),file,30,5,50);
-  // std::system(std::string(python + "python/plot_surface.py " + file).c_str());
+  std::string file("output/nurbs_heat_conduction.txt");
+  IO::writeSolutionToFile(solid,convert::to<std::vector<double>>(T),file,30,5,50);
+  std::system(std::string(python + "python/plot_surface.py " + file).c_str());
 
   // check along u=v=const
   NurbsSolid wsolution; IO::geometryWithSolution(solid,convert::to<std::vector<double>>(T),wsolution);
   size_t N = 100;
   std::vector<double> w(N+1); std::iota(w.begin(),w.end(),0); w/= N;
-  double u = 0.5; double v = 1.0;
+  double u = 0.5; double v = 0.0;
   std::vector<double> isoline;
   for (auto x : w)
   {
@@ -547,8 +547,8 @@ int main(int argc, char **argv)
 {
   NurbsSolid solid;
   // bsolid(solid);
-  pipe(1,2,solid);
-  // elbow(1,2,3,solid);
+  // pipe(1,2,solid);
+  elbow(1,2,3,solid);
   // shapeFunctionTest(solid,10000);
   // derivativeTest(solid,25);
   heatCondution(solid);

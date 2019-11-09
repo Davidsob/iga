@@ -9,6 +9,8 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 def plot(mesh,verts,cpts,**kwargs):
   cmap = kwargs.get('cmap',color_map.get_cmap('rainbow'))
+  # cmap = kwargs.get('cmap',color_map.get_cmap('bwr'))
+  # cmap = kwargs.get('cmap',color_map.get_cmap('nipy_spectral'))
   size = kwargs.get('size', (10,10))
   has_field = kwargs.get('has_field',False)
   transparancy = kwargs.get('alpha', 0.3)

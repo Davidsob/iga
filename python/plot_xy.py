@@ -9,10 +9,9 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 def plot(xy, **kwargs):
   xy = np.asarray(xy)
-  print xy
   plt.plot(xy[:,0],xy[:,1])
   plt.grid(True)
-  # plt.axis('equal')
+  print 'Field range: [%g, %g]'%(min(xy[:,1]),max(xy[:,1]))
   plt.show()
 
 def open_xy_data(file):
@@ -22,6 +21,7 @@ def open_xy_data(file):
     while n > 0 :
       xy.append(map(float, f.readline().split()))
       n -= 1
+
   return xy
 
 if __name__ == "__main__":

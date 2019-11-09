@@ -37,7 +37,7 @@ void arc(NurbsCurve &curve, double radius=1.0)
 {
   using namespace vector_ops;
   int p = 2;
-  std::vector<double> knot{0.0, 0.0, 0.0, 1, 1, 2,2, 3,3,3};
+  std::vector<double> knot{0.0, 0.0, 0.0, 1, 1, 2, 2, 3, 3, 4, 4, 4};
   algo::normalizeKnot(knot);
   typename NurbsCurve::matrix cpts{
     {radius , 0.0    , 0.0},
@@ -46,7 +46,9 @@ void arc(NurbsCurve &curve, double radius=1.0)
     {-radius, radius , 0.0},
     {-radius, 0.0    , 0.0},
     {-radius, -radius, 0.0},
-    {0.0, -radius, 0.0},
+    {0.0    , -radius, 0.0},
+    {radius , -radius, 0.0},
+    {radius*std::cos(0.01) , -radius*std::sin(0.01)    , 0.0},
   };
 
   static double const fact{1.0/std::sqrt(2.0)};
@@ -157,11 +159,11 @@ void pipe(double ri, double ro, NurbsSolid &solid)
 
   solid.p = surf.p;
   solid.q = surf.q;
-  solid.r = 3;
+  solid.r = 2;
 
   solid.uknot = surf.uknot;
   solid.vknot = surf.vknot;
-  solid.wknot = {0,0,0,0,1,1,1,1};
+  solid.wknot = {0,0,0,1,1,1};
 
   // now the fun part
   auto addPoints = [&solid](double cw, auto const &section)
@@ -175,12 +177,7 @@ void pipe(double ri, double ro, NurbsSolid &solid)
   addPoints(1.0, surf);// bottom of pipe
 
   {
-    auto section = transform::translate(surf,{0,0,1.25});
-    addPoints(1,section);
-  }
-
-  {
-    auto section = transform::translate(surf,{0,0,2.5});
+    auto section = transform::translate(surf,{0,0,2});
     addPoints(1,section);
   }
 
@@ -193,7 +190,7 @@ void pipe(double ri, double ro, NurbsSolid &solid)
 void elbow(double ri, double ro, double re, NurbsSolid &solid)
 {
   NurbsCurve curve; sweepCurve(curve,re);
-  NurbsSurface surf; annulus(surf,ri,ro);
+  NurbsSurface surf; sector(surf,ri,ro);
 
   solid.p = surf.p;
   solid.q = surf.q;
@@ -446,7 +443,7 @@ void simulation(Solid const &solid)
   // reshape solution
   auto const uvw = Eigen::Map<const Eigen::MatrixXd>(u.data(),3,solid.Q.size()).transpose();
   // compute disp mag and deform the mesh
-  double scale = 1.0;
+  double scale = 1e5;
   Solid deformed = solid;
   Eigen::VectorXd disp(solid.Q.size());
   for (size_t i = 0; i < solid.Q.size(); i++)
@@ -457,16 +454,32 @@ void simulation(Solid const &solid)
   }
 
   std::string file("output/nurbs_stress.txt");
-  IO::writeSolutionToFile(deformed,disp,file,20,3,20);
+  IO::writeSolutionToFile(deformed,uvw.col(2),file,20,10,20);
   std::system(std::string(python + "python/plot_surface.py " + file).c_str());
+
+  // check along v=w=const
+  NurbsSolid wsolution; IO::geometryWithSolution(solid,uvw.col(2),wsolution);
+  size_t N = 100;
+  std::vector<double> iso(N+1); std::iota(iso.begin(),iso.end(),0); iso/= N;
+  double v = 1.0; double w = 1.0;
+  std::vector<double> isoline;
+  for (auto x : iso)
+  {
+    auto s = spline_ops::SolidPoint(x,v,w,wsolution);
+    isoline.push_back(s.back());
+  }
+
+  std::string isofile("output/nurbs_solid_iso.txt");
+  IO::writeXYdata(iso,isoline,isofile);
+  std::system(std::string(python + "python/plot_xy.py " + isofile).c_str());
   std::cout << "--- (" << __LINE__ << ") Exit: " << __PRETTY_FUNCTION__ << "\n" << std::endl;
 }
 
 int main(int argc, char **argv)
 {
   NurbsSolid solid;
-  // elbow(1,2,3,solid);
-  pipe(1,2,solid);
+  elbow(1,2,3,solid);
+  // pipe(1,2,solid);
   simulation(solid);
   return 0;
 }
