@@ -31,3 +31,6 @@ target_link_libraries(Heat.exe ${EXTERNAL_LIBS})
 
 add_executable(Stress.exe solid_mechanics.cxx)
 target_link_libraries(Stress.exe ${EXTERNAL_LIBS})
+
+add_executable(PlaneStrain.exe plane_strain_ex.cxx)
+target_link_libraries(PlaneStrain.exe ${EXTERNAL_LIBS})

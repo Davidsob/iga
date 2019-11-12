@@ -30,14 +30,14 @@ namespace IO
       x.push_back(solution[i++]);
   }
 
-  template<typename Solid, typename Solution>
+  template<typename Solid, typename Solution, typename ...Args>
   inline void writeSolutionToFile(Solid const &solid,
                                   Solution const &solution,
                                   std::string const &file_name,
-                                  int ulevel = 10, int vlevel=10, int wlevel=10)
+                                  Args ...args)
   {
     Solid s; geometryWithSolution(solid,solution,s);
-    spline_ops::writeToFile(s,file_name,ulevel,vlevel,wlevel);
+    spline_ops::writeToFile(s,file_name,args...);
   }
 
   inline void writeXYdata(std::vector<double> const &x, std::vector<double> const &y, std::string const &file_name)

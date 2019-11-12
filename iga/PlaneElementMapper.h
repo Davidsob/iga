@@ -1,17 +1,23 @@
 #pragma once
 
 #include "ElementMapperBase.h"
+#include <iostream>
 
-class NurbsSolid;
+class NurbsSurface;
 
-class SolidElementMapper
+class PlaneElementMapper
  : public ElementMapperBase
 {
 public:
 
-  explicit SolidElementMapper(NurbsSolid const &solid);
+  explicit PlaneElementMapper(NurbsSurface const &surface);
 
-  ~SolidElementMapper() = default;
+  ~PlaneElementMapper() = default;
+
+  friend std::ostream &operator<<(std::ostream &os, PlaneElementMapper const &mapper);
+
+  Eigen::MatrixXd const &parametricMesh() const { return _parametricMesh; }
+  Eigen::MatrixXd const &elementMesh()    const { return _elementMesh; }
 
 protected:
   Eigen::RowVectorXd _shape(double x1, double x2, double x3)                  const override;
@@ -22,8 +28,17 @@ protected:
   void               _mapIntegrationPoint(double  x1, double  x2, double  x3,
                                           double &p1, double &p2, double &p3) const override;
   void               _updateElementMesh(size_t i, size_t j, size_t k)               override;
+
 private:
-  NurbsSolid const &_solid;
+  NurbsSurface const &_surface;
   Eigen::MatrixXd _parametricMesh;
   mutable Eigen::MatrixXd _elementMesh;
 };
+
+inline std::ostream &operator<<(std::ostream &os, PlaneElementMapper const &mapper)
+{
+  os << "\nPlane Element Mapper:" << std::endl;
+  os << "*** parametric mesh:\n" << mapper.parametricMesh() << std::endl;
+  os << "*** element mesh:\n" << mapper.elementMesh() << std::endl;
+  return os;
+}

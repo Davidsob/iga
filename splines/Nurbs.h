@@ -22,7 +22,7 @@ struct NurbsCurve
   vector knot, weights;
   matrix Q; 
 
-  friend std::ostream operator<<(std::ostream const &os, NurbsCurve const &curve);
+  friend std::ostream &operator<<(std::ostream &os, NurbsCurve const &curve);
 };
 
 struct NurbsSurface 
@@ -35,7 +35,7 @@ struct NurbsSurface
   vector uknot, vknot, weights; // knot vectors, weight vector
   matrix Q; // cpts in vector form {c0j, c1j, cij...} 
 
-  friend std::ostream operator<<(std::ostream const &os, NurbsSurface const &surf);
+  friend std::ostream &operator<<(std::ostream &os, NurbsSurface const &surf);
 };
 
 struct NurbsSolid
@@ -48,7 +48,7 @@ struct NurbsSolid
   vector uknot, vknot, wknot, weights; // knot vectors, weight vector
   matrix Q; // cpts in vector form {c0j, c1j, cij...} 
 
-  friend std::ostream operator<<(std::ostream const &os, NurbsSolid const &solid);
+  friend std::ostream &operator<<(std::ostream &os, NurbsSolid const &solid);
 };
 
 inline std::ostream & operator<<(std::ostream &os, NurbsCurve const &curve)
@@ -235,6 +235,18 @@ namespace spline_ops
     }
 
     return Skl;
+  }
+
+  std::vector<double>
+  inline SurfaceDerivative(double u, double v, int order, int direction, NurbsSurface const &surf)
+  {
+    using namespace vector_ops;
+    BSplineSurface b; weightedBSpline(surf,b);
+    auto P = spline_ops::SurfacePoint(u,v,b);
+    auto Aders = spline_ops::SurfaceDerivative(u,v,order,direction,b);
+    auto dP = (Aders - binomial(1,1)*Aders.back()*P)/P.back();
+    dP.pop_back();
+    return dP;
   }
 
   std::vector<double>

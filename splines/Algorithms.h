@@ -22,6 +22,12 @@ namespace algo
     return std::abs(a-b) <= FLT_TOL;
   }
 
+  template<typename T>
+  inline bool equal(std::vector<T> const &a, std::vector<T> const &b)
+  { 
+    return std::abs(vector_ops::norm(a-b)) <= FLT_TOL;
+  }
+
   inline void normalizeKnot(std::vector<double> &knot)
   {
     auto min = knot[0];

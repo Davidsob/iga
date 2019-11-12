@@ -190,7 +190,7 @@ void pipe(double ri, double ro, NurbsSolid &solid)
 void elbow(double ri, double ro, double re, NurbsSolid &solid)
 {
   NurbsCurve curve; sweepCurve(curve,re);
-  NurbsSurface surf; sector(surf,ri,ro);
+  NurbsSurface surf; annulus(surf,ri,ro);
 
   solid.p = surf.p;
   solid.q = surf.q;
@@ -247,7 +247,7 @@ struct Plane
 };
 
 template<typename Shape>
-std::vector<size_t> pointsOnPlane(Shape const &shape, Plane const &plane)
+std::vector<size_t> pointsOnPlaneForShape(Shape const &shape, Plane const &plane)
 {
   auto on_plane = [&plane](auto const &p)
   {
@@ -261,6 +261,102 @@ std::vector<size_t> pointsOnPlane(Shape const &shape, Plane const &plane)
   }
 
   return found;
+}
+
+template<typename Shape>
+class SimulationGeometry 
+{
+public:
+  SimulationGeometry() = default;
+  virtual ~SimulationGeometry() = default;
+
+  bool addShape(Shape const *shape)
+  {
+    if (!shape) return false;
+
+    if (std::find(shapes.begin(), shapes.end(),shape) == shapes.end())
+    {
+      shapes.push_back(shape);
+      addNewCtrlPoints();
+    } else {
+      return false;
+    }
+
+    return true;
+  }
+
+  std::vector<size_t> const &idsForShape(Shape const *shape)
+  {
+    static std::vector<size_t> const zero;
+    if (!shape) return zero;
+
+    auto it = std::find(shapes.begin(),shapes.end(),shape);
+    if (it != shapes.end())
+      return sids[std::distance(shapes.begin(),it)];
+    return zero;
+  }
+
+  std::vector<Shape const*> shapes; 
+  std::vector<size_t> ids;
+  std::vector<std::vector<size_t>> sids;
+  std::vector<std::vector<double>> ctrlPoints;
+
+private:
+  void addNewCtrlPoints()
+  {
+    std::vector<size_t> tmp;
+    for (auto const &x : shapes.back()->Q)
+    {
+      auto it = std::find(ctrlPoints.begin(), ctrlPoints.end(), x);
+      if (it == ctrlPoints.end())
+      {
+        auto id = ctrlPoints.size();
+        ids.push_back(id);
+        tmp.push_back(id);
+        ctrlPoints.push_back(x);
+      } else {
+        auto id = std::distance(ctrlPoints.begin(),it);
+        tmp.push_back(id);
+      }
+    }
+
+    sids.push_back(tmp);
+  }
+};
+
+template<typename Shape>
+std::vector<size_t> pointsOnPlane(SimulationGeometry<Shape> const &geom, Plane const &plane)
+{
+  auto on_plane = [&plane](auto const &p)
+  {
+    return algo::equal(dot(plane.n,p-plane.x),0.0);
+  };
+
+  std::vector<size_t> found;
+  for (auto const id : geom.ids)
+  {
+    if (on_plane(geom.ctrlPoints[id])) found.push_back(id);
+  }
+
+  return found;
+}
+
+
+
+Eigen::SparseMatrix<double> assemblyMatrix(std::vector<size_t> const &sdof, size_t ndof, size_t ctrlPoints)
+{
+  auto const N = ndof*ctrlPoints;
+  auto const M = ndof*sdof.size();
+  Eigen::SparseMatrix<double> L(N,M);
+  size_t k = 0;
+  for (auto const &i :sdof)
+  {
+    L.insert(ndof*i,k++) = 1;
+    L.insert(ndof*i+1,k++) = 1;
+    L.insert(ndof*i+2,k++) = 1;
+  }
+
+  return L;
 }
 
 template<typename Solid>
@@ -360,13 +456,28 @@ void simulation(Solid const &solid)
     return b.transpose()*(d*b);
   };
 
-  // Compute stiffness
-  size_t dof = 3*solid.Q.size();
-  Eigen::MatrixXd K(dof,dof); K.setZero();
-  Eigen::VectorXd f(dof); f.setZero();
+  // set the up Simulation using the defined geometry
+  SimulationGeometry<Solid> geom;
+  geom.addShape(&solid);
+
+  // create mapper
   SolidElementMapper mapper(solid);
   auto ip = iga::integrationPoints(mapper,solid.p,solid.q,solid.r);
 
+  // Compute stiffness
+  size_t ndof = 3;
+  size_t dof = ndof*geom.ctrlPoints.size();
+  size_t edof = ndof*solid.Q.size();
+  Eigen::MatrixXd K(dof,dof); K.setZero();
+  Eigen::VectorXd f(dof); f.setZero();
+
+  Eigen::MatrixXd Kel(edof,edof);
+  Eigen::VectorXd fel(edof);
+
+  // get assembly matrix for shape
+  auto const L = assemblyMatrix(geom.idsForShape(&solid),ndof,geom.ctrlPoints.size());
+
+  // integrate 
   auto elu = iga::meshFromSpan(solid.uknot).size()-1;
   auto elv = iga::meshFromSpan(solid.vknot).size()-1;
   auto elw = iga::meshFromSpan(solid.wknot).size()-1;
@@ -379,9 +490,12 @@ void simulation(Solid const &solid)
         mapper.updateElementMesh(i,j,k);
         std::cout << "updating integration points..." << std::endl;
         for (auto &p : ip) p.update();
-
-        quadrature::gauss(ip,K,stiffness);
-        quadrature::gauss(ip,f,gravity);
+        std::cout << "integrating weak forms..." << std::endl;
+        Kel.setZero(); fel.setZero();
+        quadrature::gauss(ip,Kel,stiffness);
+        quadrature::gauss(ip,fel,gravity);
+        K += L*Kel*L.transpose();
+        f += L*fel;
       }
 
 // #################################
@@ -393,11 +507,10 @@ void simulation(Solid const &solid)
   plane.x = {0,0,4};
   plane.n = {0,0,1};
   // x- plane
-  auto fixed = pointsOnPlane(solid,plane);
-
+  auto const fixed = pointsOnPlane<Solid>(geom,plane);
   std::printf("Applying boundary conditions for fixed surface to %lu cpts\n",fixed.size());
 
-  auto C = 3*fixed.size();
+  size_t C = 3*fixed.size();
   Eigen::MatrixXd Kc(C,dof); Kc.setZero();
   Eigen::VectorXd Rc(C); Rc.setZero();
 
@@ -441,24 +554,29 @@ void simulation(Solid const &solid)
 // write solution 
 // #################################
   // reshape solution
-  auto const uvw = Eigen::Map<const Eigen::MatrixXd>(u.data(),3,solid.Q.size()).transpose();
+  auto const uvw = Eigen::Map<const Eigen::MatrixXd>(u.data(),ndof,dof/ndof).transpose();
   // compute disp mag and deform the mesh
-  double scale = 1e5;
+  auto const sids = geom.idsForShape(&solid);
+  Eigen::VectorXd  umag(sids.size());
+  Eigen::VectorXd wdisp(sids.size());
+
+  double scale = 100;
   Solid deformed = solid;
-  Eigen::VectorXd disp(solid.Q.size());
-  for (size_t i = 0; i < solid.Q.size(); i++)
+  for (size_t i = 0; i < sids.size(); i++)
   {
-    auto const x = convert::to<std::vector<double>>(Eigen::RowVectorXd(uvw.row(i)));
-    disp[i] = norm(x);
+    auto const x = convert::to<std::vector<double>>(Eigen::RowVectorXd(uvw.row(sids[i])));
+    umag[i]  = norm(x);
+    wdisp[i] = x[2];
     deformed.Q[i] += scale*x;
   }
 
+
   std::string file("output/nurbs_stress.txt");
-  IO::writeSolutionToFile(deformed,uvw.col(2),file,20,10,20);
+  IO::writeSolutionToFile(deformed,wdisp,file,20,10,20);
   std::system(std::string(python + "python/plot_surface.py " + file).c_str());
 
   // check along v=w=const
-  NurbsSolid wsolution; IO::geometryWithSolution(solid,uvw.col(2),wsolution);
+  NurbsSolid wsolution; IO::geometryWithSolution(solid,wdisp,wsolution);
   size_t N = 100;
   std::vector<double> iso(N+1); std::iota(iso.begin(),iso.end(),0); iso/= N;
   double v = 1.0; double w = 1.0;

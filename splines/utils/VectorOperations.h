@@ -3,13 +3,20 @@
 #include <algorithm>
 #include <cmath>
 #include <functional>
+#include <fstream>
 #include <numeric>
 #include <ostream>
-#include <fstream>
 #include <vector>
 
 namespace vector_ops 
 {
+  template<typename T, typename U>
+  std::ostream &operator<<(std::ostream &os, std::pair<T,U> const &x)
+  {
+    os << "{" << x.first << ", " << x.second <<"}";
+    return os; 
+  }
+
   template<typename T>
   std::ostream &operator<<(std::ostream &os, std::vector<T> const &x)
   {
@@ -166,5 +173,11 @@ namespace vector_ops
     auto n = norm(x);
     auto fact = ( n < 1e-8) ? T(1.0) : T(1.0)/n;
     return fact*x;
+  }
+
+  template<typename T>
+  bool operator==(std::vector<T> const &x, std::vector<T> const &y)
+  {
+    return norm(x-y) < 1e-8;
   }
 }

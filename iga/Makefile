@@ -115,6 +115,30 @@ iga/fast:
 	cd /u/xeons08/people/bdavidson/programming/cpp/bsplines && $(MAKE) -f iga/CMakeFiles/iga.dir/build.make iga/CMakeFiles/iga.dir/build
 .PHONY : iga/fast
 
+PlaneElementMapper.o: PlaneElementMapper.cpp.o
+.PHONY : PlaneElementMapper.o
+
+# target to build an object file
+PlaneElementMapper.cpp.o:
+	cd /u/xeons08/people/bdavidson/programming/cpp/bsplines && $(MAKE) -f iga/CMakeFiles/iga.dir/build.make iga/CMakeFiles/iga.dir/PlaneElementMapper.cpp.o
+.PHONY : PlaneElementMapper.cpp.o
+
+PlaneElementMapper.i: PlaneElementMapper.cpp.i
+.PHONY : PlaneElementMapper.i
+
+# target to preprocess a source file
+PlaneElementMapper.cpp.i:
+	cd /u/xeons08/people/bdavidson/programming/cpp/bsplines && $(MAKE) -f iga/CMakeFiles/iga.dir/build.make iga/CMakeFiles/iga.dir/PlaneElementMapper.cpp.i
+.PHONY : PlaneElementMapper.cpp.i
+
+PlaneElementMapper.s: PlaneElementMapper.cpp.s
+.PHONY : PlaneElementMapper.s
+
+# target to generate assembly for a file
+PlaneElementMapper.cpp.s:
+	cd /u/xeons08/people/bdavidson/programming/cpp/bsplines && $(MAKE) -f iga/CMakeFiles/iga.dir/build.make iga/CMakeFiles/iga.dir/PlaneElementMapper.cpp.s
+.PHONY : PlaneElementMapper.cpp.s
+
 SolidElementMapper.o: SolidElementMapper.cpp.o
 .PHONY : SolidElementMapper.o
 
@@ -148,6 +172,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... iga"
 	@echo "... rebuild_cache"
+	@echo "... PlaneElementMapper.o"
+	@echo "... PlaneElementMapper.i"
+	@echo "... PlaneElementMapper.s"
 	@echo "... SolidElementMapper.o"
 	@echo "... SolidElementMapper.i"
 	@echo "... SolidElementMapper.s"

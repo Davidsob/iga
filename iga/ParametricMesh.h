@@ -8,6 +8,8 @@
 #include "splines/Algorithms.h"
 #include "splines/utils/Converters.h"
 
+#include "splines/Nurbs.h"
+
 #include <Eigen/Dense>
 
 namespace iga
@@ -26,9 +28,17 @@ namespace iga
     return tmp; 
   }
 
+  inline Eigen::MatrixXd parametricMesh(NurbsSurface const &surface)
+  {
+    std::vector<std::vector<double>> mesh;
+    for (auto v : meshFromSpan(surface.vknot))
+      for (auto u : meshFromSpan(surface.uknot))
+        mesh.push_back({u,v});
 
-  template<typename Solid>
-  Eigen::MatrixXd parametricMesh(Solid const &solid)
+    return convert::to<Eigen::MatrixXd>(mesh);
+  }
+
+  inline Eigen::MatrixXd parametricMesh(NurbsSolid const &solid)
   {
     std::vector<std::vector<double>> mesh;
     for (auto w : meshFromSpan(solid.wknot))
@@ -39,8 +49,38 @@ namespace iga
     return convert::to<Eigen::MatrixXd>(mesh);
   }
 
+  template<typename Surface>
+  inline Eigen::MatrixXd parametricElementMesh(size_t i,size_t j,
+                                        Surface const &surface,
+                                        Eigen::MatrixXd const &pmesh)
+  {
+    std::vector<std::vector<size_t>> const topology
+    {
+      {i  ,j  },
+      {i+1,j  },
+      {i+1,j+1},
+      {i  ,j+1}
+    };
+
+    auto const n = meshFromSpan(surface.uknot).size();
+
+    auto idx = [n](size_t i, size_t j)
+    {
+      return i + j*n;
+    };
+
+    size_t kk = 0;
+    Eigen::MatrixXd emesh(4,2);
+    for (auto const &p : topology)
+    {
+      emesh.row(kk++) = pmesh.row(idx(p[0],p[1]));
+    }
+
+    return emesh;
+  }
+
   template<typename Solid>
-  Eigen::MatrixXd parametricElementMesh(size_t i,size_t j,size_t k,
+  inline Eigen::MatrixXd parametricElementMesh(size_t i,size_t j,size_t k,
                                         Solid const &solid,
                                         Eigen::MatrixXd const &pmesh)
   {

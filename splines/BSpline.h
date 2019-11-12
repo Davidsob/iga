@@ -21,7 +21,7 @@ struct BSplineCurve
   vector knot;
   matrix Q; 
 
-  friend std::ostream operator<<(std::ostream const &os, BSplineCurve const &curve);
+  friend std::ostream &operator<<(std::ostream &os, BSplineCurve const &curve);
 };
 
 struct BSplineSurface
@@ -35,7 +35,7 @@ struct BSplineSurface
   vector uknot, vknot; // knot vectors
   matrix Q; // cpts in vector form {c0j, c1j, cij...} 
 
-  friend std::ostream operator<<(std::ostream const &os, BSplineSurface const &surf);
+  friend std::ostream &operator<<(std::ostream &os, BSplineSurface const &surf);
 };
 
 struct BSplineSolid
@@ -54,7 +54,7 @@ struct BSplineSolid
   vector uknot, vknot, wknot; // knot vectors
   matrix Q; // cpts in vector form {c0j, c1j, cij...} 
 
-  friend std::ostream operator<<(std::ostream const &os, BSplineSolid const &surf);
+  friend std::ostream &operator<<(std::ostream &os, BSplineSolid const &surf);
 };
 
 inline std::ostream & operator<<(std::ostream &os, BSplineCurve const &curve)
@@ -245,7 +245,71 @@ namespace spline_ops
     return S;
   }
 
+  std::vector<double>
+  inline _SurfaceDerivativeWrtU(double u, double v, int order, BSplineSurface const &surf)
+  {
+    using matrix = typename BSplineSurface::matrix;
+    using point  = typename matrix::value_type;
 
+    auto const uSpan = algo::FindSpan(u, surf.p, surf.uknot);
+    auto const vSpan = algo::FindSpan(v, surf.q, surf.vknot);
+
+    auto const dNu = algo::BasisFunctionDerivatives(u,uSpan,surf.p,surf.uknot);
+    auto const Nv = algo::BasisFunctions(v,vSpan,surf.q,surf.vknot);
+
+    point dSdU(surf.dim(),0.0);
+
+    for (int j = 0; j <= surf.q; j++)
+    {
+      auto b = j+vSpan-surf.q;
+      for (int i = 0; i <= surf.p; i++)
+      {
+        auto a = i+uSpan-surf.p;
+        auto idx = surf.qid(a,b);
+        dSdU += dNu[order][i]*Nv[j]*surf.Q[idx];
+      }
+    }
+
+    return dSdU;
+  }
+
+  std::vector<double>
+  inline _SurfaceDerivativeWrtV(double u, double v, int order, BSplineSurface const &surf)
+  {
+    using matrix = typename BSplineSurface::matrix;
+    using point  = typename matrix::value_type;
+
+    auto const uSpan = algo::FindSpan(u, surf.p, surf.uknot);
+    auto const vSpan = algo::FindSpan(v, surf.q, surf.vknot);
+
+    auto const Nu = algo::BasisFunctions(u,uSpan,surf.p,surf.uknot);
+    auto const dNv = algo::BasisFunctionDerivatives(v,vSpan,surf.q,surf.vknot);
+
+    point dSdV(surf.dim(),0.0);
+
+    for (int j = 0; j <= surf.q; j++)
+    {
+      auto b = j+vSpan-surf.q;
+      for (int i = 0; i <= surf.p; i++)
+      {
+        auto a = i+uSpan-surf.p;
+        auto idx = surf.qid(a,b);
+        dSdV += Nu[i]*dNv[order][j]*surf.Q[idx];
+      }
+    }
+
+    return dSdV;
+  }
+
+  std::vector<double>
+  inline SurfaceDerivative(double u, double v, int order, int direction, BSplineSurface const &surf)
+  {
+    switch (direction)
+    {
+      case 1:  return _SurfaceDerivativeWrtV(u,v,order,surf); break;
+      default: return _SurfaceDerivativeWrtU(u,v,order,surf); break;
+    }
+  }
 
   std::vector<double>
   inline _SolidDerivativeWrtU(double u, double v, double w, int order, BSplineSolid const &solid)

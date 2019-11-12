@@ -11,7 +11,7 @@ class IntegrationPoint
 {
 public:
   explicit IntegrationPoint(ElementMapper const &mapper)
-    : mapper(mapper), id(-1) {}
+    : mapper(mapper), id(-1), gauss({0,0,0}),para({0,0,0}) {}
 
   ~IntegrationPoint() = default;
 
@@ -66,6 +66,7 @@ namespace iga
   std::vector<IntegrationPoint<ElementMapper>>
   _integrationPoints(ElementMapper const &mapper, int order1, int order2)
   {
+    std::cout << "\n+++ (" << __LINE__ << ") Enter: " << __PRETTY_FUNCTION__ << std::endl;
     using IntPoint = IntegrationPoint<ElementMapper>;
     auto const gp1{gaussLegendrePoints(order1)};
     auto const gp2{gaussLegendrePoints(order2)};
@@ -84,6 +85,7 @@ namespace iga
         k++;
       }
     }
+std::cout << "--- (" << __LINE__ << ") Exit: " << __PRETTY_FUNCTION__ << "\n" << std::endl;
     return points;
   }
 

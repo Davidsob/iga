@@ -26,13 +26,13 @@ public:
   }
 
   template<typename IsoparametricPoint>
-  Eigen::Matrix3d parametricJacobian(IsoparametricPoint const &p) const
+  Eigen::MatrixXd parametricJacobian(IsoparametricPoint const &p) const
   {
     return _parametricJacobian(p[0],p[1],p[2]);
   }
 
   template<typename ParametricPoint>
-  Eigen::Matrix3d physicalJacobian(ParametricPoint const &p) const
+  Eigen::MatrixXd physicalJacobian(ParametricPoint const &p) const
   {
     return _physicalJacobian(p[0],p[1],p[2]);
   }
@@ -61,8 +61,8 @@ protected:
   virtual Eigen::RowVectorXd _shape(double x1, double x2, double x3) const = 0;
   virtual Eigen::MatrixXd    _grad(double x1, double x2, double x3) const = 0;
   virtual Eigen::MatrixXd    _Grad(double x1, double x2, double x3) const = 0;
-  virtual Eigen::Matrix3d    _parametricJacobian(double x1, double x2, double x3) const = 0;
-  virtual Eigen::Matrix3d    _physicalJacobian(double x1, double x2, double x3) const = 0;
+  virtual Eigen::MatrixXd    _parametricJacobian(double x1, double x2, double x3) const = 0;
+  virtual Eigen::MatrixXd    _physicalJacobian(double x1, double x2, double x3) const = 0;
   virtual void               _mapIntegrationPoint(double  x1, double  x2, double  x3,
                                                   double &p1, double &p2, double &p3) const = 0;
   virtual void               _updateElementMesh(size_t i, size_t j, size_t k) = 0;
