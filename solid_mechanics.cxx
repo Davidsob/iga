@@ -26,12 +26,46 @@ static std::string const python{"~/anaconda2/bin/python2.7 "};
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 #include <Eigen/SparseLU>
+#include <Eigen/SparseCholesky>
 
 #include <random>
 
 using namespace Eigen;
 
-static const Eigen::IOFormat CleanFormat(4, 0, ", ", "\n", "[", "]");
+static const Eigen::IOFormat CleanFormat(2, 0, ", ", "\n", "[", "]");
+
+void beam(NurbsSolid &solid, double width=1.0, double height=1.0, double depth=1.0)
+{
+  using namespace vector_ops;
+
+  int p = 1;
+  int q = 1;
+  int r = 1;
+  std::vector<double> knot{0.0, 0.0, 1.0, 1.0};
+  algo::normalizeKnot(knot);
+
+  typename NurbsCurve::matrix cpts{
+    {0        , 0.0   , 0.0},
+    {width    , 0.0   , 0.0},
+    {0        , height, 0.0},
+    {width    , height, 0.0},
+
+    {0        , 0.0   , depth},
+    {width    , 0.0   , depth},
+    {0        , height, depth},
+    {width    , height, depth},
+
+  };
+
+  solid.p = p;
+  solid.q = q;
+  solid.r = r;
+  solid.uknot = knot;
+  solid.vknot = knot;
+  solid.wknot = knot;
+  solid.weights = std::vector<double>(cpts.size(),1.0);
+  solid.Q = cpts;
+}
 
 void arc(NurbsCurve &curve, double radius=1.0)
 {
@@ -385,8 +419,9 @@ void simulation(Solid const &solid)
       b(4,i*3+2) = grad(1,i);
 
       b(5,i*3)   = grad(2,i);
-      b(5,i*3+2) = grad(1,i);
+      b(5,i*3+2) = grad(0,i);
     }
+
     return b;
   };
 
@@ -414,35 +449,33 @@ void simulation(Solid const &solid)
   auto matl = [E,nu](auto const &p)->Eigen::MatrixXd
   {
     Eigen::MatrixXd D(6,6); D.setZero();
-    double c = (1.0 - 2.0*nu);
-    double a = E/((1.0 + nu)*c);
-    double b = a*(1.0 - nu);
-    double d = a*nu;
-    c *= (0.5 *a);
+    double const a = E/((1.0+nu)*(1.0-2.0*nu));
+    double const b = 1.0-nu;
+    double const c = 0.5*(1.0-2.0*nu);
 
     D(0,0) = b;
-    D(0,1) = d;
-    D(0,2) = d;
+    D(0,1) = nu;
+    D(0,2) = nu;
 
-    D(1,0) = d;
+    D(1,0) = nu;
     D(1,1) = b;
-    D(1,2) = d;
+    D(1,2) = nu;
 
-    D(2,0) = d;
-    D(2,1) = d;
+    D(2,0) = nu;
+    D(2,1) = nu;
     D(2,2) = b;
 
     D(3,3) = c;
     D(4,4) = c;
     D(5,5) = c;
 
-    return D;
+    return a*D;
   };
 
 // #################################
 // Weak forms 
 // #################################
-  Vector3d accel; accel << 0.0, 0.0, -9.81;
+  Eigen::Vector3d accel; accel << 0.0, 0.0, -9.81;
   auto gravity = [&Nop, &rho, &accel](auto const &p)->Eigen::VectorXd
   {
     auto const n = Nop(p);
@@ -451,8 +484,8 @@ void simulation(Solid const &solid)
 
   auto stiffness = [&Bop,&matl](auto const &p)->Eigen::MatrixXd
   {
-    auto const b = Bop(p);
-    auto const d = matl(p);
+    Eigen::MatrixXd const b = Bop(p);
+    Eigen::MatrixXd const d = matl(p);
     return b.transpose()*(d*b);
   };
 
@@ -483,10 +516,13 @@ void simulation(Solid const &solid)
   auto elw = iga::meshFromSpan(solid.wknot).size()-1;
   std::printf("Default mesh has {%lu, %lu, %lu} elements\n",elu,elv,elw);
   for (size_t k = 0; k < elw; k++)
+  {
     for (size_t j = 0; j < elv; j++)
+    {
       for (size_t i = 0; i < elu; i++)
       {
         std::printf("\nIntegrating element(%lu,%lu,%lu)\n",i,j,k);
+        std::cout << "updating element mesh..." << std::endl;
         mapper.updateElementMesh(i,j,k);
         std::cout << "updating integration points..." << std::endl;
         for (auto &p : ip) p.update();
@@ -497,31 +533,34 @@ void simulation(Solid const &solid)
         K += L*Kel*L.transpose();
         f += L*fel;
       }
+    }
+  }
 
 // #################################
 // Boundary conditions
 // #################################
   // compute constraints
+  std::vector<size_t> cdof;
   // fix at the top
   Plane plane;
   plane.x = {0,0,4};
   plane.n = {0,0,1};
   // x- plane
   auto const fixed = pointsOnPlane<Solid>(geom,plane);
+  for (auto const &idx : fixed)
+  {
+    cdof.push_back(ndof*idx);
+    cdof.push_back(ndof*idx+1);
+    cdof.push_back(ndof*idx+2);
+  }
   std::printf("Applying boundary conditions for fixed surface to %lu cpts\n",fixed.size());
 
-  size_t C = 3*fixed.size();
+  size_t C = cdof.size();
   Eigen::MatrixXd Kc(C,dof); Kc.setZero();
   Eigen::VectorXd Rc(C); Rc.setZero();
 
   size_t k = 0;
-  for (auto const &idx : fixed)
-  {
-    Kc(k++,3*idx)   = 1;
-    Kc(k++,3*idx+1) = 1;
-    Kc(k++,3*idx+2) = 1;
-  }
-
+  for (auto const &i: cdof) Kc(k++,i) = 1;
 // #################################
 // compose matrix 
 // #################################
@@ -531,7 +570,6 @@ void simulation(Solid const &solid)
   A.block(0,0,dof,dof) = K;
   A.block(dof,0,C,dof) = Kc;
   A.block(0,dof,dof,C) = Kc.transpose();
-
 // #################################
 // solve 
 // #################################
@@ -560,7 +598,7 @@ void simulation(Solid const &solid)
   Eigen::VectorXd  umag(sids.size());
   Eigen::VectorXd wdisp(sids.size());
 
-  double scale = 100;
+  double scale = 1e5;
   Solid deformed = solid;
   for (size_t i = 0; i < sids.size(); i++)
   {
@@ -570,9 +608,8 @@ void simulation(Solid const &solid)
     deformed.Q[i] += scale*x;
   }
 
-
   std::string file("output/nurbs_stress.txt");
-  IO::writeSolutionToFile(deformed,wdisp,file,20,10,20);
+  IO::writeSolutionToFile(deformed,wdisp,file,30,5,60);
   std::system(std::string(python + "python/plot_surface.py " + file).c_str());
 
   // check along v=w=const
@@ -593,11 +630,67 @@ void simulation(Solid const &solid)
   std::cout << "--- (" << __LINE__ << ") Exit: " << __PRETTY_FUNCTION__ << "\n" << std::endl;
 }
 
+template<typename Solid>
+void SolidTest(Solid const &solid)
+{
+  std::cout << __PRETTY_FUNCTION__ << std::endl;
+  using namespace vector_ops;
+
+  int N = 5;
+  double u,v,w,du,dv,dw;
+  u = 1.0; v = 0.0; w = 0.0;
+  du = 1.0/N, dv = 1.0/N, dw = 1.0/N;
+  std::vector<std::vector<double>> p,pu,pv,pw;
+  Eigen::MatrixXd const Q = convert::to<Eigen::MatrixXd>(solid.Q);
+  for (int k = 0; k <= N; k++)
+  {
+    v = 0.0;
+    for (int j = 0; j <= N; j++)
+    {
+      u = 0.0;
+      for (int i = 0; i <= N; i++)
+      {
+        p.push_back(spline_ops::SolidPoint(u,v,w,solid));
+        Eigen::MatrixXd const dN = iga::ShapeFunctionDerivatives(u,v,w,solid);
+        Eigen::MatrixXd const grad = dN*Q;
+        pu.push_back(convert::to<std::vector<double>>(Eigen::RowVectorXd(grad.row(0))));
+        pv.push_back(convert::to<std::vector<double>>(Eigen::RowVectorXd(grad.row(1))));
+        pw.push_back(convert::to<std::vector<double>>(Eigen::RowVectorXd(grad.row(2))));
+        // pu.push_back(spline_ops::SolidDerivative(u,v,w,1,0,solid));
+        // pv.push_back(spline_ops::SolidDerivative(u,v,w,1,1,solid));
+        // pw.push_back(spline_ops::SolidDerivative(u,v,w,1,2,solid));
+        u += du;
+      }
+      v += dv;
+    }
+    w += dw;
+  }
+
+  std::string file("output/nurbs_solid.txt");
+  std::string uvec_file("output/nurbs_solid_du.txt");
+  std::string vvec_file("output/nurbs_solid_dv.txt");
+  std::string wvec_file("output/nurbs_solid_dw.txt");
+  spline_ops::writeVectorData(p,pu, uvec_file, true, 0.2);
+  spline_ops::writeVectorData(p,pv, vvec_file, true, 0.2);
+  spline_ops::writeVectorData(p,pw, wvec_file, true, 0.2);
+  spline_ops::writeToFile(solid,file,1,1,1);
+
+  std::string cmd = python + "python/plot_surface.py ";
+  cmd += file + " ";
+  cmd += uvec_file + " ";
+  cmd += vvec_file + " ";
+  cmd += wvec_file;
+
+  std::system(cmd.c_str());
+}
+
 int main(int argc, char **argv)
 {
   NurbsSolid solid;
   elbow(1,2,3,solid);
+  // beam(solid,2,2,2);
   // pipe(1,2,solid);
   simulation(solid);
+  // SolidTest(solid);
   return 0;
 }

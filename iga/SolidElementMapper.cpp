@@ -26,6 +26,7 @@ _grad(double x1, double x2, double x3) const
 {
   Eigen::MatrixXd const jacobian = _physicalJacobian(x1,x2,x3);
   Eigen::MatrixXd const dN = iga::ShapeFunctionDerivatives(x1,x2,x3,_solid);
+  
   return jacobian.inverse()*dN;
 }
 

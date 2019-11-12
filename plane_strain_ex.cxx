@@ -323,6 +323,7 @@ void simulation(Solid const &solid)
       std::printf("\nIntegrating element(%lu,%lu)\n",i,j);
       std::cout << "updating element mesh..." << std::endl;
       mapper.updateElementMesh(i,j);
+        std::cout << "updating integration points..." << std::endl;
       for (auto &p : ip) p.update();
       std::cout << "integrating weak forms..." << std::endl;
       Kel.setZero(); fel.setZero();

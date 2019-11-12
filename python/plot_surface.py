@@ -75,18 +75,30 @@ def plot(mesh,verts,cpts,**kwargs):
   vec_data = kwargs.get("vector_data", None)
   if vec_data:
     print "Have vector data"
-    pts,uvec,vvec = vec_data
-    for p,u,v in zip(pts,uvec,vvec):
-      w = np.cross(u,v)
-      w *= np.linalg.norm(u)/np.linalg.norm(w) 
-      x,y,z = p
-      dux,duy,duz = u
-      dvx,dvy,dvz = v
-      dwx,dwy,dwz = w
+    if len(vec_data) == 3:
+      pts,uvec,vvec = vec_data
+      for p,u,v in zip(pts,uvec,vvec):
+        w = np.cross(u,v)
+        w *= np.linalg.norm(u)/np.linalg.norm(w) 
+        x,y,z = p
+        dux,duy,duz = u
+        dvx,dvy,dvz = v
+        dwx,dwy,dwz = w
 
-      ax.plot3D([x,x+dux],[y,y+duy],[z,z+duz],color='red')
-      ax.plot3D([x,x+dvx],[y,y+dvy],[z,z+dvz],color='green')
-      ax.plot3D([x,x+dwx],[y,y+dwy],[z,z+dwz],color='blue')
+        ax.plot3D([x,x+dux],[y,y+duy],[z,z+duz],color='red')
+        ax.plot3D([x,x+dvx],[y,y+dvy],[z,z+dvz],color='green')
+        ax.plot3D([x,x+dwx],[y,y+dwy],[z,z+dwz],color='blue')
+    elif len(vec_data) == 4:
+      pts,uvec,vvec,wvec = vec_data
+      for p,u,v,w in zip(pts,uvec,vvec,wvec):
+        x,y,z = p
+        dux,duy,duz = u
+        dvx,dvy,dvz = v
+        dwx,dwy,dwz = w
+
+        ax.plot3D([x,x+dux],[y,y+duy],[z,z+duz],color='red')
+        ax.plot3D([x,x+dvx],[y,y+dvy],[z,z+dvz],color='green')
+        ax.plot3D([x,x+dwx],[y,y+dwy],[z,z+dwz],color='blue')
 
   for p in cpts:
     ax.scatter(p[0],p[1],p[2],color='red',marker='s')
@@ -142,5 +154,10 @@ if __name__ == "__main__":
       p,u = open_vector_data(sys.argv[2])
       p,v = open_vector_data(sys.argv[3])
       plot(m,x,cpt,vector_data=(p,u,v),has_field=has_field)
+    elif len(sys.argv) == 5:
+      p,u = open_vector_data(sys.argv[2])
+      p,v = open_vector_data(sys.argv[3])
+      p,w = open_vector_data(sys.argv[4])
+      plot(m,x,cpt,vector_data=(p,u,v,w),has_field=has_field)
     else:
       plot(m,x,cpt,has_field=has_field)

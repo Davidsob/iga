@@ -431,10 +431,10 @@ namespace iga
             (1.0 - u)*(1.0 + v);
 
     Eigen::MatrixXd dN(3,8);
-    dN.row(0) = dN1;
-    dN.row(1) = dN2;
-    dN.row(2) = dN3;
+    dN.row(0) = 0.125*dN1;
+    dN.row(1) = 0.125*dN2;
+    dN.row(2) = 0.125*dN3;
     
-    return 0.125*dN;
+    return dN;
   }
 }

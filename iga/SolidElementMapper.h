@@ -13,6 +13,11 @@ public:
 
   ~SolidElementMapper() = default;
 
+  friend std::ostream &operator<<(std::ostream &os, SolidElementMapper const &mapper);
+
+  Eigen::MatrixXd const &parametricMesh() const { return _parametricMesh; }
+  Eigen::MatrixXd const &elementMesh()    const { return _elementMesh; }
+
 protected:
   Eigen::RowVectorXd _shape(double x1, double x2, double x3)                  const override;
   Eigen::MatrixXd    _grad(double x1, double x2, double x3)                   const override;
@@ -27,3 +32,11 @@ private:
   Eigen::MatrixXd _parametricMesh;
   mutable Eigen::MatrixXd _elementMesh;
 };
+
+inline std::ostream &operator<<(std::ostream &os, SolidElementMapper const &mapper)
+{
+  os << "\nPlane Element Mapper:" << std::endl;
+  os << "*** parametric mesh:\n" << mapper.parametricMesh() << std::endl;
+  os << "*** element mesh:\n" << mapper.elementMesh() << std::endl;
+  return os;
+}
