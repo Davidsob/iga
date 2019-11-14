@@ -262,7 +262,7 @@ void SurfaceTest(Surface const &surf)
   std::string vvec_file("output/nurbs_surface_dv.txt");
   spline_ops::writeVectorData({S0}, {Su}, uvec_file, true, 0.2);
   spline_ops::writeVectorData({S0}, {Sv}, vvec_file, true, 0.2);
-  spline_ops::writeToFile(surf,file,50,1);
+  spline_ops::writeToFile(surf,file,10,10);
   std::system(std::string(python + "python/plot_surface.py " + file + " " + uvec_file + " " + vvec_file).c_str());
 }
 
@@ -293,10 +293,36 @@ void SolidTest(Solid const &solid)
   std::system(std::string(python + "python/plot_surface.py " + file + " " + uvec_file + " " + vvec_file).c_str());
 }
 
+template<typename Solid>
+void IsoSurfaceTest(Solid const &solid)
+{
+  std::cout << __PRETTY_FUNCTION__ << std::endl;
+  using namespace vector_ops;
+
+  std::string file("output/nurbs_solid.txt");
+  NurbsSurface xym; spline_ops::getIsoSurface(0,2,solid,xym);
+  SurfaceTest(xym);
+
+  NurbsSurface xyp; spline_ops::getIsoSurface(1,2,solid,xyp);
+  SurfaceTest(xyp);
+
+  NurbsSurface zxm; spline_ops::getIsoSurface(0,1,solid,zxm);
+  SurfaceTest(zxm);
+
+  NurbsSurface zxp; spline_ops::getIsoSurface(1,1,solid,zxp);
+  SurfaceTest(zxp);
+
+  NurbsSurface yzm; spline_ops::getIsoSurface(0,0,solid,yzm);
+  SurfaceTest(yzm);
+
+  NurbsSurface yzp; spline_ops::getIsoSurface(1,0,solid,yzp);
+  SurfaceTest(yzp);
+}
+
 int main(int argc, char **argv)
 {
   NurbsSolid solid;
   elbow(1,2,3,solid);
-  SolidTest(solid);
+  IsoSurfaceTest(solid);
   return 0;
 }

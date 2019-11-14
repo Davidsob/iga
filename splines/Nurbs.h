@@ -103,6 +103,23 @@ namespace spline_ops
     }
   }
 
+  inline void extractWeights (
+    std::vector<std::vector<double>> const &Qw,
+    std::vector<std::vector<double>> &Q,
+    std::vector<double> &w
+  )
+  {
+    Q.clear(); w.clear();
+    for (auto const &xw : Qw)
+    {
+      w.push_back(xw.back());
+      auto x{std::vector<double>(xw.begin(),xw.end()-1)/xw.back()};
+      Q.push_back(x);
+    }
+  }
+
+
+
   inline void weightedBSpline(NurbsCurve const &c, BSplineCurve &b)
   {
     b.p = c.p;
@@ -259,6 +276,24 @@ namespace spline_ops
     auto dP = (Aders - binomial(1,1)*Aders.back()*P)/P.back();
     dP.pop_back();
     return dP;
+  }
+
+  inline void getIsoSurface(double uvw, size_t direction, NurbsSolid const &solid, NurbsSurface &surf)
+  {
+    BSplineSurface bw;
+    BSplineSolid sw; weightedBSpline(solid,sw);
+    switch(direction)
+    {
+      case 1: _constVIsoSurface (uvw,sw,bw); break;
+      case 2: _constWIsoSurface (uvw,sw,bw); break;
+      default: _constUIsoSurface(uvw,sw,bw); break;
+    }
+    
+    surf.p = bw.p;
+    surf.q = bw.q;
+    surf.uknot = bw.uknot;
+    surf.vknot = bw.vknot;
+    extractWeights(bw.Q,surf.Q,surf.weights);
   }
 
   inline void writeToFile(NurbsCurve const &c,std::string const &file_name, int level = 20)

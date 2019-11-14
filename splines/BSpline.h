@@ -424,6 +424,178 @@ namespace spline_ops
     }
   }
 
+  inline void _constUIsoCurve(double u, BSplineSurface const &surf, BSplineCurve &curve)
+  {
+    using namespace vector_ops;
+    using point = typename BSplineSurface::matrix::value_type;
+
+    auto uspan = algo::FindSpan(u, surf.p, surf.uknot);
+    std::vector<double> Nu = algo::BasisFunctions(u,uspan,surf.p, surf.uknot);
+
+    int const M = surf.vknot.size()-surf.q-1;
+    for (int i = 0; i < M; i++)
+    {
+      point tmp(surf.dim(),0);
+      for (int j = 0; j <= surf.p; j++)
+      {
+        auto a = uspan-surf.p+j;
+        auto idx = surf.qid(a,i);
+        tmp += Nu[j]*surf.Q[idx];
+      }
+      curve.Q.push_back(tmp);
+    }
+
+    curve.p = surf.q;
+    curve.knot = surf.vknot; 
+  }
+
+  inline void _constVIsoCurve(double v, BSplineSurface const &surf, BSplineCurve &curve)
+  {
+    using namespace vector_ops;
+    using point = typename BSplineSurface::matrix::value_type;
+
+    auto vspan = algo::FindSpan(v, surf.q, surf.vknot);
+    std::vector<double> Nv= algo::BasisFunctions(v,vspan,surf.q,surf.vknot);
+
+    int const N = surf.uknot.size()-surf.p-1;
+    for (int i = 0; i < N; i++)
+    {
+      point tmp(surf.dim(),0);
+      for (int j = 0; j <= surf.q; j++)
+      {
+        auto b = vspan-surf.q+i;
+        auto idx = surf.qid(i,b);
+        tmp += Nv[j]*surf.Q[idx];
+      }
+      curve.Q.push_back(tmp);
+    }
+
+    curve.p = surf.p;
+    curve.knot = surf.uknot; 
+  }
+
+  inline void getIsoCurve(double uv, size_t direction, BSplineSurface const &surf, BSplineCurve &curve)
+  {
+    switch(direction)
+    {
+      case 1: _constVIsoCurve(uv,surf,curve); break;
+      default: _constUIsoCurve(uv,surf,curve); break;
+    }
+  }
+
+  inline void _constUIsoSurface(double u, BSplineSolid const &solid, BSplineSurface &surf)
+  {
+    using namespace vector_ops;
+
+    using matrix = typename BSplineSurface::matrix;
+    using point  = typename matrix::value_type;
+
+    auto const uSpan = algo::FindSpan(u, solid.p, solid.uknot);
+    std::vector<double> const Nu = algo::BasisFunctions(u,uSpan,solid.p, solid.uknot);
+
+    int const M = solid.vknot.size()-solid.q-1;
+    int const O = solid.wknot.size()-solid.r-1;
+    for (int k = 0; k < O; k++)
+    {
+      for (int j = 0; j < M; j++)
+      {
+        point tmp(solid.dim(),0);
+        for (int i = 0; i <= solid.p; i++)
+        {
+          auto a = i+uSpan-solid.p;
+          auto idx = solid.qid(a,j,k);
+          tmp += Nu[i]*solid.Q[idx];
+        }
+
+        surf.Q.push_back(tmp);
+      }
+    }
+
+    surf.p = solid.q;
+    surf.q = solid.r;
+
+    surf.uknot = solid.vknot;
+    surf.vknot = solid.wknot;
+  }
+
+  inline void _constVIsoSurface(double v, BSplineSolid const &solid, BSplineSurface &surf)
+  {
+    using namespace vector_ops;
+
+    using matrix = typename BSplineSurface::matrix;
+    using point  = typename matrix::value_type;
+
+    auto const vSpan = algo::FindSpan(v, solid.q, solid.vknot);
+    std::vector<double> const Nv = algo::BasisFunctions(v,vSpan,solid.q, solid.vknot);
+
+    int const N = solid.uknot.size()-solid.p-1;
+    int const O = solid.wknot.size()-solid.r-1;
+    for (int i = 0; i < N; i++)
+    {
+      for (int k = 0; k < O; k++)
+      {
+        point tmp(solid.dim(),0);
+        for (int j = 0; j <= solid.q; j++)
+        {
+          auto b = j+vSpan-solid.q;
+          auto idx = solid.qid(i,b,k);
+          tmp += Nv[j]*solid.Q[idx];
+        }
+        surf.Q.push_back(tmp);
+      }
+    }
+
+    surf.p = solid.r;
+    surf.q = solid.p;
+
+    surf.uknot = solid.wknot;
+    surf.vknot = solid.uknot;
+  }
+
+  inline void _constWIsoSurface(double w, BSplineSolid const &solid, BSplineSurface &surf)
+  {
+    using namespace vector_ops;
+
+    using matrix = typename BSplineSurface::matrix;
+    using point  = typename matrix::value_type;
+
+    auto const wSpan = algo::FindSpan(w, solid.r, solid.wknot);
+    std::vector<double> const Nw = algo::BasisFunctions(w,wSpan,solid.r, solid.wknot);
+
+    int const N = solid.uknot.size()-solid.p-1;
+    int const M = solid.vknot.size()-solid.q-1;
+    for (int j = 0; j < M; j++)
+    {
+      for (int i = 0; i < N; i++)
+      {
+        point tmp(solid.dim(),0);
+        for (int k = 0; k <= solid.r; k++)
+        {
+          auto c = k+wSpan-solid.r;
+          auto idx = solid.qid(i,j,c);
+          tmp += Nw[k]*solid.Q[idx];
+        }
+        surf.Q.push_back(tmp);
+      }
+    }
+
+    surf.p = solid.p;
+    surf.q = solid.q;
+
+    surf.uknot = solid.uknot;
+    surf.vknot = solid.vknot;
+  }
+
+  inline void getIsoSurface(double uvw, size_t direction, BSplineSolid const &solid, BSplineSurface &surf)
+  {
+    switch(direction)
+    {
+      case 1: _constVIsoSurface (uvw,solid,surf); break;
+      case 2: _constWIsoSurface (uvw,solid,surf); break;
+      default: _constUIsoSurface(uvw,solid,surf); break;
+    }
+  }
+
   inline void writeToFile(BSplineCurve const &c,std::string const &file_name, int level = 20)
   {
     using namespace vector_ops;

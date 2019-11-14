@@ -2,8 +2,10 @@
 #include "splines/Algorithms.h"
 #include "splines/BSpline.h"
 #include "splines/Nurbs.h"
+#include "splines/SplineModifiers.h"
 #include "splines/utils/VectorOperations.h"
 
+#include <algorithm>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -38,16 +40,12 @@ void curveTest()
   // std::system(std::string("~/anaconda2/bin/python2.7 python/plot_curve.py " + file).c_str());
 }
 
-void nurbsCurveTest()
+void acurve(NurbsCurve &curve)
 {
-  using namespace vector_ops;
-  std::cout << __PRETTY_FUNCTION__ << std::endl;
-  NurbsCurve curve;
-
   int p = 3;
-  typename decltype(curve)::vector knot{0.0, 0.0, 0.0, 0.0, 0.25, 0.5, 0.75, 1.0, 1.0, 1.0, 1.0};
-  typename decltype(curve)::vector weights{1,1,1,10,20,1,1};
-  typename decltype(curve)::matrix cpts{
+  typename NurbsCurve::vector knot{0.0, 0.0, 0.0, 0.0, 0.25, 0.5, 0.75, 1.0, 1.0, 1.0, 1.0};
+  typename NurbsCurve::vector weights{1,1,1,10,20,1,1};
+  typename NurbsCurve::matrix cpts{
     {0.0, 0.0},
     {0.25, 1.0},
     {0.7, 1.2},
@@ -61,6 +59,57 @@ void nurbsCurveTest()
   curve.knot = knot;
   curve.weights = weights;
   curve.Q = cpts;
+}
+
+void bcurve(BSplineCurve &curve)
+{
+  int p = 3;
+  typename NurbsCurve::vector knot{0.0, 0.0, 0.0, 0.0, 0.25, 0.5, 0.75, 1.0, 1.0, 1.0, 1.0};
+  typename NurbsCurve::matrix cpts{
+    {0.0, 0.0},
+    {0.25, 1.0},
+    {0.7, 1.2},
+    {0.4, -0.25},
+    {1.25, -0.25},
+    {1.0, 0.75},
+    {1.5, 0.8}
+  };
+
+  curve.p = p;
+  curve.knot = knot;
+  curve.Q = cpts;
+}
+
+void asurf(BSplineSurface &surf)
+{
+  int p = 3; int q = 1;
+  typename BSplineSurface::vector uknot{0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0};
+  typename BSplineSurface::vector vknot{0.0, 0.0, 1.0, 1.0};
+  typename BSplineSurface::matrix cpts{
+    {0.0, 0.0, 0.0},
+    {1.0, 1.0, 0.0},
+    {2.0, 1.2, 0.0},
+    {3.0, 0.0, 0.0}, 
+
+    {0.0, 0.0, 1.0},
+    {1.0, 1.0, 1.0},
+    {2.0, 1.2, 1.0},
+    {3.0, 0.0, 1.0}
+  };
+
+  surf.p = p;
+  surf.q = q;
+  surf.uknot = uknot;
+  surf.vknot = vknot;
+  surf.Q = cpts;
+}
+
+void nurbsCurveTest()
+{
+  using namespace vector_ops;
+  std::cout << __PRETTY_FUNCTION__ << std::endl;
+  NurbsCurve curve; acurve(curve);
+
   auto C = spline_ops::CurvePoint(0.5, curve);
   // make a bunch of tangents
   int N = 5;
@@ -86,28 +135,8 @@ void surfaceTest()
 {
   using namespace vector_ops;
   std::cout << __PRETTY_FUNCTION__ << std::endl;
-  BSplineSurface surf;
+  BSplineSurface surf; asurf(surf);
 
-  int p = 3; int q = 1;
-  typename decltype(surf)::vector uknot{0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0};
-  typename decltype(surf)::vector vknot{0.0, 0.0, 1.0, 1.0};
-  typename decltype(surf)::matrix cpts{
-    {0.0, 0.0, 0.0},
-    {1.0, 1.0, 0.0},
-    {2.0, 1.2, 0.0},
-    {3.0, 0.0, 0.0}, 
-
-    {0.0, 0.0, 1.0},
-    {1.0, 1.0, 1.0},
-    {2.0, 1.2, 1.0},
-    {3.0, 0.0, 1.0}
-  };
-
-  surf.p = p;
-  surf.q = q;
-  surf.uknot = uknot;
-  surf.vknot = vknot;
-  surf.Q = cpts;
   std::cout << "point on surface= " << spline_ops::SurfacePoint(0.5, 0.5, surf) << std::endl;
   auto ders = spline_ops::SurfaceDerivatives(0.5, 0.5, 1, surf);
   auto Su = ders[1][0];
@@ -198,67 +227,46 @@ void nurbsSurfaceTest()
   std::system(std::string(python + "python/plot_surface.py " + file + " " + uvec_file + " " + vvec_file).c_str());
 }
 
-void nurbsSurfaceTest2()
+void curveKnotInsertion()
 {
   using namespace vector_ops;
-  std::cout << __PRETTY_FUNCTION__ << std::endl;
-  NurbsSurface surf;
+  std::string file("output/nurbs_curve.txt");
 
-  int p = 2;
-  int q = p;
-  typename decltype(surf)::vector uknot{0.0, 0.0, 0.0, 0.5, 1.0, 1.0, 1.0};
-  typename decltype(surf)::vector vknot{0.0, 0.0, 0.0, 1.0, 1.0, 1.0};
-  typename decltype(surf)::matrix cpts{
-    {0,0,0},
-    {0,1,0},
-    {2,3,0},
-    {3,3,0},
+  NurbsCurve curve; acurve(curve);
+  // BSplineCurve curve; bcurve(curve);
+  std::cout << curve << std::endl;
+  spline_ops::writeToFile(curve,file,50);
+  std::system(std::string(python + "python/plot_curve.py " + file).c_str());
 
-    {0.5,0,0},
-    {0.5,1,0},
-    {2,2.5,0},
-    {3,1.0,0},
+  std::cout << "insertion...." << std::endl;
+  spline_ops::insertKnot(0.25,1,curve);
+  std::cout << curve << std::endl;
+  spline_ops::writeToFile(curve,file,50);
+  std::system(std::string(python + "python/plot_curve.py " + file).c_str());
+}
 
-    {1.0,0,0},
-    {1.0,0.75,0},
-    {2,1,0},
-    {3,1.0,0},
-  };
+void surfaceKnotInsertion()
+{
+  using namespace vector_ops;
+  // std::string file("output/nurbs_surface.txt");
+  BSplineSurface surf; asurf(surf);
+  // BSplineCurve curve; bcurve(curve);
+  std::cout << surf << std::endl;
+  // spline_ops::writeToFile(surf,file,5,5);
 
-  std::vector<double> weights(cpts.size(),1.0);
+  // std::system(std::string(python + "python/plot_surface.py " + file).c_str());
 
-  surf.p = p;
-  surf.q = q;
-  surf.weights = weights;
-  surf.uknot = uknot;
-  surf.vknot = vknot;
-  surf.Q = cpts;
-
-  auto ders = spline_ops::SurfaceDerivatives(0.25, 0.75, 1, surf);
-  auto Su = ders[1][0];
-  auto Sv = ders[0][1];
-  auto S0  = ders[0][0];
-
-  std::cout << "S0 = " << S0 << std::endl;
-  std::cout << "Su = " << Su << std::endl;
-  std::cout << "Sv = " << Sv << std::endl;
-
-  std::string file("output/nurbs_surface.txt");
-  std::string uvec_file("output/nurbs_surface_du.txt");
-  std::string vvec_file("output/nurbs_surface_dv.txt");
-  spline_ops::writeVectorData({S0}, {Su}, uvec_file, true, 0.2);
-  spline_ops::writeVectorData({S0}, {Sv}, vvec_file, true, 0.2);
-
-
-  spline_ops::writeToFile(surf,file,10,2);
-  std::system(std::string(python + "python/plot_surface.py " + file + " " + uvec_file + " " + vvec_file).c_str());
+  std::cout << "insertion...." << std::endl;
+  spline_ops::insertKnot(0.3,1,1,surf);
+  std::cout << surf << std::endl;
 }
 
 int main(int argc, char **argv)
 {
-  std::cout << "*** B-Spline Main ***" << std::endl;
+  std::cout << "\n+++ (" << __LINE__ << ") Enter: " << __PRETTY_FUNCTION__ << std::endl;
+  surfaceKnotInsertion();
   // nurbsCurveTest();
-  nurbsSurfaceTest();
-  // nurbsSurfaceTest2();
+  // nurbsSurfaceTest();
+  std::cout << "--- (" << __LINE__ << ") Exit: " << __PRETTY_FUNCTION__ << "\n" << std::endl;
   return 0;
 }

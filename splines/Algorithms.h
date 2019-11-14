@@ -57,7 +57,7 @@ namespace algo
     if (u < knot[0] || u > knot.back()) {
       return size_t(-1); // special case
     }
-    
+
     // binary search 
     auto low = p; auto high = n+1; auto mid = (low+high)/2;
     
@@ -70,6 +70,27 @@ namespace algo
 
     return mid;
   }
+
+  /**
+   * @brief      { given a valid span index return the multiplicity of the span}
+   *
+   * @param      i     { span index }
+   * @param      knot  The knot vector
+   *
+   * @return     { multiplicity of the span }
+   */
+  inline size_t SpanMultiplicity(size_t const &i, std::vector<double> const &knot)
+  {
+    size_t mult = 0;
+    if (equal(knot[i], knot[0])) return 0;
+    
+    while ((i-mult) >= 0 && knot[i-mult] == knot[i])
+    {
+      mult++;
+    }
+    return mult-1;
+  }
+    
  
   /**
    * @brief      Computes non-zero b-spline basis functions given coordinate in the knot span
