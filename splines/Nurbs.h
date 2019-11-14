@@ -278,14 +278,29 @@ namespace spline_ops
     return dP;
   }
 
+  inline void getIsoCurve(double uv, size_t direction, NurbsSurface const &surface, NurbsCurve &curve)
+  {
+    BSplineCurve bw;
+    BSplineSurface sw; weightedBSpline(surface,sw);
+    switch(direction)
+    {
+      case 1:  _constVIsoCurve(uv,sw,bw); break;
+      default: _constUIsoCurve(uv,sw,bw); break;
+    }
+    
+    curve.p = bw.p;
+    curve.knot = bw.knot;
+    extractWeights(bw.Q,curve.Q,curve.weights);
+  }
+
   inline void getIsoSurface(double uvw, size_t direction, NurbsSolid const &solid, NurbsSurface &surf)
   {
     BSplineSurface bw;
     BSplineSolid sw; weightedBSpline(solid,sw);
     switch(direction)
     {
-      case 1: _constVIsoSurface (uvw,sw,bw); break;
-      case 2: _constWIsoSurface (uvw,sw,bw); break;
+      case 1:  _constVIsoSurface(uvw,sw,bw); break;
+      case 2:  _constWIsoSurface(uvw,sw,bw); break;
       default: _constUIsoSurface(uvw,sw,bw); break;
     }
     

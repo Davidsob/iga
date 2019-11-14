@@ -433,14 +433,14 @@ namespace spline_ops
     std::vector<double> Nu = algo::BasisFunctions(u,uspan,surf.p, surf.uknot);
 
     int const M = surf.vknot.size()-surf.q-1;
-    for (int i = 0; i < M; i++)
+    for (int j = 0; j < M; j++)
     {
       point tmp(surf.dim(),0);
-      for (int j = 0; j <= surf.p; j++)
+      for (int i = 0; i <= surf.p; i++)
       {
-        auto a = uspan-surf.p+j;
-        auto idx = surf.qid(a,i);
-        tmp += Nu[j]*surf.Q[idx];
+        auto a = uspan-surf.p+i;
+        auto idx = surf.qid(a,j);
+        tmp += Nu[i]*surf.Q[idx];
       }
       curve.Q.push_back(tmp);
     }
@@ -463,7 +463,7 @@ namespace spline_ops
       point tmp(surf.dim(),0);
       for (int j = 0; j <= surf.q; j++)
       {
-        auto b = vspan-surf.q+i;
+        auto b = vspan-surf.q+j;
         auto idx = surf.qid(i,b);
         tmp += Nv[j]*surf.Q[idx];
       }
@@ -478,7 +478,7 @@ namespace spline_ops
   {
     switch(direction)
     {
-      case 1: _constVIsoCurve(uv,surf,curve); break;
+      case 1 : _constVIsoCurve(uv,surf,curve); break;
       default: _constUIsoCurve(uv,surf,curve); break;
     }
   }
@@ -495,9 +495,9 @@ namespace spline_ops
 
     int const M = solid.vknot.size()-solid.q-1;
     int const O = solid.wknot.size()-solid.r-1;
-    for (int k = 0; k < O; k++)
+    for (int j = 0; j < M; j++)
     {
-      for (int j = 0; j < M; j++)
+      for (int k = 0; k < O; k++)
       {
         point tmp(solid.dim(),0);
         for (int i = 0; i <= solid.p; i++)
@@ -511,11 +511,11 @@ namespace spline_ops
       }
     }
 
-    surf.p = solid.q;
-    surf.q = solid.r;
+    surf.p = solid.r;
+    surf.q = solid.q;
 
-    surf.uknot = solid.vknot;
-    surf.vknot = solid.wknot;
+    surf.uknot = solid.wknot;
+    surf.vknot = solid.vknot;
   }
 
   inline void _constVIsoSurface(double v, BSplineSolid const &solid, BSplineSurface &surf)
@@ -530,9 +530,9 @@ namespace spline_ops
 
     int const N = solid.uknot.size()-solid.p-1;
     int const O = solid.wknot.size()-solid.r-1;
-    for (int i = 0; i < N; i++)
+    for (int k = 0; k < O; k++)
     {
-      for (int k = 0; k < O; k++)
+      for (int i = 0; i < N; i++)
       {
         point tmp(solid.dim(),0);
         for (int j = 0; j <= solid.q; j++)
@@ -545,11 +545,11 @@ namespace spline_ops
       }
     }
 
-    surf.p = solid.r;
-    surf.q = solid.p;
+    surf.p = solid.p;
+    surf.q = solid.r;
 
-    surf.uknot = solid.wknot;
-    surf.vknot = solid.uknot;
+    surf.uknot = solid.uknot;
+    surf.vknot = solid.wknot;
   }
 
   inline void _constWIsoSurface(double w, BSplineSolid const &solid, BSplineSurface &surf)
@@ -586,13 +586,13 @@ namespace spline_ops
     surf.vknot = solid.vknot;
   }
 
-  inline void getIsoSurface(double uvw, size_t direction, BSplineSolid const &solid, BSplineSurface &surf)
+  inline void getIsoSurface(double uvw, size_t direction, BSplineSolid const &solid, BSplineSurface &surface)
   {
     switch(direction)
     {
-      case 1: _constVIsoSurface (uvw,solid,surf); break;
-      case 2: _constWIsoSurface (uvw,solid,surf); break;
-      default: _constUIsoSurface(uvw,solid,surf); break;
+      case 1 : _constVIsoSurface (uvw,solid,surface); break;
+      case 2 : _constWIsoSurface (uvw,solid,surface); break;
+      default: _constUIsoSurface(uvw,solid,surface); break;
     }
   }
 
