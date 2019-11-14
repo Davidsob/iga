@@ -42,7 +42,7 @@ protected:
   std::vector<double> v; // vector part
 };
 
-std::ostream &operator<<(std::ostream &os, Quaternion const &x)
+inline std::ostream &operator<<(std::ostream &os, Quaternion const &x)
 {
   os << "< " << x.scalarComponent() << " ";
   for(auto e : x.vectorComponent()) os << e << " ";
@@ -50,50 +50,50 @@ std::ostream &operator<<(std::ostream &os, Quaternion const &x)
   return os; 
 }
 
-Quaternion operator+(Quaternion const &a, Quaternion const &b)
+inline Quaternion operator+(Quaternion const &a, Quaternion const &b)
 {
   return Quaternion(a.scalarComponent() + b.scalarComponent(),
                     a.vectorComponent() + b.vectorComponent());
 }
 
-void operator+=(Quaternion &a, Quaternion const &b)
+inline void operator+=(Quaternion &a, Quaternion const &b)
 {
   a.setScalarComponent(a.scalarComponent() + b.scalarComponent());
   a.setVectorComponent(a.vectorComponent() + b.vectorComponent());
 }
 
-Quaternion operator-(Quaternion const &a, Quaternion const &b)
+inline Quaternion operator-(Quaternion const &a, Quaternion const &b)
 {
   return Quaternion(a.scalarComponent() - b.scalarComponent(),
                     a.vectorComponent() - b.vectorComponent());
 }
 
-void operator-=(Quaternion &a, Quaternion const &b)
+inline void operator-=(Quaternion &a, Quaternion const &b)
 {
   a.setScalarComponent(a.scalarComponent() - b.scalarComponent());
   a.setVectorComponent(a.vectorComponent() - b.vectorComponent());
 }
 
 template<typename T>
-Quaternion operator*(Quaternion const &a, T const &c)
+inline Quaternion operator*(Quaternion const &a, T const &c)
 {
   return Quaternion(c*a.scalarComponent(), c*a.vectorComponent());
 }
 
 template<typename T>
-Quaternion operator*(T const &c, Quaternion const &a)
+inline Quaternion operator*(T const &c, Quaternion const &a)
 {
   return a*c;
 }
 
 template<typename T>
-void operator*=(Quaternion &a, T const &c)
+inline void operator*=(Quaternion &a, T const &c)
 {
   a.setScalarComponent(a.scalarComponent()*c);
   a.setVectorComponent(a.vectorComponent()*c);
 }
 
-Quaternion operator*(Quaternion const &a, Quaternion const &b)
+inline Quaternion operator*(Quaternion const &a, Quaternion const &b)
 {
   auto const &s1 = a.scalarComponent();
   auto const &s2 = b.scalarComponent();
@@ -107,39 +107,39 @@ Quaternion operator*(Quaternion const &a, Quaternion const &b)
 }
 
 template<typename T>
-Quaternion operator/(Quaternion const &a, T const &c)
+inline Quaternion operator/(Quaternion const &a, T const &c)
 {
   return Quaternion(a.scalarComponent()/c, a.vectorComponent()/c);
 }
 
 template<typename T>
-void operator/=(Quaternion &a, T const &c)
+inline void operator/=(Quaternion &a, T const &c)
 {
   a.setScalarComponent(a.scalarComponent()/c);
   a.setVectorComponent(a.vectorComponent()/c);
 }
 
-Quaternion conj(Quaternion const &a)
+inline Quaternion conj(Quaternion const &a)
 {
   return Quaternion(a.scalarComponent(), -a.vectorComponent());
 }
 
-double norm(Quaternion const &a)
+inline double norm(Quaternion const &a)
 {
   return std::sqrt(Quaternion(conj(a)*a).scalarComponent());
 }
 
-void normalize(Quaternion &a)
+inline void normalize(Quaternion &a)
 {
   a /= norm(a);
 }
 
-Quaternion inverse(Quaternion const &a)
+inline Quaternion inverse(Quaternion const &a)
 {
   return conj(a)/std::pow(norm(a),1);
 }
 
-Quaternion rotate(Quaternion const &q, Quaternion const &p)
+inline Quaternion rotate(Quaternion const &q, Quaternion const &p)
 {
   return q*(p*inverse(q));
 }

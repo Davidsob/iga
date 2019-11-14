@@ -51,6 +51,8 @@ public:
     // set weight of integration point
     auto const jac_iso  = parametricJacobian(p.gauss).determinant();
     auto const jac_phys = physicalJacobian(p.para).determinant();
+
+    // std::printf("jac_iso = %f, jac_phys = %f\n",jac_iso, jac_phys);
     p.jdet = jac_phys*jac_iso;
   }
 

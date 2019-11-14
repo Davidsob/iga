@@ -9,7 +9,7 @@ using namespace vector_ops;
 namespace transform
 {
   template<typename T>
-  T translate(T const &original, std::vector<double> const &translation)
+  inline T translate(T const &original, std::vector<double> const &translation)
   {
     T copy(original);
     for (auto &x : copy.Q) x += translation;
@@ -17,7 +17,7 @@ namespace transform
   }
 
   template<typename T>
-  T rotate(T const &original,
+  inline T rotate(T const &original,
           std::vector<double> const &n0,
           std::vector<double> const &origin,
           std::vector<double> const &n)
@@ -38,7 +38,7 @@ namespace transform
   }
 
   template<typename T>
-  T project(T const &original,
+  inline T project(T const &original,
           std::vector<double> const &N0,
           std::vector<double> const &origin,
           std::vector<double> &n)

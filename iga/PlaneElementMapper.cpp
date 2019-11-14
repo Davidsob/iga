@@ -44,7 +44,7 @@ _parametricJacobian(double x1, double x2, double x3) const
   Eigen::MatrixXd const dN       = iga::parametricShapeFunctionDerivatives(x1,x2);
   Eigen::MatrixXd const jacobian = dN*_elementMesh;
 
-  return jacobian.block(0,0,2,2);
+  return jacobian;
 }
 
 Eigen::MatrixXd
@@ -54,6 +54,7 @@ _physicalJacobian(double x1, double x2, double x3) const
   Eigen::MatrixXd const Q        = convert::to<Eigen::MatrixXd>(_surface.Q);
   Eigen::MatrixXd const dN       = iga::ShapeFunctionDerivatives(x1,x2,_surface);
   Eigen::MatrixXd const jacobian = dN*Q;
+
   return jacobian.block(0,0,2,2);
 }
 

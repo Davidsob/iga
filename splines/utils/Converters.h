@@ -68,4 +68,12 @@ namespace convert
     for (auto const &x : in) out.row(row++) = to<Eigen::VectorXd>(x);
     return out;
   }
+
+  template<>
+  inline std::vector<std::vector<double>> _converter(Eigen::MatrixXd const &in)
+  {
+    std::vector<std::vector<double>> out;
+    for (int i = 0; i < in.rows(); i++) out.push_back(to<std::vector<double>>(Eigen::RowVectorXd(in.row(i))));
+    return out;
+  }
 }
