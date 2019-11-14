@@ -11,13 +11,15 @@
 #include <vector>
 
 #include "BSpline.h"
+#include "GeometricObject.h"
 
-struct NurbsCurve 
+struct NurbsCurve : public GeometricObject
 {
   using vector = std::vector<double>;
   using matrix = std::vector<std::vector<double>>; // need a point type
 
-  size_t dim() const { return Q.empty() ? 0 : Q[0].size(); }
+  matrix const &coordinates() const override { return Q; }
+
   int p; //polynomial order
   vector knot, weights;
   matrix Q; 
@@ -25,12 +27,15 @@ struct NurbsCurve
   friend std::ostream &operator<<(std::ostream &os, NurbsCurve const &curve);
 };
 
-struct NurbsSurface 
+struct NurbsSurface : public GeometricObject
 {
   using vector = std::vector<double>;
   using matrix = std::vector<std::vector<double>>; // need a point type
 
   int qid(int iu, int iv) const { return iu + iv*(uknot.size()-p-1); }
+
+  matrix const &coordinates() const override { return Q; }
+
   int p, q; //polynomial order
   vector uknot, vknot, weights; // knot vectors, weight vector
   matrix Q; // cpts in vector form {c0j, c1j, cij...} 
@@ -38,12 +43,15 @@ struct NurbsSurface
   friend std::ostream &operator<<(std::ostream &os, NurbsSurface const &surf);
 };
 
-struct NurbsSolid
+struct NurbsSolid : public GeometricObject
 {
   using vector = std::vector<double>;
   using matrix = std::vector<std::vector<double>>; // need a point type
 
   int qid(int iu, int iv) const { return iu + iv*(uknot.size()-p-1); }
+
+  matrix const &coordinates() const override { return Q; }
+
   int p, q, r; //polynomial order
   vector uknot, vknot, wknot, weights; // knot vectors, weight vector
   matrix Q; // cpts in vector form {c0j, c1j, cij...} 

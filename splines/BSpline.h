@@ -10,13 +10,15 @@
 #include <string>
 #include <vector>
 
+#include "GeometricObject.h"
 
-struct BSplineCurve
+struct BSplineCurve : public GeometricObject
 {
   using vector = std::vector<double>;
-  using matrix = std::vector<std::vector<double>>; // need a point type
+  using matrix = std::vector<vector>; // need a point type
 
-  size_t dim() const { return Q.empty() ? 0 : Q[0].size(); }
+  matrix const &coordinates() const override { return Q; }
+
   int p; //polynomial order
   vector knot;
   matrix Q; 
@@ -24,13 +26,15 @@ struct BSplineCurve
   friend std::ostream &operator<<(std::ostream &os, BSplineCurve const &curve);
 };
 
-struct BSplineSurface
+struct BSplineSurface : public GeometricObject
 {
   using vector = std::vector<double>;
   using matrix = std::vector<std::vector<double>>; // need a point type
 
-  size_t dim() const { return Q.empty() ? 0 : Q[0].size(); }
+  matrix const &coordinates() const override { return Q; }
+
   int qid(int iu, int iv) const { return iu + iv*(uknot.size()-p-1); }
+
   int p, q; //polynomial order
   vector uknot, vknot; // knot vectors
   matrix Q; // cpts in vector form {c0j, c1j, cij...} 
@@ -38,18 +42,20 @@ struct BSplineSurface
   friend std::ostream &operator<<(std::ostream &os, BSplineSurface const &surf);
 };
 
-struct BSplineSolid
+struct BSplineSolid : public GeometricObject
 {
   using vector = std::vector<double>;
   using matrix = std::vector<std::vector<double>>; // need a point type
 
-  size_t dim() const { return Q.empty() ? 0 : Q[0].size(); }
+  matrix const &coordinates() const override { return Q; }
+
   int qid(int a, int b, int c) const
   { 
-    auto cols = uknot.size()-p-1;
-    auto rows = vknot.size()-q-1;
+    auto const cols = uknot.size()-p-1;
+    auto const rows = vknot.size()-q-1;
     return a + b*(cols) + c*(cols*rows); 
   }
+
   int p, q, r; //polynomial order
   vector uknot, vknot, wknot; // knot vectors
   matrix Q; // cpts in vector form {c0j, c1j, cij...} 
