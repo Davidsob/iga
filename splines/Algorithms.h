@@ -16,6 +16,16 @@ using namespace vector_ops;
 
 namespace algo
 {
+  inline int factorial(int k)
+  {
+    return k > 0 ? k*factorial(k-1) : 1.0;
+  }
+
+  inline double binomial(int n, int k)
+  {
+    return factorial(n)/(double(factorial(n-k)*factorial(k)));
+  }
+
   template<typename T>
   inline bool equal(T const &a, T const &b)
   { 

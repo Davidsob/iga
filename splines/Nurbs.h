@@ -166,16 +166,6 @@ namespace spline_ops
     return Cw;
   }
 
-  inline int factorial(int k)
-  {
-    return k > 0 ? k*factorial(k-1) : 1.0;
-  }
-
-  inline double binomial(int n, int k)
-  {
-    return factorial(n)/(double(factorial(n-k)*factorial(k)));
-  }
-
   std::vector<std::vector<double>>
   inline CurveDerivatives(double u, int order, NurbsCurve const &curve)
   {
@@ -189,7 +179,7 @@ namespace spline_ops
       auto v = ders[k];
       for (int i = 1; i <= k; i++)
       {
-        v -= binomial(k,i)*ders[i].back()*dC[k-i];
+        v -= algo::binomial(k,i)*ders[i].back()*dC[k-i];
       }
 
       v /= ders[0].back();
@@ -241,18 +231,18 @@ namespace spline_ops
         auto v = Aders[k][l];
         for (int j = 1; j <= l; j++)
         {
-          v -= binomial(l,j)*Aders[0][j].back()*Skl[k][l-j];
+          v -= algo::binomial(l,j)*Aders[0][j].back()*Skl[k][l-j];
         }
 
         for (int i = 1; i <= k; i++)
         {
-          v -= binomial(k,i)*Aders[i][0].back()*Skl[k-i][l];
+          v -= algo::binomial(k,i)*Aders[i][0].back()*Skl[k-i][l];
           decltype(v) v2(v.size(),0);
           for (int j = 1; j <= l; j++)
           {
-            v2 += binomial(l,j)*Aders[i][j].back()*Skl[k-i][l-j];
+            v2 += algo::binomial(l,j)*Aders[i][j].back()*Skl[k-i][l-j];
           }
-          v -= binomial(k,i)*v2;
+          v -= algo::binomial(k,i)*v2;
         }
         v /= Aders[0][0].back(); v.pop_back();
         Skl[k][l] = v; 
@@ -269,7 +259,7 @@ namespace spline_ops
     BSplineSurface b; weightedBSpline(surf,b);
     auto P = spline_ops::SurfacePoint(u,v,b);
     auto Aders = spline_ops::SurfaceDerivative(u,v,order,direction,b);
-    auto dP = (Aders - binomial(1,1)*Aders.back()*P)/P.back();
+    auto dP = (Aders - algo::binomial(1,1)*Aders.back()*P)/P.back();
     dP.pop_back();
     return dP;
   }
@@ -281,7 +271,7 @@ namespace spline_ops
     BSplineSolid b; weightedBSpline(solid,b);
     auto P = spline_ops::SolidPoint(u,v,w,b);
     auto Aders = spline_ops::SolidDerivative(u,v,w,order,direction,b);
-    auto dP = (Aders - binomial(1,1)*Aders.back()*P)/P.back();
+    auto dP = (Aders - algo::binomial(1,1)*Aders.back()*P)/P.back();
     dP.pop_back();
     return dP;
   }
