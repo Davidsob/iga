@@ -1,0 +1,120 @@
+#include "CurveElementMapper.h"
+
+#include "splines/Nurbs.h"
+
+#include "ParametricMesh.h"
+#include "ShapeFunctions.h"
+
+
+CurveElementMapper::
+CurveElementMapper(NurbsCurve const &curve)
+  : ElementMapperBase()
+  , _curve(curve)
+  , _parametricMesh(iga::parametricMesh(_curve))
+{}
+
+Eigen::RowVectorXd
+CurveElementMapper::
+_shape(double x1, double x2, double x3) const
+{
+  return iga::ShapeFunctions(x1,_curve);
+}
+
+Eigen::MatrixXd
+CurveElementMapper::
+_grad(double x1, double x2, double x3) const
+{
+  Eigen::MatrixXd const jacobian = _physicalJacobian(x1,x2,x3);
+  Eigen::MatrixXd const dN = iga::ShapeFunctionDerivatives(x1,_curve);
+  
+  return jacobian.inverse()*dN;
+}
+
+Eigen::MatrixXd
+CurveElementMapper::
+_Grad(double x1, double x2, double x3) const
+{
+  return _grad(x1,x2,x3);
+}
+
+Eigen::MatrixXd
+CurveElementMapper::
+_parametricJacobian(double x1, double x2, double x3) const
+{
+  Eigen::MatrixXd const dN       = iga::parametricShapeFunctionDerivatives(x1);
+  Eigen::MatrixXd const jacobian = dN*_elementMesh;
+
+  return jacobian;
+}
+
+Eigen::MatrixXd
+CurveElementMapper::
+computeLocalCoordinates(double x1, Eigen::MatrixXd const &dN) const
+{
+  static Eigen::RowVector3d e3({0,0,1});
+
+  Eigen::MatrixXd    const Q = convert::to<Eigen::MatrixXd>(_curve.Q);
+  Eigen::MatrixXd    const jac = dN*Q;
+
+  Eigen::RowVector3d e1; e1.head(2) = jac.row(0).normalized();
+  auto e2 = e3.cross(e1).normalized(); 
+
+  auto const dim = Q.cols();
+  Eigen::MatrixXd R = Eigen::MatrixXd::Zero(dim,dim);
+  R.row(0) = e1.head(dim);
+  R.row(1) = e2.head(dim);
+
+  // Eigen::VectorXd xc = Q.colwise().mean();
+
+  Eigen::MatrixXd lQ(Q.rows(),1);
+  for (int i = 0; i < Q.rows(); i++)
+  {
+    auto xg = Eigen::VectorXd(Q.row(i));
+    auto xl = R*xg;
+    // auto xl = R*(xg-xc) + xc;
+    lQ.row(i) = xl.head(1);
+  }
+  return lQ;
+}
+
+Eigen::MatrixXd
+CurveElementMapper::
+_physicalJacobian(double x1, double x2, double x3) const
+{
+  Eigen::MatrixXd const dN       = iga::ShapeFunctionDerivatives(x1,_curve);
+  Eigen::MatrixXd const lQ       = computeLocalCoordinates(x1,dN);
+  Eigen::MatrixXd const jacobian = dN*lQ;
+
+  return jacobian;
+}
+
+void
+CurveElementMapper::
+_mapIntegrationPoint(double  x1, double  x2, double  x3,
+                     double &p1, double &p2, double &p3) const
+
+{
+  Eigen::RowVectorXd const N = iga::parametricShapeFunction(x1);
+  Eigen::RowVectorXd const mapped{N*_elementMesh};
+
+  p1 = mapped[0];
+}
+
+void
+CurveElementMapper::
+_updateElementMesh(size_t i, size_t j, size_t k)
+{
+  _elementMesh = iga::parametricElementMesh(i,_curve,_parametricMesh); 
+}
+
+Eigen::VectorXd
+CurveElementMapper::
+_normal(double x1) const
+{
+  Eigen::MatrixXd const Q  = convert::to<Eigen::MatrixXd>(_curve.Q);
+  Eigen::VectorXd const t  = Eigen::MatrixXd(_grad(x1,0,0)*Q).row(0).normalized();
+  Eigen::Vector3d e1; e1.head(2) = t; 
+  Eigen::Vector3d e3; e3 << 0, 0, 1;
+  auto const n = e1.cross(e3).head(2);
+  return n;
+}

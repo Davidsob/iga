@@ -62,9 +62,10 @@ computeLocalCoordinates(double x1, double x2, Eigen::MatrixXd const &dN) const
   Eigen::RowVector3d e2 = dxdt.normalized();
 
   Eigen::Matrix3d R = Eigen::Matrix3d::Zero();
-  Eigen::Vector3d xc; xc << Q.col(0).mean(), Q.col(1).mean(), Q.col(2).mean();
   R.row(0) = e1;
   R.row(1) = e2;
+  
+  Eigen::Vector3d xc = Q.colwise().mean();
 
   Eigen::MatrixXd lQ(Q.rows(),2);
   for (int i = 0; i < Q.rows(); i++)

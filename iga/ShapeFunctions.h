@@ -13,9 +13,48 @@ using namespace Eigen;
 
 namespace iga
 {
+  inline RowVectorXd ShapeFunctions(double u, BSplineCurve const &curve)
+  {
+    auto n = curve.knot.size() - curve.p - 1;
+    RowVectorXd shape(n); shape.setZero();
+
+    auto const span = algo::FindSpan(u, curve.p, curve.knot);
+
+    auto const Nu = algo::BasisFunctions(u,span,curve.p,curve.knot);
+
+    for (int i = 0; i <= curve.p; i++)
+    {
+      auto a = i+span-curve.p;
+      shape[a] += Nu[i];
+    }
+
+    return shape;
+  }
+
+  inline RowVectorXd ShapeFunctions(double u, NurbsCurve const &curve)
+  {
+    auto gen = [&curve]()
+    {
+      BSplineCurve b;
+      b.p = curve.p;
+      b.knot = curve.knot;
+      b.Q = curve.Q;
+
+      return b;
+    };
+
+    auto const shape{ShapeFunctions(u,gen())};
+    auto const weights{convert::to<decltype(shape)>(curve.weights)};
+    auto nrbN((shape.array()*weights.array())/shape.dot(weights));
+
+    return  nrbN;
+  }
+
   inline RowVectorXd ShapeFunctions(double u, double v, BSplineSurface const &surf)
   {
-    RowVectorXd shape(surf.Q.size()); shape.setZero();
+    auto n = surf.uknot.size() - surf.p - 1;
+    auto m = surf.vknot.size() - surf.q - 1;
+    RowVectorXd shape(n*m); shape.setZero();
 
     auto const uSpan = algo::FindSpan(u, surf.p, surf.uknot);
     auto const vSpan = algo::FindSpan(v, surf.q, surf.vknot);
@@ -62,7 +101,10 @@ namespace iga
 
   inline RowVectorXd ShapeFunctions(double u, double v, double w, BSplineSolid const &solid)
   {
-    RowVectorXd shape(solid.Q.size()); shape.setZero();
+    auto n = solid.uknot.size() - solid.p - 1;
+    auto m = solid.vknot.size() - solid.q - 1;
+    auto o = solid.wknot.size() - solid.r - 1;
+    RowVectorXd shape(n*m*o); shape.setZero();
 
     auto const uSpan = algo::FindSpan(u, solid.p, solid.uknot);
     auto const vSpan = algo::FindSpan(v, solid.q, solid.vknot);
@@ -116,6 +158,24 @@ namespace iga
   }
 
   Eigen::RowVectorXd
+  inline ShapeFunctionDerivative(double u, int order, BSplineCurve const &curve)
+  {
+    auto const uSpan = algo::FindSpan(u, curve.p, curve.knot);
+    auto const dNu = algo::BasisFunctionDerivatives(u,uSpan,curve.p,curve.knot);
+
+    auto const n = curve.knot.size()-curve.p-1;
+    Eigen::RowVectorXd dNdU(n); dNdU.setZero();
+
+    for (int i = 0; i <= curve.p; i++)
+    {
+      auto a = i+uSpan-curve.p;
+      dNdU[a] += dNu[order][i];
+    }
+
+    return dNdU;
+  }
+
+  Eigen::RowVectorXd
   inline _derivativeWrtU(double u, double v, int order, BSplineSurface const &surf)
   {
     auto const uSpan = algo::FindSpan(u, surf.p, surf.uknot);
@@ -124,7 +184,9 @@ namespace iga
     auto const dNu = algo::BasisFunctionDerivatives(u,uSpan,surf.p,surf.uknot);
     auto const Nv  = algo::BasisFunctions(v,vSpan,surf.q,surf.vknot);
 
-    Eigen::RowVectorXd dNdU(surf.Q.size()); dNdU.setZero();
+    auto const n = surf.uknot.size()-surf.p-1;
+    auto const m = surf.vknot.size()-surf.q-1;
+    Eigen::RowVectorXd dNdU(n*m); dNdU.setZero();
 
     for (int j = 0; j <= surf.q; j++)
     {
@@ -151,7 +213,10 @@ namespace iga
     auto const Nv  = algo::BasisFunctions(v,vSpan,solid.q,solid.vknot);
     auto const Nw  = algo::BasisFunctions(w,wSpan,solid.r,solid.wknot);
 
-    Eigen::RowVectorXd dNdU(solid.Q.size()); dNdU.setZero();
+    auto const n = solid.uknot.size()-solid.p-1;
+    auto const m = solid.vknot.size()-solid.q-1;
+    auto const o = solid.wknot.size()-solid.r-1;
+    Eigen::RowVectorXd dNdU(n*m*o); dNdU.setZero();
 
     for (int k = 0; k <= solid.r; k++)
     {
@@ -180,7 +245,9 @@ namespace iga
     auto const Nu  = algo::BasisFunctions(u,uSpan,surf.p,surf.uknot);
     auto const dNv = algo::BasisFunctionDerivatives(v,vSpan,surf.q,surf.vknot);
 
-    Eigen::RowVectorXd dNdV(surf.Q.size()); dNdV.setZero();
+    auto const n = surf.uknot.size()-surf.p-1;
+    auto const m = surf.vknot.size()-surf.q-1;
+    Eigen::RowVectorXd dNdV(n*m); dNdV.setZero();
 
     for (int j = 0; j <= surf.q; j++)
     {
@@ -207,7 +274,10 @@ namespace iga
     auto const dNv = algo::BasisFunctionDerivatives(v,vSpan,solid.q,solid.vknot);
     auto const Nw  = algo::BasisFunctions(w,wSpan,solid.r,solid.wknot);
 
-    Eigen::RowVectorXd dNdV(solid.Q.size()); dNdV.setZero();
+    auto const n = solid.uknot.size()-solid.p-1;
+    auto const m = solid.vknot.size()-solid.q-1;
+    auto const o = solid.wknot.size()-solid.r-1;
+    Eigen::RowVectorXd dNdV(n*m*o); dNdV.setZero();
 
     for (int k = 0; k <= solid.r; k++)
     {
@@ -238,7 +308,10 @@ namespace iga
     auto const Nv  = algo::BasisFunctions(v,vSpan,solid.q,solid.vknot);
     auto const dNw = algo::BasisFunctionDerivatives(w,wSpan,solid.r,solid.wknot);
 
-    Eigen::RowVectorXd dNdW(solid.Q.size()); dNdW.setZero();
+    auto const n = solid.uknot.size()-solid.p-1;
+    auto const m = solid.vknot.size()-solid.q-1;
+    auto const o = solid.wknot.size()-solid.r-1;
+    Eigen::RowVectorXd dNdW(n*m*o); dNdW.setZero();
 
     for (int k = 0; k <= solid.r; k++)
     {
@@ -277,6 +350,30 @@ namespace iga
       case 2:  return _derivativeWrtW(u,v,w,order,solid); break;
       default: return _derivativeWrtU(u,v,w,order,solid); break;
     }
+  }
+
+  inline Eigen::RowVectorXd ShapeFunctionDerivative(double u, int order, NurbsCurve const &curve)
+  {
+    auto gen = [&curve]()
+    {
+      BSplineCurve b;
+      b.p = curve.p;
+      b.knot = curve.knot;
+      b.Q = curve.Q;
+
+      return b;
+    };
+
+    auto const b = gen();
+    auto const shape{ShapeFunctions(u,b)};
+    auto const dshape{ShapeFunctionDerivative(u,order,b)};
+
+    auto const weights{convert::to<RowVectorXd>(curve.weights)};
+    auto const wgt  = shape.dot(weights);
+    auto const wgt2 = std::pow(wgt,2);
+    auto const dwgt = dshape.dot(weights);
+
+    return (weights.array()*(wgt*dshape.array() - wgt*dwgt*shape.array())/wgt2);
   }
 
   inline Eigen::RowVectorXd ShapeFunctionDerivative(double u, double v, int order, int direction, NurbsSurface const &surf)
@@ -337,6 +434,13 @@ namespace iga
     return (weights.array()*(wgt*dshape.array() - wgt*dwgt*shape.array())/wgt2);
   }
 
+  inline MatrixXd ShapeFunctionDerivatives(double u, NurbsCurve const &curve)
+  {
+    MatrixXd dN(1,curve.Q.size());
+    dN.row(0) = ShapeFunctionDerivative(u,1,curve);
+    return dN;
+  }
+
   inline MatrixXd ShapeFunctionDerivatives(double u, double v, NurbsSurface const &surf)
   {
     MatrixXd dN(2,surf.Q.size());
@@ -352,6 +456,15 @@ namespace iga
     dN.row(1) = ShapeFunctionDerivative(u,v,w,1,1,solid);
     dN.row(2) = ShapeFunctionDerivative(u,v,w,1,2,solid);
     return dN;
+  }
+
+  inline Eigen::RowVectorXd parametricShapeFunction(double u)
+  {
+    Eigen::RowVectorXd N(2);
+    N << (1.0 - u),
+         (1.0 + u);
+
+    return 0.5*N;
   }
 
   inline Eigen::RowVectorXd parametricShapeFunction(double u, double v)
@@ -378,6 +491,17 @@ namespace iga
          (1.0 - u)*(1.0 + v)*(1.0 + w);
 
     return 0.125*N;
+  }
+
+  inline Eigen::MatrixXd parametricShapeFunctionDerivatives(double u)
+  {
+    Eigen::RowVectorXd dN1(2);
+    dN1 << -1.0, 1.0;
+
+    Eigen::MatrixXd dN(1,2);
+    dN.row(0) = dN1;
+    
+    return 0.5*dN;
   }
 
   inline Eigen::MatrixXd parametricShapeFunctionDerivatives(double u, double v)

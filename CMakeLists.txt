@@ -17,7 +17,7 @@ message(STATUS "${TPL_DIR}/eigen-3.3.5")
 
 link_directories()
 
-set(EXTERNAL_LIBS iga)
+set(EXTERNAL_LIBS iga splines)
 
 # set the executable
 add_executable(Main.exe main.cxx)
@@ -34,3 +34,6 @@ target_link_libraries(Stress.exe ${EXTERNAL_LIBS})
 
 add_executable(PlaneStrain.exe plane_strain_ex.cxx)
 target_link_libraries(PlaneStrain.exe ${EXTERNAL_LIBS})
+
+add_executable(BBar.exe bbar_ex.cxx)
+target_link_libraries(BBar.exe ${EXTERNAL_LIBS})

@@ -101,6 +101,92 @@ depend:
 	cd /u/xeons08/people/bdavidson/programming/cpp/bsplines && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
+# Convenience name for target.
+splines/CMakeFiles/splines.dir/rule:
+	cd /u/xeons08/people/bdavidson/programming/cpp/bsplines && $(MAKE) -f CMakeFiles/Makefile2 splines/CMakeFiles/splines.dir/rule
+.PHONY : splines/CMakeFiles/splines.dir/rule
+
+# Convenience name for target.
+splines: splines/CMakeFiles/splines.dir/rule
+.PHONY : splines
+
+# fast build rule for target.
+splines/fast:
+	cd /u/xeons08/people/bdavidson/programming/cpp/bsplines && $(MAKE) -f splines/CMakeFiles/splines.dir/build.make splines/CMakeFiles/splines.dir/build
+.PHONY : splines/fast
+
+DegreeElevation_impl.o: DegreeElevation_impl.cpp.o
+.PHONY : DegreeElevation_impl.o
+
+# target to build an object file
+DegreeElevation_impl.cpp.o:
+	cd /u/xeons08/people/bdavidson/programming/cpp/bsplines && $(MAKE) -f splines/CMakeFiles/splines.dir/build.make splines/CMakeFiles/splines.dir/DegreeElevation_impl.cpp.o
+.PHONY : DegreeElevation_impl.cpp.o
+
+DegreeElevation_impl.i: DegreeElevation_impl.cpp.i
+.PHONY : DegreeElevation_impl.i
+
+# target to preprocess a source file
+DegreeElevation_impl.cpp.i:
+	cd /u/xeons08/people/bdavidson/programming/cpp/bsplines && $(MAKE) -f splines/CMakeFiles/splines.dir/build.make splines/CMakeFiles/splines.dir/DegreeElevation_impl.cpp.i
+.PHONY : DegreeElevation_impl.cpp.i
+
+DegreeElevation_impl.s: DegreeElevation_impl.cpp.s
+.PHONY : DegreeElevation_impl.s
+
+# target to generate assembly for a file
+DegreeElevation_impl.cpp.s:
+	cd /u/xeons08/people/bdavidson/programming/cpp/bsplines && $(MAKE) -f splines/CMakeFiles/splines.dir/build.make splines/CMakeFiles/splines.dir/DegreeElevation_impl.cpp.s
+.PHONY : DegreeElevation_impl.cpp.s
+
+KnotInsertion_impl.o: KnotInsertion_impl.cpp.o
+.PHONY : KnotInsertion_impl.o
+
+# target to build an object file
+KnotInsertion_impl.cpp.o:
+	cd /u/xeons08/people/bdavidson/programming/cpp/bsplines && $(MAKE) -f splines/CMakeFiles/splines.dir/build.make splines/CMakeFiles/splines.dir/KnotInsertion_impl.cpp.o
+.PHONY : KnotInsertion_impl.cpp.o
+
+KnotInsertion_impl.i: KnotInsertion_impl.cpp.i
+.PHONY : KnotInsertion_impl.i
+
+# target to preprocess a source file
+KnotInsertion_impl.cpp.i:
+	cd /u/xeons08/people/bdavidson/programming/cpp/bsplines && $(MAKE) -f splines/CMakeFiles/splines.dir/build.make splines/CMakeFiles/splines.dir/KnotInsertion_impl.cpp.i
+.PHONY : KnotInsertion_impl.cpp.i
+
+KnotInsertion_impl.s: KnotInsertion_impl.cpp.s
+.PHONY : KnotInsertion_impl.s
+
+# target to generate assembly for a file
+KnotInsertion_impl.cpp.s:
+	cd /u/xeons08/people/bdavidson/programming/cpp/bsplines && $(MAKE) -f splines/CMakeFiles/splines.dir/build.make splines/CMakeFiles/splines.dir/KnotInsertion_impl.cpp.s
+.PHONY : KnotInsertion_impl.cpp.s
+
+SplineModifiers.o: SplineModifiers.cpp.o
+.PHONY : SplineModifiers.o
+
+# target to build an object file
+SplineModifiers.cpp.o:
+	cd /u/xeons08/people/bdavidson/programming/cpp/bsplines && $(MAKE) -f splines/CMakeFiles/splines.dir/build.make splines/CMakeFiles/splines.dir/SplineModifiers.cpp.o
+.PHONY : SplineModifiers.cpp.o
+
+SplineModifiers.i: SplineModifiers.cpp.i
+.PHONY : SplineModifiers.i
+
+# target to preprocess a source file
+SplineModifiers.cpp.i:
+	cd /u/xeons08/people/bdavidson/programming/cpp/bsplines && $(MAKE) -f splines/CMakeFiles/splines.dir/build.make splines/CMakeFiles/splines.dir/SplineModifiers.cpp.i
+.PHONY : SplineModifiers.cpp.i
+
+SplineModifiers.s: SplineModifiers.cpp.s
+.PHONY : SplineModifiers.s
+
+# target to generate assembly for a file
+SplineModifiers.cpp.s:
+	cd /u/xeons08/people/bdavidson/programming/cpp/bsplines && $(MAKE) -f splines/CMakeFiles/splines.dir/build.make splines/CMakeFiles/splines.dir/SplineModifiers.cpp.s
+.PHONY : SplineModifiers.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -109,6 +195,16 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
+	@echo "... splines"
+	@echo "... DegreeElevation_impl.o"
+	@echo "... DegreeElevation_impl.i"
+	@echo "... DegreeElevation_impl.s"
+	@echo "... KnotInsertion_impl.o"
+	@echo "... KnotInsertion_impl.i"
+	@echo "... KnotInsertion_impl.s"
+	@echo "... SplineModifiers.o"
+	@echo "... SplineModifiers.i"
+	@echo "... SplineModifiers.s"
 .PHONY : help
 
 

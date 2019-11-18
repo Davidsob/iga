@@ -1,0 +1,50 @@
+
+// knot insertion algorithm of piegl Algorithm 5.1 in the Nurbs book
+inline void insertKnot(double u, int r, BSplineCurve &shape)
+{
+  if (r == 0) return;
+  if (shape.knot.empty() || shape.Q.empty()) return;
+
+  int const mp = shape.knot.size();
+  int const np = shape.Q.size();
+  int const  k = algo::FindSpan(u,shape.p,shape.knot);
+  int const  s = algo::SpanMultiplicity(k,shape.knot);
+
+  if ((s+r) > shape.p) r = shape.p-s; // adjust number of repititions if required 
+
+  // create and assign the new knot vector
+  decltype(shape.knot) U(mp+r,0.0);
+  for (int i = 0; i <= k; i++) U[i] = shape.knot[i];
+  for (int i = 1; i <= r; i++) U[k+i] = u;
+  for (int i = k+1; i < mp; i++) U[r+i] = shape.knot[i];
+
+  // save unaltered control points
+  std::vector<double> const zero(shape.dim(),0);
+  std::vector<std::vector<double>> tmp(shape.p+1,zero);
+  decltype(shape.Q) P(np+r,zero);
+
+  for (int i = 0; i <= k-shape.p; i++) P[i] = shape.Q[i];
+  for (int i = k; i < np; i++) P[i+r] = shape.Q[i];
+  for (int i = 0; i <= shape.p-s; i++) tmp[i] = shape.Q[k-shape.p+i];
+
+  int L(-1);
+  for (int j = 1; j <= r; j++)
+  {
+    L = k-shape.p+j;
+    for (int i = 0; i <= shape.p-j-s; i++)
+    {
+      auto alf = (u-shape.knot[L+i])/(shape.knot[i+k+1] - shape.knot[L+i]);
+      tmp[i] = alf*tmp[i+1] + (1.0-alf)*tmp[i];
+    }
+
+    P[L] = tmp[0];
+    P[k+r-j] = tmp[shape.p-j];
+  }
+
+  // load the remaining control points
+  for (int i = L+1; i < k; i++) P[i] = tmp[i-L];
+
+  // update the shape
+  shape.knot = U;
+  shape.Q = P;
+}

@@ -10,9 +10,9 @@ ${CMAKE_SOURCE_DIR}/bsplines/
 ${CMAKE_SOURCE_DIR}/bsplines/utils
 )
 
-set(EXTERNAL_LIBS)
+set(EXTERNAL_LIBS splines)
 
-message(STATUS "Processing iga directory...")
+message(STATUS "Processing iga library...")
 message(STATUS "library named: ${library}")
 message(STATUS "library headers: ${HEADERS}")
 message(STATUS "library sources: ${SOURCES}")

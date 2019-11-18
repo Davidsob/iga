@@ -28,6 +28,15 @@ namespace iga
     return tmp; 
   }
 
+  inline Eigen::MatrixXd parametricMesh(NurbsCurve const &curve)
+  {
+    std::vector<std::vector<double>> mesh;
+    for (auto u : meshFromSpan(curve.knot))
+      mesh.push_back({u});
+
+    return convert::to<Eigen::MatrixXd>(mesh);
+  }
+
   inline Eigen::MatrixXd parametricMesh(NurbsSurface const &surface)
   {
     std::vector<std::vector<double>> mesh;
@@ -47,6 +56,27 @@ namespace iga
           mesh.push_back({u,v,w});
 
     return convert::to<Eigen::MatrixXd>(mesh);
+  }
+
+  template<typename Curve >
+  inline Eigen::MatrixXd parametricElementMesh(size_t i,
+                                        Curve const &curve,
+                                        Eigen::MatrixXd const &pmesh)
+  {
+    std::vector<std::vector<size_t>> const topology
+    {
+      {i  },
+      {i+1}
+    };
+
+    size_t kk = 0;
+    Eigen::MatrixXd emesh(2,1);
+    for (auto const &p : topology)
+    {
+      emesh.row(kk++) = pmesh.row(p[0]);
+    }
+
+    return emesh;
   }
 
   template<typename Surface>
