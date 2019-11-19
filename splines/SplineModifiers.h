@@ -31,4 +31,7 @@ namespace spline_ops
   // degree elevation
   void elevate(size_t rep, BSplineCurve &);
   void elevate(size_t rep, NurbsCurve &);
+
+  void elevate(size_t rep, size_t direction, BSplineSurface &);
+  void elevate(size_t rep, size_t direction, NurbsSurface &);
 }
