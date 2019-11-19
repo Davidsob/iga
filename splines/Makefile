@@ -139,6 +139,30 @@ DegreeElevation_impl.cpp.s:
 	cd /u/xeons08/people/bdavidson/programming/cpp/bsplines && $(MAKE) -f splines/CMakeFiles/splines.dir/build.make splines/CMakeFiles/splines.dir/DegreeElevation_impl.cpp.s
 .PHONY : DegreeElevation_impl.cpp.s
 
+DegreeReduction.o: DegreeReduction.cpp.o
+.PHONY : DegreeReduction.o
+
+# target to build an object file
+DegreeReduction.cpp.o:
+	cd /u/xeons08/people/bdavidson/programming/cpp/bsplines && $(MAKE) -f splines/CMakeFiles/splines.dir/build.make splines/CMakeFiles/splines.dir/DegreeReduction.cpp.o
+.PHONY : DegreeReduction.cpp.o
+
+DegreeReduction.i: DegreeReduction.cpp.i
+.PHONY : DegreeReduction.i
+
+# target to preprocess a source file
+DegreeReduction.cpp.i:
+	cd /u/xeons08/people/bdavidson/programming/cpp/bsplines && $(MAKE) -f splines/CMakeFiles/splines.dir/build.make splines/CMakeFiles/splines.dir/DegreeReduction.cpp.i
+.PHONY : DegreeReduction.cpp.i
+
+DegreeReduction.s: DegreeReduction.cpp.s
+.PHONY : DegreeReduction.s
+
+# target to generate assembly for a file
+DegreeReduction.cpp.s:
+	cd /u/xeons08/people/bdavidson/programming/cpp/bsplines && $(MAKE) -f splines/CMakeFiles/splines.dir/build.make splines/CMakeFiles/splines.dir/DegreeReduction.cpp.s
+.PHONY : DegreeReduction.cpp.s
+
 KnotInsertion_impl.o: KnotInsertion_impl.cpp.o
 .PHONY : KnotInsertion_impl.o
 
@@ -199,6 +223,9 @@ help:
 	@echo "... DegreeElevation_impl.o"
 	@echo "... DegreeElevation_impl.i"
 	@echo "... DegreeElevation_impl.s"
+	@echo "... DegreeReduction.o"
+	@echo "... DegreeReduction.i"
+	@echo "... DegreeReduction.s"
 	@echo "... KnotInsertion_impl.o"
 	@echo "... KnotInsertion_impl.i"
 	@echo "... KnotInsertion_impl.s"

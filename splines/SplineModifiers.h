@@ -27,11 +27,14 @@ namespace spline_ops
   template<typename Shape>
   void midpointRefinement(size_t level, size_t direction, Shape &);
 
-
   // degree elevation
   void elevate(size_t rep, BSplineCurve &);
   void elevate(size_t rep, NurbsCurve &);
 
   void elevate(size_t rep, size_t direction, BSplineSurface &);
   void elevate(size_t rep, size_t direction, NurbsSurface &);
+
+
+  // inline void reduce(size_t direction, BSplineSurface &, double tolerance = 1e-8);
+  // inline void reduce(size_t direction, NurbsSurface   &, double tolerance = 1e-8);
 }
