@@ -129,10 +129,20 @@ Eigen::VectorXd
 CurveElementMapper::
 _normal(double x1) const
 {
+  static const double eps = 1e-6;
+  static const Eigen::Vector3d e3{0,0,1};
+
   Eigen::MatrixXd const Q  = convert::to<Eigen::MatrixXd>(_curve.Q);
-  Eigen::VectorXd const t  = Eigen::MatrixXd(_grad(x1,0,0)*Q).row(0).normalized();
-  Eigen::Vector3d e1; e1.head(2) = t; 
-  Eigen::Vector3d e3; e3 << 0, 0, 1;
-  auto const n = e1.cross(e3).head(2);
-  return n;
+  Eigen::VectorXd const t   = Eigen::MatrixXd(_grad(x1,0,0)*Q).row(0).normalized();
+  Eigen::VectorXd const tf  = Eigen::MatrixXd(_grad(x1+eps,0,0)*Q).row(0).normalized();
+
+  Eigen::VectorXd N = (tf-t)/eps;
+  if (algo::equal(N.norm(),0.0))
+  {
+    auto const dim = Q.cols();
+    Eigen::Vector3d e1; e1.head(dim) = t;
+    return e1.cross(e3).head(dim);
+  } else {
+    return N.normalized();
+  }
 }
