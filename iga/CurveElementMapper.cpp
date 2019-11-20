@@ -47,32 +47,50 @@ _parametricJacobian(double x1, double x2, double x3) const
   return jacobian;
 }
 
+// Eigen::MatrixXd
+// CurveElementMapper::
+// computeLocalCoordinates(double x1, Eigen::MatrixXd const &dN) const
+// {
+//   static Eigen::RowVector3d e3({0,0,1});
+
+//   Eigen::MatrixXd    const Q = convert::to<Eigen::MatrixXd>(_curve.Q);
+//   Eigen::MatrixXd    const jac = dN*Q;
+
+//   auto const dim = Q.cols();
+//   Eigen::MatrixXd R = Eigen::MatrixXd::Zero(dim,dim);
+
+//   Eigen::Vector3d e1; e1.head(2) = jac.row(0).normalized(); e1[2] = 0.0;
+//   Eigen::Vector3d e2 = e3.cross(e1); e2 = e2.normalized();
+
+//   R.row(0) = e1.head(2);
+//   // R.row(1) = e2.head(2);
+
+//   Eigen::MatrixXd lQ(Q.rows(),1);
+//   Eigen::VectorXd xc = _shape(x1,0,0)*Q;
+//   for (int i = 0; i < Q.rows(); i++)
+//   {
+//     auto xg = Eigen::VectorXd(Q.row(i));
+//     auto xl = R*(xg-xc)+xc;
+//     lQ(i,0) = xl(0,0);
+//   }
+//   return lQ;
+// }
+
 Eigen::MatrixXd
 CurveElementMapper::
 computeLocalCoordinates(double x1, Eigen::MatrixXd const &dN) const
 {
-  static Eigen::RowVector3d e3({0,0,1});
+  Eigen::MatrixXd  const Q = convert::to<Eigen::MatrixXd>(_curve.Q);
+  Eigen::MatrixXd  const jac = dN*Q;
+  Eigen::VectorXd  const x = _shape(x1,0,0)*Q;
 
-  Eigen::MatrixXd    const Q = convert::to<Eigen::MatrixXd>(_curve.Q);
-  Eigen::MatrixXd    const jac = dN*Q;
-
-  Eigen::RowVector3d e1; e1.head(2) = jac.row(0).normalized();
-  auto e2 = e3.cross(e1).normalized(); 
-
-  auto const dim = Q.cols();
-  Eigen::MatrixXd R = Eigen::MatrixXd::Zero(dim,dim);
-  R.row(0) = e1.head(dim);
-  R.row(1) = e2.head(dim);
-
-  // Eigen::VectorXd xc = Q.colwise().mean();
-
+  Eigen::VectorXd e1 = jac.row(0).normalized();
   Eigen::MatrixXd lQ(Q.rows(),1);
   for (int i = 0; i < Q.rows(); i++)
   {
     auto xg = Eigen::VectorXd(Q.row(i));
-    auto xl = R*xg;
-    // auto xl = R*(xg-xc) + xc;
-    lQ.row(i) = xl.head(1);
+    auto xl = (xg-x).dot(e1);
+    lQ(i,0) = xl;
   }
   return lQ;
 }
