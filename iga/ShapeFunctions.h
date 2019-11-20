@@ -373,7 +373,7 @@ namespace iga
     auto const wgt2 = std::pow(wgt,2);
     auto const dwgt = dshape.dot(weights);
 
-    return (weights.array()*(wgt*dshape.array() - wgt*dwgt*shape.array())/wgt2);
+    return (weights.array()*(wgt*dshape.array() - dwgt*shape.array())/wgt2);
   }
 
   inline Eigen::RowVectorXd ShapeFunctionDerivative(double u, double v, int order, int direction, NurbsSurface const &surf)
@@ -401,7 +401,7 @@ namespace iga
     auto const wgt2 = std::pow(wgt,2);
     auto const dwgt = dshape.dot(weights);
 
-    return (weights.array()*(wgt*dshape.array() - wgt*dwgt*shape.array())/wgt2);
+    return (weights.array()*(wgt*dshape.array() - dwgt*shape.array())/wgt2);
   }
 
   inline Eigen::RowVectorXd ShapeFunctionDerivative(double u, double v, double w, int order, int direction, NurbsSolid const &solid)
@@ -431,7 +431,7 @@ namespace iga
     auto const wgt2 = std::pow(wgt,2);
     auto const dwgt = dshape.dot(weights);
 
-    return (weights.array()*(wgt*dshape.array() - wgt*dwgt*shape.array())/wgt2);
+    return (weights.array()*(wgt*dshape.array() - dwgt*shape.array())/wgt2);
   }
 
   inline MatrixXd ShapeFunctionDerivatives(double u, NurbsCurve const &curve)
