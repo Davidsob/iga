@@ -67,7 +67,7 @@ def plot(mesh,verts,cpts,**kwargs):
 
 ## plot the controlpoints
   for p in cpts:
-    plt.plot(p[0],p[1],color='red',marker='s')
+    plt.plot(p[0],p[1],color='red',marker='s',markersize=1)
 
 ## set the bounds and aspect ratio of the plot
   xmin,xmax = get_bounds(verts,0)

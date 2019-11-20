@@ -35,6 +35,7 @@ def plot3(mesh, verts, cpts, **kwargs):
   ax.set_ylabel('y-axis')
   ax.set_zlabel('z-axis')
 
+  plt.axes().set_aspect('equal', 'datalim')
   plt.show()
 
 def plot(mesh, verts, cpts, **kwargs):
@@ -56,8 +57,9 @@ def plot(mesh, verts, cpts, **kwargs):
       plt.arrow(x,y,dx,dy,color='green',head_width=0.05, head_length=0.05)
       plt.scatter(x,y,color='green')
 
+
   plt.grid(True)
-  plt.axis('equal')
+  plt.axes().set_aspect('equal', 'datalim')
   plt.show()
 
 
