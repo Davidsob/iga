@@ -162,8 +162,8 @@ namespace iga
 
       case 4:
       {
-        static const double x1{std::sqrt(5.0 - 2.0*std::sqrt(10.0/7.0))};
-        static const double x2{std::sqrt(5.0 + 2.0*std::sqrt(10.0/7.0))};
+        static const double x1{std::sqrt(5.0 - 2.0*std::sqrt(10.0/7.0))/3.0};
+        static const double x2{std::sqrt(5.0 + 2.0*std::sqrt(10.0/7.0))/3.0};
         pts.push_back(-x2);
         pts.push_back(-x1);
         pts.push_back(0.0);
@@ -216,7 +216,7 @@ namespace iga
       {
         static const double x1{(322.0 + 13.0*std::sqrt(70.0))/900.0};
         static const double x2{(322.0 - 13.0*std::sqrt(70.0))/900.0};
-        static const double x3{128.0/255.0};
+        static const double x3{128.0/225.0};
         pts.push_back(x2);
         pts.push_back(x1);
         pts.push_back(x3);
