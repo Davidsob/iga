@@ -23,7 +23,7 @@ namespace spline_ops
     if (bpts.size() == 2)
     {
       rbpts[0] = 0.5*(bpts.back()+bpts[0]);
-      return 0.0;
+      return 1.0;
     }
 
     if ( p%2 == 0 ) // even case
@@ -240,10 +240,10 @@ namespace spline_ops
       curve.knot = shape.uknot;
       for (size_t i = 0; i < n; i++) curve.Q.push_back(shape.Q[shape.qid(i,j)]);
       success &= reduce(curve,tolerance);
+      if (!success) return;
       j++;
     }
 
-    if (!success) return;
     // assemble the reduced surface
     shape.p -= 1;
     shape.uknot = curves[0].knot;
@@ -272,10 +272,10 @@ namespace spline_ops
       curve.knot = shape.vknot;
       for (size_t j = 0; j < m; j++) curve.Q.push_back(shape.Q[shape.qid(i,j)]);
       success &= reduce(curve,tolerance);
+      if (!success) return;
       i++;
     }
 
-    if (!success) return;
     // assemble the reduced surface
     shape.q -= 1;
     shape.vknot = curves[0].knot;
