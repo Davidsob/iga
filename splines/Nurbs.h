@@ -13,6 +13,8 @@
 #include "BSpline.h"
 #include "GeometricObject.h"
 
+#include <cassert>
+
 struct NurbsCurve : public GeometricObject
 {
   using vector = std::vector<double>;
@@ -256,11 +258,18 @@ namespace spline_ops
   inline SurfaceDerivative(double u, double v, int order, int direction, NurbsSurface const &surf)
   {
     using namespace vector_ops;
+    // only use for first order derivatives at this time
+    assert(order < 2);
+
     BSplineSurface b; weightedBSpline(surf,b);
     auto P = spline_ops::SurfacePoint(u,v,b);
+    auto w = P.back();
+    P /= w;
+
     auto Aders = spline_ops::SurfaceDerivative(u,v,order,direction,b);
-    auto dP = (Aders - algo::binomial(1,1)*Aders.back()*P)/P.back();
+    auto dP = (Aders - Aders.back()*P)/w;
     dP.pop_back();
+
     return dP;
   }
 
@@ -268,11 +277,18 @@ namespace spline_ops
   inline SolidDerivative(double u, double v, double w, int order, int direction, NurbsSolid const &solid)
   {
     using namespace vector_ops;
+    // only use for first order derivatives at this time
+    assert(order < 2);
+
     BSplineSolid b; weightedBSpline(solid,b);
     auto P = spline_ops::SolidPoint(u,v,w,b);
+    auto wgt = P.back();
+    P /= wgt;
+
     auto Aders = spline_ops::SolidDerivative(u,v,w,order,direction,b);
-    auto dP = (Aders - algo::binomial(1,1)*Aders.back()*P)/P.back();
+    auto dP = (Aders - Aders.back()*P)/wgt;
     dP.pop_back();
+
     return dP;
   }
 
