@@ -32,6 +32,19 @@ _grad(double x1, double x2, double x3) const
 
 Eigen::MatrixXd
 CurveElementMapper::
+_grad2(double x1) const
+{
+
+  Eigen::MatrixXd const jacobian = _physicalJacobian(x1,0,0);
+  Eigen::MatrixXd dN2(1,_curve.Q.size());
+  dN2.row(0) = iga::ShapeFunctionDerivative2(x1,_curve);
+
+  auto ijac = jacobian.inverse();
+  return ijac*ijac*dN2;
+}
+
+Eigen::MatrixXd
+CurveElementMapper::
 _Grad(double x1, double x2, double x3) const
 {
   return _grad(x1,x2,x3);
@@ -125,6 +138,31 @@ _updateElementMesh(size_t i, size_t j, size_t k)
   _elementMesh = iga::parametricElementMesh(i,_curve,_parametricMesh); 
 }
 
+// double
+// CurveElementMapper::
+// _curvature(double x1) const
+// {
+//   static const double eps = 1e-6;
+
+//   Eigen::MatrixXd const Q  = convert::to<Eigen::MatrixXd>(_curve.Q);
+//   Eigen::VectorXd const t   = Eigen::MatrixXd(_grad(x1,0,0)*Q).row(0).normalized();
+//   Eigen::VectorXd const tf  = Eigen::MatrixXd(_grad(x1+eps,0,0)*Q).row(0).normalized();
+
+//   Eigen::VectorXd N = (tf-t)/eps;
+//   return N.norm();
+// }
+
+double
+CurveElementMapper::
+_curvature(double x1) const
+{
+  auto dt = spline_ops::CurveDerivatives(x1,2,_curve);
+  auto num = norm(cross(dt[1],dt[2]));
+  auto den = std::pow(norm(dt[1]),3);
+
+  return algo::equal(den,0.0) ? 0.0 : num/den;
+}
+
 Eigen::VectorXd
 CurveElementMapper::
 _normal(double x1) const
@@ -145,4 +183,23 @@ _normal(double x1) const
   } else {
     return N.normalized();
   }
+}
+
+Eigen::MatrixXd
+CurveElementMapper::
+_localTransformation(double const x1) const
+{
+  static const Eigen::Vector3d e3{0,0,1};
+
+  Eigen::MatrixXd const Q  = convert::to<Eigen::MatrixXd>(_curve.Q);
+  Eigen::VectorXd const t   = Eigen::MatrixXd(_grad(x1,0,0)*Q).row(0).normalized();
+
+  auto const dim = Q.cols();
+  Eigen::Vector3d e1; e1.head(dim) = t; 
+  Eigen::RowVector3d e2 = e3.cross(e1);
+  MatrixXd R(dim,dim);
+  R.row(0) = e1.head(dim);
+  R.row(1) = e2.head(dim);
+
+  return R;
 }

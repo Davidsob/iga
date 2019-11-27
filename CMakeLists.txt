@@ -20,23 +20,29 @@ link_directories()
 set(EXTERNAL_LIBS iga splines)
 
 # set the executable
-add_executable(Main.exe main.cxx)
-target_link_libraries(Main.exe ${EXTERNAL_LIBS})
+# add_executable(Main.exe main.cxx)
+# target_link_libraries(Main.exe ${EXTERNAL_LIBS})
 
-add_executable(Elbow.exe elbow.cxx)
-target_link_libraries(Elbow.exe ${EXTERNAL_LIBS})
+# add_executable(Elbow.exe elbow.cxx)
+# target_link_libraries(Elbow.exe ${EXTERNAL_LIBS})
 
-add_executable(Heat.exe heat_conduction.cxx)
-target_link_libraries(Heat.exe ${EXTERNAL_LIBS})
+# add_executable(Heat.exe heat_conduction.cxx)
+# target_link_libraries(Heat.exe ${EXTERNAL_LIBS})
 
 add_executable(Stress.exe solid_mechanics.cxx)
 target_link_libraries(Stress.exe ${EXTERNAL_LIBS})
 
-add_executable(PlaneStrain.exe plane_strain_ex.cxx)
-target_link_libraries(PlaneStrain.exe ${EXTERNAL_LIBS})
+# add_executable(PlaneStrain.exe plane_strain_ex.cxx)
+# target_link_libraries(PlaneStrain.exe ${EXTERNAL_LIBS})
 
-add_executable(BBar.exe bbar_ex.cxx)
-target_link_libraries(BBar.exe ${EXTERNAL_LIBS})
+# add_executable(BBar.exe bbar_ex.cxx)
+# target_link_libraries(BBar.exe ${EXTERNAL_LIBS})
 
-add_executable(Integration.exe integration_ex.cxx)
-target_link_libraries(Integration.exe ${EXTERNAL_LIBS})
+# add_executable(Integration.exe integration_ex.cxx)
+# target_link_libraries(Integration.exe ${EXTERNAL_LIBS})
+
+add_executable(TimBeam.exe tim_beam_ex.cxx)
+target_link_libraries(TimBeam.exe ${EXTERNAL_LIBS})
+
+add_executable(AxialTimBeam.exe tim_beam_axial_ex.cxx)
+target_link_libraries(AxialTimBeam.exe ${EXTERNAL_LIBS})
