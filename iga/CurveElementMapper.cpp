@@ -165,6 +165,16 @@ _curvature(double x1) const
 
 Eigen::VectorXd
 CurveElementMapper::
+_tangent(double x1) const
+{
+  Eigen::MatrixXd const Q  = convert::to<Eigen::MatrixXd>(_curve.Q);
+  Eigen::VectorXd const t   = Eigen::MatrixXd(_grad(x1,0,0)*Q).row(0).normalized();
+
+  return t.normalized();
+}
+
+Eigen::VectorXd
+CurveElementMapper::
 _normal(double x1) const
 {
   static const double eps = 1e-6;

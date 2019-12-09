@@ -10,12 +10,12 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 def plot3(mesh, verts, cpts, **kwargs):
   size = kwargs.get('size', (10,10))
   fig = plt.figure(figsize=size)
-  ax = Axes3D(fig)
+  ax = fig.gca(projection='3d')
 
   for el in mesh:
     a1,a2,a3 = verts[el[0]]
     b1,b2,b3 = verts[el[1]]
-    ax.plot3D([a1,b1],[a2,b2],[a3,b3], 'k')
+    ax.plot([a1,b1],[0*a2,0*b2],[a3,b3],'k')
 
   for p in cpts:
     x,y,z = p
@@ -35,7 +35,7 @@ def plot3(mesh, verts, cpts, **kwargs):
   ax.set_ylabel('y-axis')
   ax.set_zlabel('z-axis')
 
-  plt.axes().set_aspect('equal', 'datalim')
+  # plt.axes().set_aspect('equal', 'datalim')
   plt.show()
 
 def plot(mesh, verts, cpts, **kwargs):

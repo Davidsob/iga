@@ -203,6 +203,33 @@ namespace iga
   }
 
   inline Eigen::RowVectorXd
+  ShapeFunctionMixedDerivative(double u, double v, BSplineSurface const &surf)
+  {
+    auto const uSpan = algo::FindSpan(u, surf.p, surf.uknot);
+    auto const vSpan = algo::FindSpan(v, surf.q, surf.vknot);
+
+    auto const dNu = algo::BasisFunctionDerivatives(u,uSpan,surf.p,surf.uknot);
+    auto const dNv = algo::BasisFunctionDerivatives(v,vSpan,surf.q,surf.vknot);
+
+    auto const n = surf.uknot.size()-surf.p-1;
+    auto const m = surf.vknot.size()-surf.q-1;
+    Eigen::RowVectorXd dNdUV(n*m); dNdUV.setZero();
+
+    for (int j = 0; j <= surf.q; j++)
+    {
+      auto b = j+vSpan-surf.q;
+      for (int i = 0; i <= surf.p; i++)
+      {
+        auto a = i+uSpan-surf.p;
+        auto idx = surf.qid(a,b);
+        dNdUV[idx] += dNu[1][i]*dNv[1][j];
+      }
+    }
+
+    return dNdUV;
+  }
+
+  inline Eigen::RowVectorXd
   _derivativeWrtU(double u, double v, double w, int order, BSplineSolid const &solid)
   {
     auto const uSpan = algo::FindSpan(u, solid.p, solid.uknot);
@@ -468,6 +495,44 @@ namespace iga
     auto A = (weights.array()*(wgt*dshape2.array() - dwgt2*shape.array())/wgt2);
     auto B = 2.0*dwgt*(weights.array()*(wgt*dshape.array() - dwgt*shape.array()))/wgt3;
     return A - B;
+  }
+
+  inline Eigen::RowVectorXd
+  ShapeFunctionMixedDerivative(double u, double v, NurbsSurface const &surf)
+  {
+    auto gen = [&surf]()
+    {
+      BSplineSurface b;
+      b.p = surf.p;
+      b.q = surf.q;
+
+      b.uknot = surf.uknot;
+      b.vknot = surf.vknot;
+
+      b.Q = surf.Q;
+
+      return b;
+    };
+
+    auto const b = gen();
+    auto const shape{ShapeFunctions(u,v,b)};
+    auto const dshapeU{ShapeFunctionDerivative(u,v,1,0,b)};
+    auto const dshapeV{ShapeFunctionDerivative(u,v,1,1,b)};
+    auto const dshapeUV{ShapeFunctionMixedDerivative(u,v,b)};
+
+    auto const weights{convert::to<RowVectorXd>(surf.weights)};
+    auto const wgt    = shape.dot(weights);
+    auto const wgt2   = std::pow(wgt,2);
+    auto const wgt3   = wgt2*wgt;
+    auto const dwgtU  = dshapeU.dot(weights);
+    auto const dwgtV  = dshapeV.dot(weights);
+    auto const dwgtUV = dshapeUV.dot(weights);
+
+    Eigen::RowVectorXd Nuv =
+      weights.array()*(wgt2*dshapeUV.array()
+                     - wgt*(dshapeU.array()*dwgtV + dshapeV.array()*dwgtU + shape.array()*dwgtUV)
+                     + 2.0*shape.array()*dwgtU*dwgtV)/wgt3;
+    return Nuv;
   }
 
   inline Eigen::RowVectorXd

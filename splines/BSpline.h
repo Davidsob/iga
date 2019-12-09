@@ -12,6 +12,17 @@
 
 #include "GeometricObject.h"
 
+struct BSplinePoint : public GeometricObject
+{
+  using vector = std::vector<double>;
+  using matrix = std::vector<vector>; // need a point type
+
+  matrix const &coordinates() const override { return Q; }
+  matrix Q; 
+
+  friend std::ostream &operator<<(std::ostream &os, BSplinePoint const &point);
+};
+
 struct BSplineCurve : public GeometricObject
 {
   using vector = std::vector<double>;
@@ -62,6 +73,14 @@ struct BSplineSolid : public GeometricObject
 
   friend std::ostream &operator<<(std::ostream &os, BSplineSolid const &surf);
 };
+
+inline std::ostream & operator<<(std::ostream &os, BSplinePoint const &point)
+{
+  using namespace vector_ops;
+  os << "### BSpline-Point ###" << std::endl;
+  os << "contol  = " << point.Q << std::endl;
+  return os;
+}
 
 inline std::ostream & operator<<(std::ostream &os, BSplineCurve const &curve)
 {

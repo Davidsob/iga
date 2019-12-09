@@ -19,6 +19,12 @@ public:
   Eigen::MatrixXd const &elementMesh()    const { return _elementMesh; }
 
   template<typename ParametricPoint>
+  Eigen::VectorXd tangent(ParametricPoint const &p) const
+  {
+    return _tangent(p[0]);
+  }
+
+  template<typename ParametricPoint>
   Eigen::VectorXd normal(ParametricPoint const &p) const
   {
     return _normal(p[0]);
@@ -51,14 +57,15 @@ protected:
   void               _mapIntegrationPoint(double  x1, double  x2, double  x3,
                                           double &p1, double &p2, double &p3) const override;
   void               _updateElementMesh(size_t i, size_t j, size_t k)               override;
-  Eigen::VectorXd    _normal(double x1) const;
-  double             _curvature(double x1) const;
-  Eigen::MatrixXd    _grad2(double x1) const;
-  Eigen::MatrixXd    _localTransformation(double x1) const;
 
 private:
 
   Eigen::MatrixXd computeLocalCoordinates(double x1, Eigen::MatrixXd const &dN) const;
+  Eigen::VectorXd _tangent(double x1) const;
+  Eigen::VectorXd _normal(double x1) const;
+  double          _curvature(double x1) const;
+  Eigen::MatrixXd _grad2(double x1) const;
+  Eigen::MatrixXd _localTransformation(double x1) const;
 
   NurbsCurve const &_curve;
   Eigen::MatrixXd _parametricMesh;

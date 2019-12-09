@@ -82,11 +82,11 @@ Eigen::MatrixXd
 ManifoldElementMapper::
 _physicalJacobian(double x1, double x2, double x3) const
 {
-  Eigen::MatrixXd const dN       = iga::ShapeFunctionDerivatives(x1,x2,_manifold);
-  Eigen::MatrixXd const lQ       = computeLocalCoordinates(x1,x2,dN);
-  Eigen::MatrixXd const jacobian = dN*lQ;
-
-  return jacobian;
+  // Eigen::MatrixXd const dN       = iga::ShapeFunctionDerivatives(x1,x2,_manifold);
+  // Eigen::MatrixXd const lQ       = computeLocalCoordinates(x1,x2,dN);
+  // Eigen::MatrixXd const jacobian = dN*lQ;
+  return covariantMetricTensor(std::vector<double>{x1,x2,x3}).block(0,0,2,2);
+  // return jacobian;
 }
 
 void
@@ -107,5 +107,63 @@ ManifoldElementMapper::
 _updateElementMesh(size_t i, size_t j, size_t k)
 {
   _elementMesh = iga::parametricElementMesh(i,j,_manifold,_parametricMesh); 
+}
+
+Eigen::VectorXd
+ManifoldElementMapper::
+_normal(double x1, double x2) const
+{
+  Eigen::MatrixXd const tangents = _tangents(x1,x2);
+  Eigen::Vector3d const &e1 = tangents.row(0);
+  Eigen::Vector3d const &e2 = tangents.row(1);
+  Eigen::Vector3d const normal = e1.cross(e2);
+
+  return normal.normalized();
+}
+
+Eigen::MatrixXd
+ManifoldElementMapper::
+_tangents(double x1, double x2) const
+{
+  Eigen::MatrixXd const Q = convert::to<Eigen::MatrixXd>(_manifold.Q);
+  Eigen::MatrixXd const g = _grad(x1,x2,0);
+
+  Eigen::MatrixXd tangents = g*Q;
+  tangents.row(0) = tangents.row(0).normalized();
+  tangents.row(1) = tangents.row(1).normalized();
+
+  return tangents;
+}
+
+Eigen::Matrix3d
+ManifoldElementMapper::
+_localTransformation(double x1, double x2) const
+{
+  Eigen::MatrixXd const tangents = _tangents(x1,x2);
+  Eigen::Vector3d const &e1 = tangents.row(0);
+  Eigen::Vector3d const &e2 = tangents.row(1);
+  Eigen::Vector3d const normal = e1.cross(e2);
+
+  Eigen::Matrix3d R;
+  R.block(0,0,2,3) = tangents;
+  R.row(2) = normal;
+
+  return R;
+}
+
+Eigen::Matrix3d
+ManifoldElementMapper::
+_covariantBasis(double x1, double x2) const
+{
+  Eigen::MatrixXd const Q     = convert::to<Eigen::MatrixXd>(_manifold.Q);
+  Eigen::MatrixXd const sgrad = iga::ShapeFunctionDerivatives(x1,x2,_manifold);
+
+  Eigen::Matrix3d A;
+  A.block(0,0,2,3) = sgrad*Q;
+
+  Eigen::Vector3d N = A.row(0).cross(A.row(1));
+  A.row(2) = N.normalized();
+
+  return A.transpose();
 }
 
