@@ -82,11 +82,11 @@ Eigen::MatrixXd
 ManifoldElementMapper::
 _physicalJacobian(double x1, double x2, double x3) const
 {
-  // Eigen::MatrixXd const dN       = iga::ShapeFunctionDerivatives(x1,x2,_manifold);
-  // Eigen::MatrixXd const lQ       = computeLocalCoordinates(x1,x2,dN);
-  // Eigen::MatrixXd const jacobian = dN*lQ;
-  return covariantMetricTensor(std::vector<double>{x1,x2,x3}).block(0,0,2,2);
-  // return jacobian;
+  Eigen::MatrixXd const dN       = iga::ShapeFunctionDerivatives(x1,x2,_manifold);
+  Eigen::MatrixXd const lQ       = computeLocalCoordinates(x1,x2,dN);
+  Eigen::MatrixXd const jacobian = dN*lQ;
+  // return covariantMetricTensor(std::vector<double>{x1,x2,x3}).block(0,0,2,2);
+  return jacobian;
 }
 
 void
