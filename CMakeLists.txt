@@ -8,6 +8,7 @@ add_subdirectory(iga) # get down in the weeds and build/link other dirs
 include_directories(
 ${CMAKE_SOURCE_DIR}
 ${TPL_DIR}/eigen-3.3.5
+${CMAKE_SOURCE_DIR}/base
 ${CMAKE_SOURCE_DIR}/iga
 )
 
