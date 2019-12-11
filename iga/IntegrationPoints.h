@@ -43,7 +43,7 @@ namespace iga
   std::vector<double> gaussLegendreWeights(int order);
 
   template<typename ElementMapper>
-  std::vector<IntegrationPoint>
+  inline std::vector<IntegrationPoint>
   _integrationPoints(ElementMapper const &mapper, int order)
   {
     auto const gp{gaussLegendrePoints(order)};
@@ -59,7 +59,7 @@ namespace iga
   }
 
   template<typename ElementMapper>
-  std::vector<IntegrationPoint>
+  inline std::vector<IntegrationPoint>
   _integrationPoints(ElementMapper const &mapper, int order1, int order2)
   {
     auto const gp1{gaussLegendrePoints(order1)};
@@ -83,7 +83,7 @@ namespace iga
   }
 
   template<typename ElementMapper>
-  std::vector<IntegrationPoint>
+  inline std::vector<IntegrationPoint>
   _integrationPoints(ElementMapper const &mapper, int order1, int order2, int order3)
   {
     auto const gp1{gaussLegendrePoints(order1)};
@@ -113,13 +113,13 @@ namespace iga
   }
 
   template<typename ElementMapper, typename ...Args>
-  std::vector<IntegrationPoint>
+  inline std::vector<IntegrationPoint>
   integrationPoints(ElementMapper const &mapper, Args const ...args)
   {
     return _integrationPoints(mapper, args...);
   }
 
-  std::vector<double> gaussLegendrePoints(int order)
+  inline std::vector<double> gaussLegendrePoints(int order)
   {
     std::vector<double> pts;
     switch(order)
@@ -171,7 +171,7 @@ namespace iga
     return pts;
   }
 
-  std::vector<double> gaussLegendreWeights(int order)
+  inline std::vector<double> gaussLegendreWeights(int order)
   {
     std::vector<double> pts;
     switch(order)
@@ -205,6 +205,7 @@ namespace iga
         pts.push_back(x1);
         pts.push_back(x2);
       } break;
+
 
       case 4:
       {

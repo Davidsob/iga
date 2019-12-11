@@ -4,12 +4,14 @@ cmake_minimum_required(VERSION 2.8)
 # subdirectories
 add_subdirectory(splines) # get down in the weeds and build/link other dirs
 add_subdirectory(iga) # get down in the weeds and build/link other dirs
+add_subdirectory(utils) # get down in the weeds and build/link other dirs
 
 include_directories(
 ${CMAKE_SOURCE_DIR}
 ${TPL_DIR}/eigen-3.3.5
 ${CMAKE_SOURCE_DIR}/base
 ${CMAKE_SOURCE_DIR}/iga
+${CMAKE_SOURCE_DIR}/utils
 )
 
 message(STATUS "Include Directories:")
@@ -18,7 +20,7 @@ message(STATUS "${TPL_DIR}/eigen-3.3.5")
 
 link_directories()
 
-set(EXTERNAL_LIBS iga splines)
+set(EXTERNAL_LIBS iga splines utils)
 
 # set the executable
 # add_executable(Main.exe main.cxx)
@@ -62,3 +64,6 @@ target_link_libraries(PinchedCylinder.exe ${EXTERNAL_LIBS})
 
 add_executable(CurvedShellBeam.exe curved_shell_ex.cxx)
 target_link_libraries(CurvedShellBeam.exe ${EXTERNAL_LIBS})
+
+add_executable(Ht3D.exe ht3d_ex.cxx)
+target_link_libraries(Ht3D.exe ${EXTERNAL_LIBS})

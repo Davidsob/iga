@@ -2,10 +2,12 @@
 #define WeakForms_h
 
 
-#include "MatrixTypeTraits.h"
+#include "base/NamedObject.h"
+#include "base/Operator.h"
 
-#include "NamedObject.h"
-#include "Operator.h"
+#include "iga/IntegrationPoints.h"
+
+#include "utils/MatrixTypeTraits.h"
 
 #include <type_traits>
 
@@ -19,8 +21,9 @@ public:
 
   ~WeakFormBase() = default; 
 
-  using linear_engine_t = typename Operator<DynamicVectorR>::OperatorEngine;
-  using bilinear_engine_t = typename Operator<DynamicMatrixR>::OperatorEngine;
+  using index_t           = IntegrationPoint;
+  using linear_engine_t   = typename Operator<IntegrationPoint,DynamicVectorR>::OperatorEngine;
+  using bilinear_engine_t = typename Operator<IntegrationPoint,DynamicMatrixR>::OperatorEngine;
 
   virtual linear_engine_t   * createLinearEngine() const = 0;
   virtual bilinear_engine_t * createBilinearEngine() const = 0;
@@ -50,10 +53,10 @@ public:
     return static_cast<Wf const *>(this)->eval(args...);
   }
 
-  class FormEngine : public Operator<DynamicMatrixR>::OperatorEngine
+  class FormEngine : public Operator<IntegrationPoint, DynamicMatrixR>::OperatorEngine
   {
   public:
-    using base_t = typename Operator<DynamicMatrixR>::OperatorEngine;
+    using base_t = typename Operator<IntegrationPoint, DynamicMatrixR>::OperatorEngine;
     using var_t = WeakForm<Wf, Return_t>;
     using typename base_t::value_t;
     using typename base_t::index_t;
@@ -106,10 +109,10 @@ public:
     return static_cast<Wf const *>(this)->eval(args...);
   }
 
-  class FormEngine : public Operator<DynamicVectorR>::OperatorEngine
+  class FormEngine : public Operator<IntegrationPoint, DynamicVectorR>::OperatorEngine
   {
   public:
-    using base_t = typename Operator<DynamicVectorR>::OperatorEngine;
+    using base_t = typename Operator<IntegrationPoint, DynamicVectorR>::OperatorEngine;
     using var_t = WeakForm<Wf, Return_t>;
     using typename base_t::value_t;
     using typename base_t::index_t;

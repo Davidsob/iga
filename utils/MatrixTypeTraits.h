@@ -30,7 +30,7 @@ struct is_matrix_type<SparseMatrixR>
 template<>
 struct is_matrix_type<StaticMatrixR<1,1>>
 {
-  static constexpr bool value() { return true; }
+  static constexpr bool value() { return false; } // equivalent to a vector
 };
 
 template<>

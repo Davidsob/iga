@@ -1,11 +1,12 @@
 set(library iga)
 
-file(GLOB HEADERS "*.h")
-file(GLOB SOURCES "*.cpp")
+file(GLOB HEADERS "*.h" "weakforms/*.h")
+file(GLOB SOURCES "*.cpp" "weakforms/*.cpp")
 
 include_directories(
 ${CMAKE_SOURCE_DIR}
 ${TPL_DIR}/eigen-3.3.5
+#${CMAKE_SOURCE_DIR}/base
 ${CMAKE_SOURCE_DIR}/bsplines/
 ${CMAKE_SOURCE_DIR}/bsplines/utils
 )
