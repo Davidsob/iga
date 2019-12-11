@@ -4,13 +4,15 @@
 
 #include <vector>
 
+#include "utils/MatrixTypes.h"
+
 namespace convert
 {
-  template<typename From, typename To>
-  inline To _converter(From const &in);
+  template<typename From, typename To, typename ...Args>
+  inline To _converter(From const &in, Args &...args);
 
-  template<typename To, typename From>
-  inline To to(From const &in) { return _converter<From,To>(in);}
+  template<typename To, typename From, typename ...Args>
+  inline To to(From const &in, Args &...args) { return _converter<From,To>(in,args...);}
 
   template<>
   inline Eigen::VectorXd _converter(std::vector<double> const &in)
@@ -75,5 +77,30 @@ namespace convert
     std::vector<std::vector<double>> out;
     for (int i = 0; i < in.rows(); i++) out.push_back(to<std::vector<double>>(Eigen::RowVectorXd(in.row(i))));
     return out;
+  }
+
+  template<>
+  inline void _converter(Eigen::VectorXd const &in,
+                         std::vector<size_t> const &dof,
+                         std::vector<Triplet> &out)
+  {
+    for (int i = 0; i < in.size(); i++)
+      out.push_back(Triplet(dof[i], 0, in[i]));
+  }
+
+  template<>
+  inline void _converter(Eigen::MatrixXd const &in,
+                         std::vector<size_t> const &rdof,
+                         std::vector<size_t> const &cdof,
+                         std::vector<Triplet> &out)
+  {
+    SparseMatrixR const &sp = in.sparseView();
+    for (int k = 0; k < sp.outerSize(); k++)
+    {
+      for (SparseMatrixR::InnerIterator it(sp,k); it; ++it)
+      {
+        out.push_back(Triplet(rdof[it.row()], cdof[it.col()], it.value()));
+      }
+    }
   }
 }

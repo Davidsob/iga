@@ -8,6 +8,7 @@
 
 namespace StoredVariableTraits
 {
+
   template<typename Var> struct increment_var {};
 
   // template<>

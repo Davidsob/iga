@@ -27,7 +27,7 @@ public:
   friend std::ostream &operator<<(std::ostream &os, IntegrationPoint const &ip);
 };
 
-std::ostream &operator<<(std::ostream &os, IntegrationPoint const &ip)
+inline std::ostream &operator<<(std::ostream &os, IntegrationPoint const &ip)
 {
   os << "Integration point(" << ip.id << "):" << std::endl;
   os << "*** weight            = " << ip.weight << std::endl;

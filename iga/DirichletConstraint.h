@@ -1,12 +1,16 @@
 #pragma once
 
 #include "ConstraintBase.h"
-#include "MatrixTypes.h"
-#include "WeakForms.h"
 
-#include "StoredVoltageVariable.h"
-#include "StoredTemperatureVariable.h"
-#include "SimulationClock.h"
+#include "weakforms/WeakForms.h"
+
+// #include "StoredVoltageVariable.h"
+// #include "StoredTemperatureVariable.h"
+#include "base/SimulationClock.h"
+
+#include "utils/MatrixTypes.h"
+
+#include <cassert>
 
 template<size_t N>
 struct IdentityOperator
@@ -22,6 +26,27 @@ struct IdentityOperator
   static value_t const _eye;
 };
 
+template<size_t NDOF>
+struct BIdOperator
+{
+  using value_t = DynamicMatrixR;
+
+  template<typename Index>
+  value_t const operator()(Index const &p) const
+  {
+    DynamicVectorR const shape = p.mapper.shape(p.para);
+    value_t b(value_t::Zero(NDOF,NDOF*shape.rows()));
+    for (int i = 0; i < shape.rows(); i++)
+    {
+      for (size_t j = 0; j < NDOF; j++)
+      {
+        b(j,NDOF*i+j) = shape[i];
+      }
+    }
+    return b;
+  }
+};
+
 template<size_t N>
 StaticMatrixR<N,N> const IdentityOperator<N>::_eye = StaticMatrixR<N,N>::Identity();
 
@@ -35,15 +60,16 @@ private:
   class _f;
 
 public:
-  using linear_form = LinearWeakForm<IdentityOperator<1>, _f, DynamicVectorR>;
-  using bilinear_form = BBWeakForm<IdentityOperator<1>, DynamicMatrixR>;
+  using id_op = BIdOperator<Var::ndof>;
+  using linear_form = LinearWeakForm<id_op, _f, DynamicVectorR>;
+  using bilinear_form = BBWeakForm<id_op, DynamicMatrixR>;
 
   template<typename ...Args>
   DirichletConstraint(Args ...args)
     : ConstraintBase("DirichletConstraint")
     , _load(args...)
-    , _residual(IdentityOperator<1>(), _load)
-    , _jacobian(IdentityOperator<1>())
+    , _residual(id_op(), _load)
+    , _jacobian(id_op())
   {}
 
   virtual ~DirichletConstraint() = default;
@@ -62,25 +88,26 @@ private:
   class _f
   {
   public:
-    using value_t = StaticVectorR<1>;
+    using value_t = typename T::value_t;
 
     template<typename ...Args>
     _f(Args ...args) : _value(args...), _var() {}
     virtual ~_f() {};
 
     template<typename Index>
-    value_t operator()(Index const &x) const
+    value_t operator()(Index const &p) const
     {
-      auto constraint = value_t(_value(x));
-      auto variable = _var(x);
-      auto diff = constraint - variable;
+      // auto const shape = p.mapper.shapeFunctions(p.para);
+      auto constraint = value_t(_value(p));
+      auto variable = value_t(0);
+      // auto variable = _var(x);
+      value_t diff = constraint - variable;
       // std::cout << "+++ Dirchlet op()" << std::endl;
       // std::cout << "constraint = " << constraint << std::endl;
       // std::cout << "variable = " << variable << std::endl;
       // std::cout << "delta = " << diff << std::endl;
       // std::cout << "--- Dirchlet op()\n" << std::endl;
       return diff;
-      // return constraint;
     }
 
   private:

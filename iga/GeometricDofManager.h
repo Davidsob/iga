@@ -20,7 +20,7 @@ public:
     return true;
   }
 
-  std::vector<size_t> const &idsForShape(GeometricObject const *shape)
+  std::vector<size_t> const &idsForShape(GeometricObject const *shape) const
   {
     static std::vector<size_t> const zero;
     if (!shape) return zero;
@@ -29,6 +29,16 @@ public:
     if (it != shapes.end())
       return sids[std::distance(shapes.begin(),it)];
     return zero;
+  }
+
+  std::vector<size_t> const dofForShape(GeometricObject const *shape, size_t const ndof) const
+  {
+    std::vector<size_t> dof; dof.reserve(sids.size()*ndof);
+    for (auto const id : idsForShape(shape))
+    {
+      for (size_t i = 0; i < ndof; i++) dof.push_back(ndof*id+i);
+    }
+    return dof;
   }
 
   std::vector<GeometricObject const*> shapes; 

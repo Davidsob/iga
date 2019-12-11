@@ -35,23 +35,6 @@ struct Triplet : public Eigen::Triplet<double>
   }
 };
 
-
 using SparseMatrixR = Eigen::SparseMatrix<double>;
-
-namespace mpm
-{
-
-  template<typename T>
-  void print(std::vector<T> const &t, std::string const &msg)
-  {
-    std::cout << "\n" + msg << std::endl;
-    for (T const &x : t)
-    {
-      std::cout << " " << x;
-    }
-    std::cout << std::endl;
-  }
-}
-
 
 #endif //MatrixTypes_h

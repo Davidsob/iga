@@ -9,9 +9,9 @@ class StoredVariableBase
 public:
 
   ~StoredVariableBase() = default; 
-  virtual bool initialize() = 0;
-  virtual bool isInitialized() const = 0;
-  virtual bool clear() = 0;
+  virtual bool   initialize() = 0;
+  virtual bool   isInitialized() const = 0;
+  virtual bool   clear() = 0;
 
 protected:
   explicit StoredVariableBase(std::string const &name)
@@ -47,7 +47,7 @@ public:
   }
 
   size_t size() const { return _data.size(); }
-  
+
   std::vector<T> const &data() const
   {
     return _data;

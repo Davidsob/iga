@@ -5,6 +5,7 @@ file(GLOB SOURCES "*.cpp")
 
 include_directories(
 ${CMAKE_SOURCE_DIR}
+${CMAKE_SOURCE_DIR}/utils
 )
 
 set(EXTERNAL_LIBS)

@@ -1,11 +1,15 @@
 #pragma once
 
+#include "utils/MatrixTypes.h"
+
 #include <cmath>
 
 template<typename T>
 class ConstantValue
 {
 public:
+  using value_t = T;
+
   ConstantValue(T const x) : _x(x) {}
   virtual ~ConstantValue() = default;
 

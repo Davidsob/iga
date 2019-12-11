@@ -1,7 +1,8 @@
 #pragma once
 
-#include "WeakForms.h"
-#include "NamedObject.h"
+#include "base/NamedObject.h"
+
+#include "weakforms/WeakForms.h"
 
 class ConstraintBase : public NamedObject
 {
