@@ -1,13 +1,14 @@
 #pragma once
 
-#include "MatrixTypes.h"
+// #include "GaussianIntegrationPoints.h"
+// #include "IntegrationPointSet.h"
+// #include "NumericalIntegration.h"
+#include "base/SimulationClock.h"
 
-#include "GaussianIntegrationPoints.h"
-#include "IntegrationPointSet.h"
-#include "NumericalIntegration.h"
-#include "SimulationClock.h"
-#include "WeakFormManager.h"
-#include "WeakFormTags.h"
+#include "weakforms/WeakFormManager.h"
+#include "weakforms/WeakFormTags.h"
+
+#include "utils/MatrixTypes.h"
 
 #include <cassert>
 #include <memory>
@@ -47,7 +48,6 @@ protected:
 };
 
 
-template<class Mesh, class BoundaryMesh>
 class LaSystem : public LaSystemBase
 {
 public:
@@ -56,7 +56,7 @@ public:
   using LinearEngine_t = typename Operator<DynamicVectorR>::OperatorEngine;
 
   LaSystem(Mesh const &m, BoundaryMesh const &bm)
-    : LaSystemBase(), _mesh(m), _bmesh(bm)
+    : LaSystemBase(), _mesh(m)
   {
     initialize();
   }
