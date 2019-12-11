@@ -4,13 +4,12 @@
 #include <iostream>
 #include <array>
 
-class ElementMapper;
+#include "ElementMapperBase.h"
 
-template<typename ElementMapper>
 class IntegrationPoint
 {
 public:
-  explicit IntegrationPoint(ElementMapper const &mapper)
+  explicit IntegrationPoint(ElementMapperBase const &mapper)
     : mapper(mapper), id(-1), gauss({0,0,0}),para({0,0,0}) {}
 
   ~IntegrationPoint() = default;
@@ -20,17 +19,15 @@ public:
     mapper.mapIntegrationPoint(*this);
   }
 
-  ElementMapper const &mapper;
+  ElementMapperBase const &mapper;
   int id;
   std::array<double,3> gauss, para; // gauss integration points,parametric integration points
   double jdet,weight; // element jacobian determinant and weight for mapping
 
-  template<typename Mapper>
-  friend std::ostream &operator<<(std::ostream &os, IntegrationPoint<Mapper> const &ip);
+  friend std::ostream &operator<<(std::ostream &os, IntegrationPoint const &ip);
 };
 
-template<typename ElementMapper>
-std::ostream &operator<<(std::ostream &os, IntegrationPoint<ElementMapper> const &ip)
+std::ostream &operator<<(std::ostream &os, IntegrationPoint const &ip)
 {
   os << "Integration point(" << ip.id << "):" << std::endl;
   os << "*** weight            = " << ip.weight << std::endl;
@@ -46,13 +43,12 @@ namespace iga
   std::vector<double> gaussLegendreWeights(int order);
 
   template<typename ElementMapper>
-  std::vector<IntegrationPoint<ElementMapper>>
+  std::vector<IntegrationPoint>
   _integrationPoints(ElementMapper const &mapper, int order)
   {
-    using IntPoint = IntegrationPoint<ElementMapper>;
     auto const gp{gaussLegendrePoints(order)};
     auto const w{gaussLegendreWeights(order)};
-    std::vector<IntPoint> points(gp.size(),IntPoint(mapper));
+    std::vector<IntegrationPoint> points(gp.size(),IntegrationPoint(mapper));
     for (size_t i = 0; i < gp.size(); i++)
     {
       points[i].id       = i;
@@ -63,15 +59,14 @@ namespace iga
   }
 
   template<typename ElementMapper>
-  std::vector<IntegrationPoint<ElementMapper>>
+  std::vector<IntegrationPoint>
   _integrationPoints(ElementMapper const &mapper, int order1, int order2)
   {
-    using IntPoint = IntegrationPoint<ElementMapper>;
     auto const gp1{gaussLegendrePoints(order1)};
     auto const gp2{gaussLegendrePoints(order2)};
     auto const w1{gaussLegendreWeights(order1)};
     auto const w2{gaussLegendreWeights(order2)};
-    std::vector<IntPoint> points(gp1.size()*gp2.size(),IntPoint(mapper));
+    std::vector<IntegrationPoint> points(gp1.size()*gp2.size(),IntegrationPoint(mapper));
     size_t k = 0;
     for (size_t j = 0; j < gp2.size(); j++)
     {
@@ -88,17 +83,16 @@ namespace iga
   }
 
   template<typename ElementMapper>
-  std::vector<IntegrationPoint<ElementMapper>>
+  std::vector<IntegrationPoint>
   _integrationPoints(ElementMapper const &mapper, int order1, int order2, int order3)
   {
-    using IntPoint = IntegrationPoint<ElementMapper>;
     auto const gp1{gaussLegendrePoints(order1)};
     auto const gp2{gaussLegendrePoints(order2)};
     auto const gp3{gaussLegendrePoints(order3)};
     auto const w1{gaussLegendreWeights(order1)};
     auto const w2{gaussLegendreWeights(order2)};
     auto const w3{gaussLegendreWeights(order3)};
-    std::vector<IntPoint> points(gp1.size()*gp2.size()*gp3.size(),IntPoint(mapper));
+    std::vector<IntegrationPoint> points(gp1.size()*gp2.size()*gp3.size(),IntegrationPoint(mapper));
     size_t kk = 0;
     for (size_t k = 0; k < gp3.size(); k++)
     {
@@ -119,7 +113,7 @@ namespace iga
   }
 
   template<typename ElementMapper, typename ...Args>
-  std::vector<IntegrationPoint<ElementMapper>>
+  std::vector<IntegrationPoint>
   integrationPoints(ElementMapper const &mapper, Args const ...args)
   {
     return _integrationPoints(mapper, args...);
