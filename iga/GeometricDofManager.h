@@ -1,11 +1,20 @@
 #pragma once
 
+#include "base/Singleton.h"
+
 class GeometricDofManager 
+  : public Singleton<GeometricDofManager>
 {
 public:
-  GeometricDofManager() = default;
-  virtual ~GeometricDofManager() = default;
+  // GeometricDofManager() = default;
+  ~GeometricDofManager() = default;
 
+  bool hasShape(GeometricObject const *shape)
+  {
+    if (!shape ) return false;
+    return (std::find(shapes.begin(), shapes.end(),shape) == shapes.end());
+  }
+  
   bool addShape(GeometricObject const *shape)
   {
     if (!shape ) return false;

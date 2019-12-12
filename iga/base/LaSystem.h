@@ -72,7 +72,8 @@ public:
 
   void sparse_lhs(std::vector<Triplet> &data) const override
   {
-    auto const dof = _dofManager.dofForShape(_obj,PrimaryVariable::ndof);
+    auto &mgr = GeometricDofManager::instance();
+    auto const dof = mgr.dofForShape(_obj,PrimaryVariable::ndof);
     auto const size = dof.size();
     DynamicMatrixR x(DynamicMatrixR::Zero(size,size));
 
@@ -88,7 +89,8 @@ public:
 
   void sparse_stiffness(std::vector<Triplet> &data) const
   {
-    auto const dof = _dofManager.dofForShape(_obj,PrimaryVariable::ndof);
+    auto &mgr = GeometricDofManager::instance();
+    auto const dof = mgr.dofForShape(_obj,PrimaryVariable::ndof);
     auto const size = dof.size();
     DynamicMatrixR x(DynamicMatrixR::Zero(size,size));
     
@@ -104,7 +106,8 @@ public:
 
   void sparse_mass(std::vector<Triplet> &data) const
   {
-    auto const dof = _dofManager.dofForShape(_obj,PrimaryVariable::ndof);
+    auto &mgr = GeometricDofManager::instance();
+    auto const dof = mgr.dofForShape(_obj,PrimaryVariable::ndof);
     auto const size = dof.size();
     DynamicMatrixR x(DynamicMatrixR::Zero(size,size));
     
@@ -120,7 +123,8 @@ public:
 
   void sparse_rhs(std::vector<Triplet> &data) const override
   {
-    auto const dof = _dofManager.dofForShape(_obj,PrimaryVariable::ndof);
+    auto &mgr = GeometricDofManager::instance();
+    auto const dof = mgr.dofForShape(_obj,PrimaryVariable::ndof);
     auto const size = dof.size();
     DynamicVectorR x(DynamicVectorR::Zero(size));
 
@@ -133,8 +137,6 @@ public:
     }
     convert::to<void>(x,dof,data); // converts to triplets
   }
-
-  GeometricDofManager _dofManager;
 
 protected:
   void initialize()
@@ -160,11 +162,11 @@ protected:
     }
 
     // initialize geometric object
-    _dofManager.addShape(_obj);
+    auto &mgr = GeometricDofManager::instance();
+    mgr.addShape(_obj);
   }
 
   GeometricObject const * _obj;
-  size_t _ndof;
   std::vector<std::unique_ptr<BilinearEngine_t>> _bilinear_forms;
   std::vector<std::unique_ptr<BilinearEngine_t>> _stiffness_forms;
   std::vector<std::unique_ptr<BilinearEngine_t>> _mass_forms;
@@ -182,8 +184,8 @@ public:
   template<typename Eng>
   using EnginePair_t = std::pair<GeometricObject const *, std::unique_ptr<Eng>>;
 
-  ConstrainedLaSystem(GeometricDofManager &dofManager, std::vector<Pair_t> const &constraints)
-    : LaSystemBase(), _dofManager(dofManager), _constraints(constraints)
+  ConstrainedLaSystem(std::vector<Pair_t> const &constraints)
+    : LaSystemBase(), _constraints(constraints)
   {
     initialize();
   }
@@ -193,17 +195,17 @@ public:
   virtual void lhs(SparseMatrixR &A) const
   {
     assert(0);
-    auto offset = 0;
-    static auto renumber = [&](Triplet &t) { t.setRow(offset++); };
+    // auto offset = 0;
+    // static auto renumber = [&](Triplet &t) { t.setRow(offset++); };
 
-    std::vector<Triplet> lhs;
-    sparse_lhs(lhs);
-    for_each(lhs.begin(), lhs.end(), renumber);
+    // std::vector<Triplet> lhs;
+    // sparse_lhs(lhs);
+    // for_each(lhs.begin(), lhs.end(), renumber);
 
-    auto cdof = lhs.size();
-    auto ndof = _dofManager.ids.size();
-    A.resize(cdof, ndof);
-    A.setFromTriplets(lhs.begin(), lhs.end());
+    // auto cdof = lhs.size();
+    // auto ndof = _dofManager.ids.size();
+    // A.resize(cdof, ndof);
+    // A.setFromTriplets(lhs.begin(), lhs.end());
   }
 
   virtual void rhs(DynamicVectorR &b) const
@@ -226,11 +228,13 @@ public:
 
   void sparse_lhs(std::vector<Triplet> &data) const override
   {
+    auto &mgr = GeometricDofManager::instance();
+
     for (auto const &pair : _bilinear_forms) // loop of shape engine pairs
     {
       auto const shape = pair.first;
       auto const form = pair.second.get();
-      auto const dof = _dofManager.dofForShape(shape,PrimaryVariable::ndof);
+      auto const dof = mgr.dofForShape(shape,PrimaryVariable::ndof);
       auto const size = dof.size();
       DynamicMatrixR x(DynamicMatrixR::Zero(size,size));
       for (auto const &ip : QuadratureMesh(shape))
@@ -244,11 +248,13 @@ public:
 
   void sparse_rhs(std::vector<Triplet> &data) const override
   {
+    auto &mgr = GeometricDofManager::instance();
+
     for (auto const &pair : _linear_forms) // loop of shape engine pairs
     {
       auto const shape = pair.first;
       auto const form = pair.second.get();
-      auto const dof = _dofManager.dofForShape(shape,PrimaryVariable::ndof);
+      auto const dof = mgr.dofForShape(shape,PrimaryVariable::ndof);
       auto const size = dof.size();
       DynamicVectorR x(DynamicVectorR::Zero(size));
       for (auto const &ip : QuadratureMesh(shape))
@@ -262,15 +268,15 @@ public:
 protected:
   void initialize()
   {
+    auto &mgr = GeometricDofManager::instance();
     for (auto const &pair : _constraints)
     {
       _linear_forms  .push_back({pair.first, std::unique_ptr<LinearEngine_t  >(pair.second->getResidual()->createLinearEngine())});
       _bilinear_forms.push_back({pair.first, std::unique_ptr<BilinearEngine_t>(pair.second->getJacobian()->createBilinearEngine())});
-      _dofManager.addShape(pair.first);
+      mgr.addShape(pair.first);
     }
   }
 
-  GeometricDofManager &_dofManager;
   std::vector<Pair_t> const  &_constraints;
   std::vector< EnginePair_t<BilinearEngine_t> > _bilinear_forms;
   std::vector< EnginePair_t<LinearEngine_t> >   _linear_forms;
@@ -286,7 +292,7 @@ public:
   using Constrained_t = ConstrainedLaSystem<PrimaryVariable>;
 
   FeLaSystem(GeometricObject const *obj, std::vector<Pair_t> const &constraints)
-    : _obj(obj), _lasystem(obj), _constrained(_lasystem._dofManager, constraints)
+    : _obj(obj), _lasystem(obj), _constrained(constraints)
   {
   }
 
@@ -436,7 +442,8 @@ public:
 
 private:
 
-  size_t unconstrainedDof() const { return _lasystem._dofManager.ids.size()*PrimaryVariable::ndof; }
+  size_t unconstrainedDof() const
+  { return GeometricDofManager::instance().ids.size()*PrimaryVariable::ndof; }
 
   size_t unique_dof(std::vector<Triplet> const &data) const
   {
