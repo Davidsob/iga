@@ -58,6 +58,8 @@ public:
     return _data;
   }
 
+  T const &operator[](size_t i) const { return _data[i]; }
+
 protected:
 
   StoredVariable(size_t i, T const x0, std::string const &name)
