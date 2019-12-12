@@ -1,7 +1,9 @@
 #include "SolidElementMapper.h"
 
+#include "splines/GeometricObject.h"
 #include "splines/Nurbs.h"
 
+#include "GeometricDofManager.h"
 #include "ParametricMesh.h"
 #include "ShapeFunctions.h"
 
@@ -11,7 +13,17 @@ SolidElementMapper(NurbsSolid const &solid)
   : ElementMapperBase()
   , _solid(solid)
   , _parametricMesh(iga::parametricMesh(_solid))
-{}
+{
+  auto &mgr = GeometricDofManager::instance();
+  mgr.addShape(&_solid);
+  _dof = mgr.idsForShape(&_solid);
+}
+
+GeometricObject const *
+SolidElementMapper::geometry() const
+{ 
+  return dynamic_cast<GeometricObject const *>(&_solid);
+}
 
 Eigen::RowVectorXd
 SolidElementMapper::

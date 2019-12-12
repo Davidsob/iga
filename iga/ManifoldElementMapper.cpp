@@ -1,7 +1,9 @@
 #include "ManifoldElementMapper.h"
 
+#include "splines/GeometricObject.h"
 #include "splines/Nurbs.h"
 
+#include "GeometricDofManager.h"
 #include "ParametricMesh.h"
 #include "ShapeFunctions.h"
 
@@ -11,7 +13,17 @@ ManifoldElementMapper(NurbsSurface const &manifold)
   : ElementMapperBase()
   , _manifold(manifold)
   , _parametricMesh(iga::parametricMesh(_manifold))
-{}
+{
+  auto &mgr = GeometricDofManager::instance();
+  mgr.addShape(&_manifold);
+  _dof = mgr.idsForShape(&_manifold);
+}
+
+GeometricObject const *
+ManifoldElementMapper::geometry() const
+{ 
+  return dynamic_cast<GeometricObject const *>(&_manifold);
+}
 
 Eigen::RowVectorXd
 ManifoldElementMapper::

@@ -18,6 +18,10 @@ public:
   Eigen::MatrixXd const &parametricMesh() const { return _parametricMesh; }
   Eigen::MatrixXd const &elementMesh()    const { return _elementMesh; }
 
+  std::vector<size_t>const &dof() const override { return _dof;}
+
+  GeometricObject const * geometry() const override;
+
 protected:
   Eigen::RowVectorXd _shape(double x1, double x2, double x3)                  const override;
   Eigen::MatrixXd    _grad(double x1, double x2, double x3)                   const override;
@@ -29,6 +33,7 @@ protected:
   void               _updateElementMesh(size_t i, size_t j, size_t k)               override;
 private:
   NurbsSolid const &_solid;
+  std::vector<size_t> _dof;
   Eigen::MatrixXd _parametricMesh;
   mutable Eigen::MatrixXd _elementMesh;
 };

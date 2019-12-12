@@ -1,10 +1,11 @@
 #pragma once
 
-#include "base/SolverBase.h"
 #include "base/SimulationClock.h"
 #include "base/VariableManager.h"
 #include "base/VariableTags.h"
 #include "base/VariableUpdateManager.h"
+
+#include "SolverBase.h"
 
 #include <Eigen/SparseLU>
 

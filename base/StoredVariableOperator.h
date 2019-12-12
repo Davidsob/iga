@@ -1,7 +1,8 @@
 #pragma once
 
 #include "VariableManager.h"
-#include "MatrixTypeTraits.h"
+
+#include "utils/MatrixTypeTraits.h"
 
 template<class StoredVar, class Enable = void>
 class StoredVariableOperator
@@ -14,7 +15,7 @@ public:
   template<typename Index>
   DynamicVectorR const operator()(Index const &i) const
   {
-    auto &dof = i.dof;
+    auto const &dof = i.mapper.dof();
     DynamicVectorR var(dof.size());
     auto svar = VariableManager::instance().has<StoredVar>();
     auto const &data = svar->data();
@@ -37,7 +38,8 @@ public:
   template<typename Index>
   DynamicMatrixR const operator()(Index const &i) const
   {
-    auto &dof = i.dof;
+    std::cout << "\n+++ (" << __LINE__ << ") Enter: " << __PRETTY_FUNCTION__ << std::endl;
+    auto const &dof = i.mapper.dof;
     DynamicMatrixR var(dof.size(), StoredVar::dim());
     auto svar = VariableManager::instance().has<StoredVar>();
     auto const &data = svar->data();
@@ -45,6 +47,7 @@ public:
     {
       var.row(i) = data[dof[i]];
     }
+    std::cout << "--- (" << __LINE__ << ") Exit: " << __PRETTY_FUNCTION__ << "\n" << std::endl;
     return var; 
   }
 };
@@ -60,42 +63,46 @@ public:
   template<typename Index>
   value_t const&operator()(Index const &i) const
   {
-    auto svar = VariableManager::instance().has<StoredLpVar>();
-    auto const &data = svar->data();
-    return data[i.cidx][i.lidx];
+    assert(false);
+    return value_t();
+    // auto svar = VariableManager::instance().has<StoredLpVar>();
+    // auto const &data = svar->data();
+    // return data[i.cidx][i.lidx];
   }
 
   template<typename Index>
   value_t &operator()(Index const &i)
   {
-    auto svar = VariableManager::instance().has<StoredLpVar>();
-    auto &data = svar->data();
-    return data[i.cidx][i.lidx];
+    assert(false);
+    return value_t(0);
+    // auto svar = VariableManager::instance().has<StoredLpVar>();
+    // auto &data = svar->data();
+    // return data[i.cidx][i.lidx];
   }
 };
 
-template<class StoredCellVar>
-class StoredCellVariableOperator
-{
-public:
-  using value_t = typename StoredCellVar::value_t;
+// template<class StoredCellVar>
+// class StoredCellVariableOperator
+// {
+// public:
+//   using value_t = typename StoredCellVar::value_t;
 
-  virtual ~StoredCellVariableOperator() = default;
+//   virtual ~StoredCellVariableOperator() = default;
 
-  template<typename Index>
-  value_t const&operator()(Index const &i) const
-  {
-    auto svar = VariableManager::instance().has<StoredCellVar>();
-    auto const &data = svar->data();
-    return data[i];
-  }
+//   template<typename Index>
+//   value_t const&operator()(Index const &i) const
+//   {
+//     auto svar = VariableManager::instance().has<StoredCellVar>();
+//     auto const &data = svar->data();
+//     return data[i];
+//   }
 
-  template<typename Index>
-  value_t &operator()(Index const &i)
-  {
-    auto svar = VariableManager::instance().has<StoredCellVar>();
-    auto &data = svar->data();
-    return data[i];
-  }
-};
+//   template<typename Index>
+//   value_t &operator()(Index const &i)
+//   {
+//     auto svar = VariableManager::instance().has<StoredCellVar>();
+//     auto &data = svar->data();
+//     return data[i];
+//   }
+// };
 

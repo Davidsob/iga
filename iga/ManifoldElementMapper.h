@@ -18,8 +18,12 @@ public:
   Eigen::MatrixXd const &parametricMesh() const { return _parametricMesh; }
   Eigen::MatrixXd const &elementMesh()    const { return _elementMesh; }
 
-  NurbsSurface const &manifold() const { return _manifold; }
+  std::vector<size_t>const &dof() const override { return _dof;}
 
+  GeometricObject const * geometry() const override;
+
+  NurbsSurface const &manifold() const { return _manifold; }
+  
   template<typename ParametricPoint>
   Eigen::VectorXd normal(ParametricPoint const &p) const
   {
@@ -81,6 +85,7 @@ private:
   Eigen::Matrix3d _covariantBasis(double x1, double x2) const;
 
   NurbsSurface const &_manifold;
+  std::vector<size_t> _dof;
   Eigen::MatrixXd _parametricMesh;
   mutable Eigen::MatrixXd _elementMesh;
 };

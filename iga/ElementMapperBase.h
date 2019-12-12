@@ -2,10 +2,17 @@
 
 #include <Eigen/Dense>
 
+#include <vector>
+
+class GeometricObject; 
+
 class ElementMapperBase
 {
 public:
   virtual ~ElementMapperBase() = default;
+
+  virtual std::vector<size_t> const &dof() const = 0;
+  virtual GeometricObject const * geometry() const = 0;
 
   template<typename ParametricPoint>
   Eigen::RowVectorXd shape(ParametricPoint const &p) const

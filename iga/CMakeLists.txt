@@ -1,14 +1,14 @@
 set(library iga)
 
-file(GLOB HEADERS "*.h" "weakforms/*.h" "base/*.h")
-file(GLOB SOURCES "*.cpp" "weakforms/*.cpp" "base/*.cpp")
+file(GLOB HEADERS "*.h" "base/*.h" "solvers/*.h" "weakforms/*.h")
+file(GLOB SOURCES "*.cpp" "base/*.cpp" "solvers/*.cpp" "weakforms/*.cpp")
 
 include_directories(
 ${CMAKE_SOURCE_DIR}
 ${TPL_DIR}/eigen-3.3.5
 #${CMAKE_SOURCE_DIR}/base
-${CMAKE_SOURCE_DIR}/bsplines/
-${CMAKE_SOURCE_DIR}/bsplines/utils
+${CMAKE_SOURCE_DIR}/splines/
+${CMAKE_SOURCE_DIR}/splines/utils
 )
 
 set(EXTERNAL_LIBS splines)

@@ -4,25 +4,28 @@
 #include <iostream>
 #include <array>
 
+#include "base/SimulationClock.h"
+
 #include "ElementMapperBase.h"
 
 class IntegrationPoint
 {
 public:
   explicit IntegrationPoint(ElementMapperBase const &mapper)
-    : mapper(mapper), id(-1), gauss({0,0,0}),para({0,0,0}) {}
+    : id(-1), mapper(mapper), gauss({0,0,0}),para({0,0,0}) {}
 
   ~IntegrationPoint() = default;
 
   void update()
   {
+    time = SimulationClock::instance().time();
     mapper.mapIntegrationPoint(*this);
   }
 
-  ElementMapperBase const &mapper;
   int id;
+  ElementMapperBase const &mapper;
   std::array<double,3> gauss, para; // gauss integration points,parametric integration points
-  double jdet,weight; // element jacobian determinant and weight for mapping
+  double jdet,weight,time; // element jacobian determinant and weight for mapping
 
   friend std::ostream &operator<<(std::ostream &os, IntegrationPoint const &ip);
 };
@@ -30,6 +33,7 @@ public:
 inline std::ostream &operator<<(std::ostream &os, IntegrationPoint const &ip)
 {
   os << "Integration point(" << ip.id << "):" << std::endl;
+  os << "*** time [s]          = " << ip.time<< std::endl;
   os << "*** weight            = " << ip.weight << std::endl;
   os << "*** jacobian          = " << ip.jdet << std::endl;
   os << "*** gauss points      = {" << ip.gauss[0] << ", " << ip.gauss[1] << ", " << ip.gauss[2] << "}" << std::endl;

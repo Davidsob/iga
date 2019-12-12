@@ -1,90 +1,58 @@
 #pragma once
 
-#include "StoredVoltageVariable.h"
-#include "StoredElectricVelocityVariable.h"
-
-#include "StoredTemperatureVariable.h"
-#include "StoredTemperatureVelocityVariable.h"
+#include "thermal/StoredTemperatureVariable.h"
+#include "thermal/StoredTemperatureRateVariable.h"
 
 namespace StoredVariableTraits
 {
+  // class StoredTemperatureVariable;
+  // class StoredTemperatureVariableIncrement;
+  // class OldStoredTemperatureVariable;
+
+  // class StoredTemperatureRateVariable;
+  // class StoredTemperatureRateVariableIncrement;
+  // class OldStoredTemperatureRateVariable;
 
   template<typename Var> struct increment_var {};
 
-  // template<>
-  // struct increment_var<StoredVoltageVariable>
-  // {
-  //   using type = StoredVoltageVariableIncrement;
-  // };
+  template<>
+  struct increment_var<StoredTemperatureVariable>
+  {
+    using type = StoredTemperatureVariableIncrement;
+  };
 
-  // template<>
-  // struct increment_var<StoredElectricVelocityVariable>
-  // {
-  //   using type = StoredElectricVelocityVariableIncrement;
-  // };
-
-  // template<>
-  // struct increment_var<StoredTemperatureVariable>
-  // {
-  //   using type = StoredTemperatureVariableIncrement;
-  // };
-
-  // template<>
-  // struct increment_var<StoredTemperatureVelocityVariable>
-  // {
-  //   using type = StoredTemperatureVelocityVariableIncrement;
-  // };
+  template<>
+  struct increment_var<StoredTemperatureRateVariable>
+  {
+    using type = StoredTemperatureRateVariableIncrement;
+  };
 
   template<typename Var> struct old_var {};
 
-  // template<>
-  // struct old_var<StoredVoltageVariable>
-  // {
-  //   using type = OldStoredVoltageVariable;
-  // };
+  template<>
+  struct old_var<StoredTemperatureVariable>
+  {
+    using type = OldStoredTemperatureVariable;
+  };
 
-  // template<>
-  // struct old_var<StoredElectricVelocityVariable>
-  // {
-  //   using type = OldStoredElectricVelocityVariable;
-  // };
-
-  // template<>
-  // struct old_var<StoredTemperatureVariable>
-  // {
-  //   using type = OldStoredTemperatureVariable;
-  // };
-
-  // template<>
-  // struct old_var<StoredTemperatureVelocityVariable>
-  // {
-  //   using type = OldStoredTemperatureVelocityVariable;
-  // };
+  template<>
+  struct old_var<StoredTemperatureRateVariable>
+  {
+    using type = OldStoredTemperatureRateVariable;
+  };
 
   template<typename Var> struct velocity_var {};
 
-  // template<>
-  // struct velocity_var<StoredVoltageVariable>
-  // {
-  //   using type = StoredElectricVelocityVariable;
-  // };
+  template<>
+  struct velocity_var<StoredTemperatureVariable>
+  {
+    using type = StoredTemperatureRateVariable;
+  };
 
-  // template<>
-  // struct velocity_var<OldStoredVoltageVariable>
-  // {
-  //   using type = OldStoredElectricVelocityVariable;
-  // };
-  
-  // template<>
-  // struct velocity_var<StoredTemperatureVariable>
-  // {
-  //   using type = StoredTemperatureVelocityVariable;
-  // };
-
-  // template<>
-  // struct velocity_var<OldStoredTemperatureVariable>
-  // {
-  //   using type = OldStoredTemperatureVelocityVariable;
-  // };
+  template<>
+  struct velocity_var<OldStoredTemperatureVariable>
+  {
+    using type = OldStoredTemperatureRateVariable;
+  };
 }
 

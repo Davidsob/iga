@@ -18,6 +18,10 @@ public:
   Eigen::MatrixXd const &parametricMesh() const { return _parametricMesh; }
   Eigen::MatrixXd const &elementMesh()    const { return _elementMesh; }
 
+  std::vector<size_t>const &dof() const override { return _dof;}
+
+  GeometricObject const * geometry() const override;
+
   template<typename ParametricPoint>
   Eigen::VectorXd tangent(ParametricPoint const &p) const
   {
@@ -68,6 +72,7 @@ private:
   Eigen::MatrixXd _localTransformation(double x1) const;
 
   NurbsCurve const &_curve;
+  std::vector<size_t> _dof;
   Eigen::MatrixXd _parametricMesh;
   mutable Eigen::MatrixXd _elementMesh;
 };

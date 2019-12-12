@@ -95,18 +95,18 @@ private:
     virtual ~_f() {};
 
     template<typename Index>
+    value_t interpolatedVar(Index const &p) const
+    {
+      auto const shape = p.mapper.shape(p.para);
+      return shape.dot(_var(p));
+    }
+
+    template<typename Index>
     value_t operator()(Index const &p) const
     {
-      // auto const shape = p.mapper.shapeFunctions(p.para);
       auto constraint = value_t(_value(p));
-      auto variable = value_t(0);
-      // auto variable = _var(x);
-      value_t diff = constraint - variable;
-      // std::cout << "+++ Dirchlet op()" << std::endl;
-      // std::cout << "constraint = " << constraint << std::endl;
-      // std::cout << "variable = " << variable << std::endl;
-      // std::cout << "delta = " << diff << std::endl;
-      // std::cout << "--- Dirchlet op()\n" << std::endl;
+      auto variable = interpolatedVar(p);
+      auto diff = constraint - variable;
       return diff;
     }
 
@@ -119,24 +119,3 @@ private:
   linear_form const _residual;
   bilinear_form const _jacobian;
 };
-
-
-// template<typename T>
-// class AppliedVoltage
-//   : public DirichletConstraint<T, VoltageVariable>
-// {
-// public:
-//   template<typename ...Args>
-//   AppliedVoltage(Args ...args) : DirichletConstraint<T, VoltageVariable>(args...) {}
-//   ~AppliedVoltage() = default;
-// };
-
-// template<typename T>
-// class AppliedTemperature
-//   : public DirichletConstraint<T, TemperatureVariable>
-// {
-// public:
-//   template<typename ...Args>
-//   AppliedTemperature(Args ...args) : DirichletConstraint<T, TemperatureVariable>(args...) {}
-//   ~AppliedTemperature() = default;
-// };

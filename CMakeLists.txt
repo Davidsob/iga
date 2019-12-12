@@ -5,6 +5,8 @@ cmake_minimum_required(VERSION 2.8)
 add_subdirectory(splines) # get down in the weeds and build/link other dirs
 add_subdirectory(iga) # get down in the weeds and build/link other dirs
 add_subdirectory(utils) # get down in the weeds and build/link other dirs
+add_subdirectory(thermal) # get down in the weeds and build/link other dirs
+add_subdirectory(solidmechanics) # get down in the weeds and build/link other dirs
 
 include_directories(
 ${CMAKE_SOURCE_DIR}

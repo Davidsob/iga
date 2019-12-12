@@ -161,9 +161,10 @@ protected:
       _linear_forms.push_back(std::unique_ptr<LinearEngine_t>(form->createLinearEngine()));
     }
 
-    // initialize geometric object
-    auto &mgr = GeometricDofManager::instance();
-    mgr.addShape(_obj);
+    {
+      auto &mgr = GeometricDofManager::instance(); 
+      mgr.addShape(_obj);
+    }
   }
 
   GeometricObject const * _obj;
@@ -273,7 +274,7 @@ protected:
     {
       _linear_forms  .push_back({pair.first, std::unique_ptr<LinearEngine_t  >(pair.second->getResidual()->createLinearEngine())});
       _bilinear_forms.push_back({pair.first, std::unique_ptr<BilinearEngine_t>(pair.second->getJacobian()->createBilinearEngine())});
-      mgr.addShape(pair.first);
+      mgr.addShape(pair.first); // handled by the element mappers!
     }
   }
 

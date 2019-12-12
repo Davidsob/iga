@@ -1,7 +1,9 @@
 #include "CurveElementMapper.h"
 
+#include "splines/GeometricObject.h"
 #include "splines/Nurbs.h"
 
+#include "GeometricDofManager.h"
 #include "ParametricMesh.h"
 #include "ShapeFunctions.h"
 
@@ -11,7 +13,17 @@ CurveElementMapper(NurbsCurve const &curve)
   : ElementMapperBase()
   , _curve(curve)
   , _parametricMesh(iga::parametricMesh(_curve))
-{}
+{
+  auto &mgr = GeometricDofManager::instance();
+  mgr.addShape(&_curve);
+  _dof = mgr.idsForShape(&_curve);
+}
+
+GeometricObject const *
+CurveElementMapper::geometry() const
+{ 
+  return dynamic_cast<GeometricObject const *>(&_curve);
+}
 
 Eigen::RowVectorXd
 CurveElementMapper::

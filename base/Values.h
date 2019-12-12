@@ -49,6 +49,7 @@ public:
 
   template<typename ...Args>
   TransposedValue(Args ...args) : _x(args...) {}
+
   virtual ~TransposedValue() = default;
 
   template<typename Index>
@@ -65,15 +66,20 @@ template<typename T>
 class RampedValue
 {
 public:
-  RampedValue(T const x, double s, double b)
+  using value_t = T;
+
+  RampedValue(T const x, double s=1.0, double b=0.0)
     : _x(x), _s(s), _b(b)
   {}
+
   virtual ~RampedValue() = default;
 
   template<typename Index>
-  T operator()(Index const &i) const {
-    return (_s*i.time + _b)*_x; 
+  T operator()(Index const &i) const
+  {
+    return (_s*i.time)*_x + _b; 
   }
+
 private:
   T const _x;
   double const _s;
@@ -84,13 +90,17 @@ template<typename T>
 class SteppedValue
 {
 public:
+  using value_t = T;
+
   SteppedValue(T const x, double rise_time, double slope)
     : _x(x), _rise_time(rise_time), _slope(slope)
   {}
+
   virtual ~SteppedValue() = default;
 
   template<typename Index>
-  T operator()(Index const &i) const {
+  T operator()(Index const &i) const
+  {
     return 0.5*(std::tanh(_slope*(i.time - _rise_time)) + 1.0)*_x; 
   }
 
