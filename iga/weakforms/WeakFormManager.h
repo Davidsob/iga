@@ -1,12 +1,12 @@
 #pragma once
 
-#include "BaseObjectManager.h"
+#include "ObjectManagerBase.h"
 #include "WeakForms.h"
 #include "WeakFormTags.h"
 #include "Singleton.h"
 
 class WeakFormManager
-  : public BaseObjectManager<WeakFormBase>
+  : public ObjectManagerBase<WeakFormBase>
   , public Singleton<WeakFormManager>
 {
 public:

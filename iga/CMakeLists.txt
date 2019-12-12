@@ -1,7 +1,7 @@
 set(library iga)
 
-file(GLOB HEADERS "*.h" "base/*.h" "solvers/*.h" "weakforms/*.h")
-file(GLOB SOURCES "*.cpp" "base/*.cpp" "solvers/*.cpp" "weakforms/*.cpp")
+file(GLOB HEADERS "*.h"   "base/*.h"   "constraints/*.h" "solvers/*.h"   "weakforms/*.h")
+file(GLOB SOURCES "*.cpp" "base/*.cpp" "constraints/*.h" "solvers/*.cpp" "weakforms/*.cpp")
 
 include_directories(
 ${CMAKE_SOURCE_DIR}

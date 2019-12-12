@@ -1,11 +1,11 @@
 #pragma once
 
-#include "BaseObjectManager.h"
+#include "ObjectManagerBase.h"
 #include "StoredVariable.h"
 #include "Singleton.h"
 
 class VariableManager
-  : public BaseObjectManager<StoredVariableBase>
+  : public ObjectManagerBase<StoredVariableBase>
   , public Singleton<VariableManager>
 {
 public:

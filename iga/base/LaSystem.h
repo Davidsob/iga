@@ -4,11 +4,12 @@
 
 #include "splines/GeometricObject.h"
 
-#include "iga/ConstraintBase.h"
-#include "iga/IgaIO.h"
 #include "iga/GeometricDofManager.h"
 #include "iga/Quadrature.h"
 #include "iga/QuadratureMesh.h"
+
+#include "iga/constraints/ConstraintManager.h"
+#include "iga/constraints/ConstraintBase.h"
 
 #include "iga/weakforms/WeakFormManager.h"
 #include "iga/weakforms/WeakFormTags.h"
@@ -178,15 +179,14 @@ template<typename PrimaryVariable>
 class ConstrainedLaSystem : public LaSystemBase
 {
 public:
-  using Pair_t = std::pair<GeometricObject const *, ConstraintBase const *>;
   using BilinearEngine_t = typename Operator<IntegrationPoint, DynamicMatrixR>::OperatorEngine;
   using LinearEngine_t   = typename Operator<IntegrationPoint, DynamicVectorR>::OperatorEngine;
 
   template<typename Eng>
   using EnginePair_t = std::pair<GeometricObject const *, std::unique_ptr<Eng>>;
 
-  ConstrainedLaSystem(std::vector<Pair_t> const &constraints)
-    : LaSystemBase(), _constraints(constraints)
+  ConstrainedLaSystem()
+    : LaSystemBase()
   {
     initialize();
   }
@@ -270,7 +270,7 @@ protected:
   void initialize()
   {
     auto &mgr = GeometricDofManager::instance();
-    for (auto const &pair : _constraints)
+    for (auto const &pair : ConstraintManager::instance())
     {
       _linear_forms  .push_back({pair.first, std::unique_ptr<LinearEngine_t  >(pair.second->getResidual()->createLinearEngine())});
       _bilinear_forms.push_back({pair.first, std::unique_ptr<BilinearEngine_t>(pair.second->getJacobian()->createBilinearEngine())});
@@ -278,7 +278,6 @@ protected:
     }
   }
 
-  std::vector<Pair_t> const  &_constraints;
   std::vector< EnginePair_t<BilinearEngine_t> > _bilinear_forms;
   std::vector< EnginePair_t<LinearEngine_t> >   _linear_forms;
 };
@@ -288,12 +287,11 @@ template<typename PrimaryVariable>
 class FeLaSystem
 {
 public:
-  using Pair_t = std::pair<GeometricObject const * , ConstraintBase const *>;
   using Unconstrained_t = LaSystem<PrimaryVariable>;
   using Constrained_t = ConstrainedLaSystem<PrimaryVariable>;
 
-  FeLaSystem(GeometricObject const *obj, std::vector<Pair_t> const &constraints)
-    : _obj(obj), _lasystem(obj), _constrained(constraints)
+  FeLaSystem(GeometricObject const *obj)
+    : _obj(obj), _lasystem(obj), _constrained()
   {
   }
 

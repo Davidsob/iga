@@ -9,7 +9,7 @@
 
 
 template<typename Object, class Enable = void>
-class BaseObjectManager
+class ObjectManagerBase
 {
 public:
 
@@ -19,7 +19,7 @@ public:
   iterator begin() { return _objects.begin(); } 
   iterator end() { return _objects.end(); } 
 
-  virtual ~BaseObjectManager()
+  virtual ~ObjectManagerBase()
   {
     for (Object *obj : _objects)
       delete obj;
@@ -90,5 +90,5 @@ protected:
 };
 
 template<typename Object>
-class BaseObjectManager<Object, typename std::enable_if<std::is_integral<Object>::type>::type >
+class ObjectManagerBase<Object, typename std::enable_if<std::is_integral<Object>::type>::type >
 {};
