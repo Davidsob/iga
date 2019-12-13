@@ -8,6 +8,9 @@
 #include "iga/Quadrature.h"
 #include "iga/QuadratureMesh.h"
 
+#include "iga/boundary_conditions/BoundaryConditionManager.h"
+#include "iga/boundary_conditions/BoundaryConditionBase.h"
+
 #include "iga/constraints/ConstraintManager.h"
 #include "iga/constraints/ConstraintBase.h"
 
@@ -61,6 +64,9 @@ class LaSystem : public LaSystemBase
 public:
   using BilinearEngine_t = typename Operator<IntegrationPoint,DynamicMatrixR>::OperatorEngine;
   using LinearEngine_t   = typename Operator<IntegrationPoint,DynamicVectorR>::OperatorEngine;
+
+  template<typename Eng>
+  using EnginePair_t = std::pair<GeometricObject const *, std::unique_ptr<Eng>>;
 
   LaSystem(GeometricObject const *obj)
     : LaSystemBase()
@@ -125,18 +131,35 @@ public:
   void sparse_rhs(std::vector<Triplet> &data) const override
   {
     auto &mgr = GeometricDofManager::instance();
-    auto const dof = mgr.dofForShape(_obj,PrimaryVariable::ndof);
-    auto const size = dof.size();
-    DynamicVectorR x(DynamicVectorR::Zero(size));
+    { // primay shape
+      auto const dof = mgr.dofForShape(_obj,PrimaryVariable::ndof);
+      auto const size = dof.size();
+      DynamicVectorR x(DynamicVectorR::Zero(size));
 
-    for (auto const &ip : QuadratureMesh(_obj))
-    {
-      for (auto &form : _linear_forms)
+      for (auto const &ip : QuadratureMesh(_obj))
       {
-        quadrature::gauss(ip,x,*form.get());
+        for (auto &form : _linear_forms)
+        {
+          quadrature::gauss(ip,x,*form.get());
+        }
       }
+      convert::to<void>(x,dof,data); // converts to triplets
     }
-    convert::to<void>(x,dof,data); // converts to triplets
+
+    for (auto const &pair : _boundary_linear_forms) // loop of boundary engine pairs
+    {
+      auto const shape = pair.first;
+      auto const form = pair.second.get();
+      auto const dof = mgr.dofForShape(shape,PrimaryVariable::ndof);
+      auto const size = dof.size();
+      DynamicVectorR x(DynamicVectorR::Zero(size));
+      for (auto const &ip : QuadratureMesh(shape))
+      {
+        quadrature::gauss(ip,x,*form);
+      }
+      convert::to<void>(x,dof,data);
+    }
+
   }
 
 protected:
@@ -166,13 +189,26 @@ protected:
       auto &mgr = GeometricDofManager::instance(); 
       mgr.addShape(_obj);
     }
+    // boundary conditions
+    {
+      auto &mgr = GeometricDofManager::instance();
+      for (auto const &pair : BoundaryConditionManager::instance())
+      {
+        _boundary_linear_forms  .push_back({pair.first, std::unique_ptr<LinearEngine_t  >(pair.second->getRhs()->createLinearEngine())});
+        // _bilinear_forms.push_back({pair.first, std::unique_ptr<BilinearEngine_t>(pair.second->getJacobian()->createBilinearEngine())});
+        mgr.addShape(pair.first); // handled by the element mappers!
+      }
+    }
   }
+
+
 
   GeometricObject const * _obj;
   std::vector<std::unique_ptr<BilinearEngine_t>> _bilinear_forms;
   std::vector<std::unique_ptr<BilinearEngine_t>> _stiffness_forms;
   std::vector<std::unique_ptr<BilinearEngine_t>> _mass_forms;
   std::vector<std::unique_ptr<LinearEngine_t>> _linear_forms;
+  std::vector< EnginePair_t<LinearEngine_t> >   _boundary_linear_forms;
 };
 
 template<typename PrimaryVariable>

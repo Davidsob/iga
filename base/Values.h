@@ -68,7 +68,7 @@ class RampedValue
 public:
   using value_t = T;
 
-  RampedValue(T const x, double s=1.0, double b=0.0)
+  RampedValue(T const x, double s=1.0, T b=0.0)
     : _x(x), _s(s), _b(b)
   {}
 
@@ -83,7 +83,7 @@ public:
 private:
   T const _x;
   double const _s;
-  double const _b;
+  T const _b;
 };
 
 template<typename T>

@@ -5,6 +5,8 @@
 #include "base/VariableTags.h"
 #include "base/VariableUpdateManager.h"
 
+#include "splines/utils/Converters.h"
+
 #include "SolverBase.h"
 
 #include <Eigen/SparseLU>
@@ -72,8 +74,14 @@ private:
 
   void updateVariableStorage()
   {
+    using to_t = std::vector<typename PrimaryVariable::value_t>;
+    auto const ndof = PrimaryVariable::ndof;
+    auto const dof  = _x.size();
+    DynamicMatrixR const xreshaped = Eigen::Map<DynamicMatrixR const>(_x.data(),ndof,dof/ndof).transpose();
+
+    auto const x = convert::to<to_t>(xreshaped);
     auto var = VariableManager::instance().has<PrimaryVariable>();
-    std::copy(_x.data(), _x.data()+var->size(), var->data().begin());
+    std::copy(x.begin(), x.begin()+var->size(), var->data().begin());
   }
 
   LaSystem_t const _lasystem;

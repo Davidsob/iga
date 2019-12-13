@@ -38,16 +38,14 @@ public:
   template<typename Index>
   DynamicMatrixR const operator()(Index const &i) const
   {
-    std::cout << "\n+++ (" << __LINE__ << ") Enter: " << __PRETTY_FUNCTION__ << std::endl;
-    auto const &dof = i.mapper.dof;
-    DynamicMatrixR var(dof.size(), StoredVar::dim());
+    auto const &dof = i.mapper.dof();
+    DynamicMatrixR var(dof.size(), StoredVar::ndof);
     auto svar = VariableManager::instance().has<StoredVar>();
     auto const &data = svar->data();
     for (size_t i = 0; i < dof.size(); i++)
     {
       var.row(i) = data[dof[i]];
     }
-    std::cout << "--- (" << __LINE__ << ") Exit: " << __PRETTY_FUNCTION__ << "\n" << std::endl;
     return var; 
   }
 };

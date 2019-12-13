@@ -31,8 +31,8 @@ set(EXTERNAL_LIBS iga splines utils)
 # add_executable(Elbow.exe elbow.cxx)
 # target_link_libraries(Elbow.exe ${EXTERNAL_LIBS})
 
-add_executable(Heat.exe heat_conduction.cxx)
-target_link_libraries(Heat.exe ${EXTERNAL_LIBS})
+# add_executable(Heat.exe heat_conduction.cxx)
+# target_link_libraries(Heat.exe ${EXTERNAL_LIBS})
 
 # add_executable(Stress.exe solid_mechanics.cxx)
 # target_link_libraries(Stress.exe ${EXTERNAL_LIBS})
@@ -43,14 +43,14 @@ target_link_libraries(Heat.exe ${EXTERNAL_LIBS})
 # add_executable(BBar.exe bbar_ex.cxx)
 # target_link_libraries(BBar.exe ${EXTERNAL_LIBS})
 
-add_executable(Integration.exe integration_ex.cxx)
-target_link_libraries(Integration.exe ${EXTERNAL_LIBS})
+# add_executable(Integration.exe integration_ex.cxx)
+# target_link_libraries(Integration.exe ${EXTERNAL_LIBS})
 
 # add_executable(TimBeam.exe tim_beam_ex.cxx)
 # target_link_libraries(TimBeam.exe ${EXTERNAL_LIBS})
 
-add_executable(AxialTimBeam.exe tim_beam_axial_ex.cxx)
-target_link_libraries(AxialTimBeam.exe ${EXTERNAL_LIBS})
+# add_executable(AxialTimBeam.exe tim_beam_axial_ex.cxx)
+# target_link_libraries(AxialTimBeam.exe ${EXTERNAL_LIBS})
 
 # add_executable(KLShellEx.exe kl_shell_ex.cxx)
 # target_link_libraries(KLShellEx.exe ${EXTERNAL_LIBS})
@@ -58,14 +58,17 @@ target_link_libraries(AxialTimBeam.exe ${EXTERNAL_LIBS})
 # add_executable(MRShellEx.exe mr_shell_ex.cxx)
 # target_link_libraries(MRShellEx.exe ${EXTERNAL_LIBS})
 
-add_executable(SixDofShellEx.exe sixdof_shell_ex.cxx)
-target_link_libraries(SixDofShellEx.exe ${EXTERNAL_LIBS})
+# add_executable(SixDofShellEx.exe sixdof_shell_ex.cxx)
+# target_link_libraries(SixDofShellEx.exe ${EXTERNAL_LIBS})
 
-add_executable(PinchedCylinder.exe pinched_shell_ex.cxx)
-target_link_libraries(PinchedCylinder.exe ${EXTERNAL_LIBS})
+# add_executable(PinchedCylinder.exe pinched_shell_ex.cxx)
+# target_link_libraries(PinchedCylinder.exe ${EXTERNAL_LIBS})
 
-add_executable(CurvedShellBeam.exe curved_shell_ex.cxx)
-target_link_libraries(CurvedShellBeam.exe ${EXTERNAL_LIBS})
+# add_executable(CurvedShellBeam.exe curved_shell_ex.cxx)
+# target_link_libraries(CurvedShellBeam.exe ${EXTERNAL_LIBS})
 
 add_executable(Ht3D.exe ht3d_ex.cxx)
 target_link_libraries(Ht3D.exe ${EXTERNAL_LIBS})
+
+add_executable(Sm3D.exe sm3d_ex.cxx)
+target_link_libraries(Sm3D.exe ${EXTERNAL_LIBS})

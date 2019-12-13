@@ -74,3 +74,23 @@ struct is_vector_type<double>
 {
   static constexpr bool value() { return false; }
 };
+
+template<typename T> struct transpose_type;
+
+template<>
+struct transpose_type<StaticRowVectorR<2>>
+{
+  using type = StaticVectorR<2>;
+};
+
+template<>
+struct transpose_type<StaticRowVectorR<1>>
+{
+  using type = StaticVectorR<1>;
+};
+
+template<>
+struct transpose_type<StaticRowVectorR<3>>
+{
+  using type = StaticVectorR<3>;
+};

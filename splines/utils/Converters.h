@@ -80,6 +80,30 @@ namespace convert
   }
 
   template<>
+  inline std::vector<double> _converter(Eigen::MatrixXd const &in)
+  {
+    std::vector<double> out;
+    for (int i = 0; i < in.rows(); i++) out.push_back(in(i,0));
+    return out;
+  }
+
+  template<>
+  inline std::vector<Eigen::RowVectorXd> _converter(Eigen::MatrixXd const &in)
+  {
+    std::vector<Eigen::RowVectorXd> out;
+    for (int i = 0; i < in.rows(); i++) out.push_back(Eigen::RowVectorXd(in.row(i)));
+    return out;
+  }
+
+  template<>
+  inline std::vector<Eigen::RowVector3d> _converter(Eigen::MatrixXd const &in)
+  {
+    std::vector<Eigen::RowVector3d> out;
+    for (int i = 0; i < in.rows(); i++) out.push_back(Eigen::RowVector3d(in.row(i)));
+    return out;
+  }
+
+  template<>
   inline void _converter(Eigen::VectorXd const &in,
                          std::vector<size_t> const &dof,
                          std::vector<Triplet> &out)

@@ -3,6 +3,8 @@
 #include "base/StoredVariableTraits.h"
 #include "base/VariableUpdateManager.h"
 
+#include "splines/utils/Converters.h"
+
 #include "SolverBase.h"
 #include "IterativeSolver.h"
 
@@ -102,8 +104,16 @@ private:
   void updateVariableIncrementStorage()
   {
     using inc_t = typename StoredVariableTraits::increment_var<PrimaryVariable>::type;
+    using to_t = std::vector<typename inc_t::value_t>;
+    // std::copy(_dx.data(), _dx.data()+dvar->size(), dvar->data().begin());
+
+    auto const ndof = PrimaryVariable::ndof;
+    auto const dof  = _dx.size();
+    DynamicMatrixR const dxreshaped = Eigen::Map<DynamicMatrixR const>(_dx.data(),ndof,dof/ndof).transpose();
+
+    auto const x = convert::to<to_t>(dxreshaped);
     auto dvar = VariableManager::instance().has<inc_t>();
-    std::copy(_dx.data(), _dx.data()+dvar->size(), dvar->data().begin());
+    std::copy(x.begin(), x.begin()+dvar->size(), dvar->data().begin());
   }
 
   void updateVariableStorage()
