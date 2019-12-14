@@ -124,11 +124,20 @@ if __name__ == "__main__":
 
   # plot the first file
   field_range = (fmn, fmx)
+  print 'plotting step ', 0
   fig,ax = plot(mesh[0],data[0],field_range=field_range)
+  last_step = 0
+  class Updater:
+    def __init__(self):
+      self.last_step = 0
 
-  def update(step):
-    ax.clear()
-    plot(mesh[step],data[step],axis=ax,figure=fig,field_range=field_range)
+    def update(self,step):
+      if self.last_step != step:
+        print 'plotting step ', step
+        ax.clear()
+        plot(mesh[step],data[step],axis=ax,figure=fig,field_range=field_range)
+        self.last_step = step
 
-  ani = animate(plt.gcf(), update, np.arange(1, len(field_files)), interval=500, repeat=False) 
+  up = Updater()
+  ani = animate(plt.gcf(), up.update, np.arange(1, len(field_files)), interval=50, repeat=True) 
   plt.show()
