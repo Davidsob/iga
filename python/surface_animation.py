@@ -139,5 +139,5 @@ if __name__ == "__main__":
         self.last_step = step
 
   up = Updater()
-  ani = animate(plt.gcf(), up.update, np.arange(1, len(field_files)), interval=50, repeat=True) 
+  ani = animate(plt.gcf(), up.update, np.arange(1, len(field_files)), interval=100, repeat=False) 
   plt.show()

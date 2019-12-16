@@ -72,3 +72,6 @@ target_link_libraries(Ht3D.exe ${EXTERNAL_LIBS})
 
 add_executable(Sm3D.exe sm3d_ex.cxx)
 target_link_libraries(Sm3D.exe ${EXTERNAL_LIBS})
+
+add_executable(NlSm3D.exe nlsm3d_ex.cxx)
+target_link_libraries(NlSm3D.exe ${EXTERNAL_LIBS})
