@@ -13,6 +13,7 @@ public:
 
   virtual std::vector<size_t> const &dof() const = 0;
   virtual GeometricObject const * geometry() const = 0;
+  virtual Eigen::MatrixXd const &coordinates() const = 0;
 
   template<typename ParametricPoint>
   Eigen::RowVectorXd shape(ParametricPoint const &p) const

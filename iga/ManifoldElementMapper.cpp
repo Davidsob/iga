@@ -2,6 +2,7 @@
 
 #include "splines/GeometricObject.h"
 #include "splines/Nurbs.h"
+#include "splines/utils/VectorOperations.h"
 
 #include "GeometricDofManager.h"
 #include "ParametricMesh.h"
@@ -16,7 +17,6 @@ ManifoldElementMapper(NurbsSurface const &manifold)
 {
   auto &mgr = GeometricDofManager::instance();
   mgr.addShape(&_manifold);
-  _dof = mgr.idsForShape(&_manifold);
 }
 
 GeometricObject const *
@@ -29,7 +29,7 @@ Eigen::RowVectorXd
 ManifoldElementMapper::
 _shape(double x1, double x2, double x3) const
 {
-  return iga::ShapeFunctions(x1,x2,_manifold);
+  return iga::CompactShapeFunctions(x1,x2,_manifold);
 }
 
 Eigen::MatrixXd
@@ -37,7 +37,7 @@ ManifoldElementMapper::
 _grad(double x1, double x2, double x3) const
 {
   Eigen::MatrixXd const jacobian = _physicalJacobian(x1,x2,x3);
-  Eigen::MatrixXd const dN = iga::ShapeFunctionDerivatives(x1,x2,_manifold);
+  Eigen::MatrixXd const dN = iga::CompactShapeFunctionDerivatives(x1,x2,_manifold);
   
   return jacobian.inverse()*dN;
 }
@@ -65,7 +65,7 @@ computeLocalCoordinates(double x1, double x2, Eigen::MatrixXd const &dN) const
 {
   static const std::vector<double> n0{0,0,1};
 
-  Eigen::MatrixXd    const Q = convert::to<Eigen::MatrixXd>(_manifold.Q);
+  Eigen::MatrixXd    const &Q  = _coordinates;
   Eigen::MatrixXd    const jac = dN*Q;
   Eigen::RowVector3d const dxds   = jac.row(0);
   Eigen::RowVector3d const dxdt   = jac.row(1);
@@ -94,7 +94,7 @@ Eigen::MatrixXd
 ManifoldElementMapper::
 _physicalJacobian(double x1, double x2, double x3) const
 {
-  Eigen::MatrixXd const dN       = iga::ShapeFunctionDerivatives(x1,x2,_manifold);
+  Eigen::MatrixXd const dN       = iga::CompactShapeFunctionDerivatives(x1,x2,_manifold);
   Eigen::MatrixXd const lQ       = computeLocalCoordinates(x1,x2,dN);
   Eigen::MatrixXd const jacobian = dN*lQ;
   // return covariantMetricTensor(std::vector<double>{x1,x2,x3}).block(0,0,2,2);
@@ -118,7 +118,15 @@ void
 ManifoldElementMapper::
 _updateElementMesh(size_t i, size_t j, size_t k)
 {
+  auto &mgr = GeometricDofManager::instance();
+
   _elementMesh = iga::parametricElementMesh(i,j,_manifold,_parametricMesh); 
+  auto const uv{_elementMesh.row(0)};
+  auto const active{iga::ActiveControlPoints(uv(0),uv(1),_manifold)};
+  auto const sids{mgr.idsForShape(&_manifold)};
+
+  _dof = subVector(sids,active);
+  _coordinates = convert::to<Eigen::MatrixXd>(subVector(mgr.ctrlPoints,_dof));
 }
 
 Eigen::VectorXd
@@ -137,8 +145,8 @@ Eigen::MatrixXd
 ManifoldElementMapper::
 _tangents(double x1, double x2) const
 {
-  Eigen::MatrixXd const Q = convert::to<Eigen::MatrixXd>(_manifold.Q);
-  Eigen::MatrixXd const g = _grad(x1,x2,0);
+  Eigen::MatrixXd const &Q = _coordinates;
+  Eigen::MatrixXd const  g = _grad(x1,x2,0);
 
   Eigen::MatrixXd tangents = g*Q;
   tangents.row(0) = tangents.row(0).normalized();
@@ -167,8 +175,8 @@ Eigen::Matrix3d
 ManifoldElementMapper::
 _covariantBasis(double x1, double x2) const
 {
-  Eigen::MatrixXd const Q     = convert::to<Eigen::MatrixXd>(_manifold.Q);
-  Eigen::MatrixXd const sgrad = iga::ShapeFunctionDerivatives(x1,x2,_manifold);
+  Eigen::MatrixXd const &Q    = _coordinates;
+  Eigen::MatrixXd const sgrad = iga::CompactShapeFunctionDerivatives(x1,x2,_manifold);
 
   Eigen::Matrix3d A;
   A.block(0,0,2,3) = sgrad*Q;

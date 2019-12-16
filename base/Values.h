@@ -42,6 +42,29 @@ private:
 };
 
 template<typename T>
+class ScalarScaledValue 
+{
+public:
+  using value_t = typename T::value_t;
+
+  template<typename ...Args>
+  ScalarScaledValue(double scale, Args ...args)
+    : _scale(scale), _x(args...) {}
+
+  virtual ~ScalarScaledValue() = default;
+
+  template<typename Index>
+  value_t operator()(Index const &i) const
+  { 
+    return _scale*_x(i);
+  }
+
+private:
+  double const _scale;
+  T const _x;
+};
+
+template<typename T>
 class TransposedValue
 {
 public:

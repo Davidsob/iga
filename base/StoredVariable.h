@@ -2,6 +2,8 @@
 
 #include "NamedObject.h"
 
+#include <vector>
+
 class StoredVariableBase
   : public NamedObject
 {

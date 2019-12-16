@@ -22,6 +22,8 @@ public:
 
   GeometricObject const * geometry() const override;
 
+  Eigen::MatrixXd const &coordinates() const override { return _coordinates; } 
+
   NurbsSurface const &manifold() const { return _manifold; }
   
   template<typename ParametricPoint>
@@ -88,6 +90,7 @@ private:
   std::vector<size_t> _dof;
   Eigen::MatrixXd _parametricMesh;
   mutable Eigen::MatrixXd _elementMesh;
+  mutable Eigen::MatrixXd _coordinates;
 };
 
 inline std::ostream &operator<<(std::ostream &os, ManifoldElementMapper const &mapper)

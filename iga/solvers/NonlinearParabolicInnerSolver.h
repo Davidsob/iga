@@ -5,7 +5,7 @@
 #include "base/VariableManager.h"
 #include "base/VariableUpdateManager.h"
 
-#include "SolverBase.h"
+#include "IgaSolverBase.h"
 #include "IterativeSolver.h"
 
 #include <algorithm>
@@ -13,7 +13,7 @@
 
 template<typename LaSystem_t, typename PrimaryVariable>
 class NonlinearParabolicInnerSolver
- : public SolverBase, public IterativeSolver
+ : public IgaSolverBase, public IterativeSolver
 {
 public:
 

@@ -45,6 +45,8 @@ class WeakForm : public WeakFormBase, public BilinearFormTag
 {
 public:
 
+  using value_t = Return_t;
+
   ~WeakForm() = default;
 
   template<typename ...Args>
@@ -100,6 +102,8 @@ class WeakForm<Wf, Return_t, typename std::enable_if<is_vector_type<Return_t>::v
   : public WeakFormBase, public LinearFormTag
 {
 public:
+
+  using value_t = Return_t;
 
   ~WeakForm() = default;
 

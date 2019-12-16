@@ -104,6 +104,14 @@ namespace convert
   }
 
   template<>
+  inline std::vector<StaticRowVectorR<6>> _converter(Eigen::MatrixXd const &in)
+  {
+    std::vector<StaticRowVectorR<6>> out;
+    for (int i = 0; i < in.rows(); i++) out.push_back(StaticRowVectorR<6>(in.row(i)));
+    return out;
+  }
+
+  template<>
   inline void _converter(Eigen::VectorXd const &in,
                          std::vector<size_t> const &dof,
                          std::vector<Triplet> &out)

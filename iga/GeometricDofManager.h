@@ -29,6 +29,14 @@ public:
     return true;
   }
 
+  void clear() 
+  {
+    shapes.clear();
+    ids.clear();
+    sids.clear();
+    ctrlPoints.clear();
+  }
+
   std::vector<size_t> const &idsForShape(GeometricObject const *shape) const
   {
     static std::vector<size_t> const zero;
@@ -48,14 +56,6 @@ public:
       for (size_t i = 0; i < ndof; i++) dof.push_back(ndof*id+i);
     }
     return dof;
-  }
-
-  void clear()
-  {
-    shapes.clear();
-    ids.clear();
-    sids.clear();
-    ctrlPoints.clear();
   }
 
   std::vector<GeometricObject const*> shapes; 

@@ -22,6 +22,8 @@ public:
 
   GeometricObject const * geometry() const override;
 
+  Eigen::MatrixXd const &coordinates() const { return _coordinates; }
+
   template<typename ParametricPoint>
   Eigen::VectorXd tangent(ParametricPoint const &p) const
   {
@@ -75,6 +77,7 @@ private:
   std::vector<size_t> _dof;
   Eigen::MatrixXd _parametricMesh;
   mutable Eigen::MatrixXd _elementMesh;
+  mutable Eigen::MatrixXd _coordinates;
 };
 
 inline std::ostream &operator<<(std::ostream &os, CurveElementMapper const &mapper)

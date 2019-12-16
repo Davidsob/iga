@@ -7,13 +7,13 @@
 
 #include "splines/utils/Converters.h"
 
-#include "SolverBase.h"
-
 #include <Eigen/SparseLU>
+
+#include "IgaSolverBase.h"
 
 template<typename LaSystem_t, typename PrimaryVariable>
 class LinearSolver
-  : public SolverBase
+  : public IgaSolverBase
 {
 public:
   template<typename ...Args>
@@ -36,7 +36,6 @@ public:
     SparseMatrixR A;
     DynamicVectorR b;
     _lasystem.discretize(A, b);
-
     // solve
     std::cout << "Begin linear solve..." << std::endl;
     Eigen::SparseLU<SparseMatrixR> solver;
@@ -48,6 +47,7 @@ public:
     }
 
     _x.resize(b.size());
+    std::cout << "Sum f = " << b.sum() << std::endl;
     _x = solver.solve(b);
     if (solver.info() != Eigen::Success)
     {
