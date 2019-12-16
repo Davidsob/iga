@@ -43,8 +43,8 @@ set(EXTERNAL_LIBS iga splines utils)
 # add_executable(BBar.exe bbar_ex.cxx)
 # target_link_libraries(BBar.exe ${EXTERNAL_LIBS})
 
-# add_executable(Integration.exe integration_ex.cxx)
-# target_link_libraries(Integration.exe ${EXTERNAL_LIBS})
+add_executable(Integration.exe integration_ex.cxx)
+target_link_libraries(Integration.exe ${EXTERNAL_LIBS})
 
 # add_executable(TimBeam.exe tim_beam_ex.cxx)
 # target_link_libraries(TimBeam.exe ${EXTERNAL_LIBS})

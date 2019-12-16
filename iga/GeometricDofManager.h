@@ -50,6 +50,14 @@ public:
     return dof;
   }
 
+  void clear()
+  {
+    shapes.clear();
+    ids.clear();
+    sids.clear();
+    ctrlPoints.clear();
+  }
+
   std::vector<GeometricObject const*> shapes; 
   std::vector<size_t> ids;
   std::vector<std::vector<size_t>> sids;
