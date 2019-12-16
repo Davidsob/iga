@@ -22,6 +22,8 @@ public:
 
   GeometricObject const * geometry() const override;
 
+  Eigen::MatrixXd const &coordinates() const override { return _coordinates; } 
+
 protected:
   Eigen::RowVectorXd _shape(double x1, double x2, double x3)                  const override;
   Eigen::MatrixXd    _grad(double x1, double x2, double x3)                   const override;
@@ -36,6 +38,7 @@ private:
   std::vector<size_t> _dof;
   Eigen::MatrixXd _parametricMesh;
   mutable Eigen::MatrixXd _elementMesh;
+  mutable Eigen::MatrixXd _coordinates;
 };
 
 inline std::ostream &operator<<(std::ostream &os, SolidElementMapper const &mapper)

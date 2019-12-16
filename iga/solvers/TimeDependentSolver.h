@@ -4,13 +4,13 @@
 #include "base/SimulationResults.h"
 #include "base/StoredVariableTraits.h"
 
-#include "SolverBase.h"
+#include "IgaSolverBase.h"
 
 #include <memory>
 
 template<typename InnerSolver>
 class TimeDependentSolver
-  : public SolverBase
+  : public IgaSolverBase
 {
 public:
 

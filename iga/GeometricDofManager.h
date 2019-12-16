@@ -29,6 +29,14 @@ public:
     return true;
   }
 
+  void clear() 
+  {
+    shapes.clear();
+    ids.clear();
+    sids.clear();
+    ctrlPoints.clear();
+  }
+
   std::vector<size_t> const &idsForShape(GeometricObject const *shape) const
   {
     static std::vector<size_t> const zero;

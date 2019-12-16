@@ -1,9 +1,9 @@
 #pragma once
 
-class SolverBase
+class IgaSolverBase
 {
 public:
-  virtual ~SolverBase() = default;
+  virtual ~IgaSolverBase() = default;
   
   virtual void initializeSolution() = 0;  
   virtual void solve() = 0;

@@ -20,8 +20,23 @@
 #include "utils/MatrixTypes.h"
 
 #include <cassert>
+#include <iostream>
 #include <memory>
 #include <algorithm>
+
+namespace LaSystem_detail
+{
+  std::vector<size_t> const varDof(std::vector<size_t> const &dof, size_t const ndof)
+  {
+    std::vector<size_t> vdof; vdof.reserve(dof.size()*ndof);
+    for (auto const &id : dof)
+    {
+      for (size_t i = 0; i < ndof; i++)
+        vdof.push_back(ndof*id+i);
+    }
+    return vdof;
+  }
+}
 
 
 class LaSystemBase
@@ -44,7 +59,7 @@ public:
 
   virtual void rhs(DynamicVectorR &b) const
   {
-    static auto set_vector =
+    auto set_vector =
       [&](Triplet const &t) { b[t.row()] += t.value(); };
 
     std::vector<Triplet> rhs;
@@ -79,85 +94,82 @@ public:
 
   void sparse_lhs(std::vector<Triplet> &data) const override
   {
-    auto &mgr = GeometricDofManager::instance();
-    auto const dof = mgr.dofForShape(_obj,PrimaryVariable::ndof);
-    auto const size = dof.size();
-    DynamicMatrixR x(DynamicMatrixR::Zero(size,size));
-
+    auto const ndof = PrimaryVariable::ndof;
     for (auto const ip : QuadratureMesh(_obj))
     {
+      auto const &dof =  LaSystem_detail::varDof(ip.back().mapper.dof(), ndof);
+      auto const size = dof.size();
+      DynamicMatrixR x(DynamicMatrixR::Zero(size,size));
+      
       for (auto &form : _bilinear_forms)
       {
         quadrature::gauss(ip,x,*form.get());
       }
+      convert::to<void>(x,dof,dof,data);
     }
-    convert::to<void>(x,dof,dof,data);
   }
 
   void sparse_stiffness(std::vector<Triplet> &data) const
   {
-    auto &mgr = GeometricDofManager::instance();
-    auto const dof = mgr.dofForShape(_obj,PrimaryVariable::ndof);
-    auto const size = dof.size();
-    DynamicMatrixR x(DynamicMatrixR::Zero(size,size));
-    
+    auto const ndof = PrimaryVariable::ndof;
     for (auto const ip : QuadratureMesh(_obj))
     {
+      auto const &dof =  LaSystem_detail::varDof(ip.back().mapper.dof(), ndof);
+      auto const size = dof.size();
+      DynamicMatrixR x(DynamicMatrixR::Zero(size,size));
       for (auto &form : _stiffness_forms)
       {
         quadrature::gauss(ip,x,*form.get());
       }
+      convert::to<void>(x,dof,dof,data);
     }
-    convert::to<void>(x,dof,dof,data);
   }
 
   void sparse_mass(std::vector<Triplet> &data) const
   {
-    auto &mgr = GeometricDofManager::instance();
-    auto const dof = mgr.dofForShape(_obj,PrimaryVariable::ndof);
-    auto const size = dof.size();
-    DynamicMatrixR x(DynamicMatrixR::Zero(size,size));
-    
+    auto const ndof = PrimaryVariable::ndof;
     for (auto const ip : QuadratureMesh(_obj))
     {
+      auto const &dof =  LaSystem_detail::varDof(ip.back().mapper.dof(), ndof);
+      auto const size = dof.size();
+      DynamicMatrixR x(DynamicMatrixR::Zero(size,size));
       for (auto &form : _mass_forms)
       {
         quadrature::gauss(ip,x,*form.get());
       }
+      convert::to<void>(x,dof,dof,data);
     }
-    convert::to<void>(x,dof,dof,data);
   }
 
   void sparse_rhs(std::vector<Triplet> &data) const override
   {
-    auto &mgr = GeometricDofManager::instance();
+    auto const ndof = PrimaryVariable::ndof;
     { // primay shape
-      auto const dof = mgr.dofForShape(_obj,PrimaryVariable::ndof);
-      auto const size = dof.size();
-      DynamicVectorR x(DynamicVectorR::Zero(size));
-
       for (auto const &ip : QuadratureMesh(_obj))
       {
+        auto const &dof =  LaSystem_detail::varDof(ip.back().mapper.dof(), ndof);
+        auto const size = dof.size();
+        DynamicVectorR x(DynamicVectorR::Zero(size));
         for (auto &form : _linear_forms)
         {
           quadrature::gauss(ip,x,*form.get());
         }
+        convert::to<void>(x,dof,data); // converts to triplets
       }
-      convert::to<void>(x,dof,data); // converts to triplets
     }
 
     for (auto const &pair : _boundary_linear_forms) // loop of boundary engine pairs
     {
       auto const shape = pair.first;
       auto const form = pair.second.get();
-      auto const dof = mgr.dofForShape(shape,PrimaryVariable::ndof);
-      auto const size = dof.size();
-      DynamicVectorR x(DynamicVectorR::Zero(size));
       for (auto const &ip : QuadratureMesh(shape))
       {
+        auto const &dof =  LaSystem_detail::varDof(ip.back().mapper.dof(), ndof);
+        auto const size = dof.size();
+        DynamicVectorR x(DynamicVectorR::Zero(size));
         quadrature::gauss(ip,x,*form);
+        convert::to<void>(x,dof,data);
       }
-      convert::to<void>(x,dof,data);
     }
 
   }
@@ -248,9 +260,9 @@ public:
   virtual void rhs(DynamicVectorR &b) const
   {
     auto offset = 0;
-    static auto renumber = [&](Triplet &t) { t.setRow(offset++); };
+    auto renumber = [&](Triplet &t) { t.setRow(offset++); };
 
-    static auto set_vector =
+    auto set_vector =
       [&](Triplet const &t) { b[t.row()] += t.value(); };
 
     std::vector<Triplet> rhs;
@@ -265,40 +277,37 @@ public:
 
   void sparse_lhs(std::vector<Triplet> &data) const override
   {
-    auto &mgr = GeometricDofManager::instance();
-
+    auto const ndof = PrimaryVariable::ndof;
     for (auto const &pair : _bilinear_forms) // loop of shape engine pairs
     {
       auto const shape = pair.first;
       auto const form = pair.second.get();
-      auto const dof = mgr.dofForShape(shape,PrimaryVariable::ndof);
-      auto const size = dof.size();
-      DynamicMatrixR x(DynamicMatrixR::Zero(size,size));
       for (auto const &ip : QuadratureMesh(shape))
       {
+        auto const &dof =  LaSystem_detail::varDof(ip.back().mapper.dof(), ndof);
+        auto const size = dof.size();
+        DynamicMatrixR x(DynamicMatrixR::Zero(size,size));
         quadrature::gauss(ip,x,*form);
+        convert::to<void>(x,dof,dof,data);
       }
-      convert::to<void>(x,dof,dof,data);
     }
-
   }
 
   void sparse_rhs(std::vector<Triplet> &data) const override
   {
-    auto &mgr = GeometricDofManager::instance();
-
+    auto const ndof = PrimaryVariable::ndof;
     for (auto const &pair : _linear_forms) // loop of shape engine pairs
     {
       auto const shape = pair.first;
       auto const form = pair.second.get();
-      auto const dof = mgr.dofForShape(shape,PrimaryVariable::ndof);
-      auto const size = dof.size();
-      DynamicVectorR x(DynamicVectorR::Zero(size));
       for (auto const &ip : QuadratureMesh(shape))
       {
+        auto const &dof =  LaSystem_detail::varDof(ip.back().mapper.dof(), ndof);
+        auto const size = dof.size();
+        DynamicVectorR x(DynamicVectorR::Zero(size));
         quadrature::gauss(ip,x,*form);
+        convert::to<void>(x,dof,data);
       }
-      convert::to<void>(x,dof,data);
     }
   }
 
@@ -352,8 +361,8 @@ public:
 
   void composed_lhs(SparseMatrixR &A, double a, double b) const
   {
-    static auto scale_a = [&](Triplet &t) { t.setValue(a*t.value()); };
-    static auto scale_b = [&](Triplet &t) { t.setValue(b*t.value()); };
+    auto scale_a = [&](Triplet &t) { t.setValue(a*t.value()); };
+    auto scale_b = [&](Triplet &t) { t.setValue(b*t.value()); };
 
     std::vector<Triplet> mass, stiffness, cdata;
     _lasystem.sparse_mass(mass);
@@ -374,7 +383,7 @@ public:
 
   virtual void rhs(DynamicVectorR &b) const
   {
-    static auto set_vector =
+    auto set_vector =
       [&](Triplet const &t) { b[t.row()] += t.value(); };
     size_t ndof = 0;
     std::vector<Triplet> rhs;
@@ -427,7 +436,6 @@ public:
   void sparse_lhs(std::vector<Triplet> &data, size_t &ndof) const
   {
     std::vector<Triplet> cdata;
-
     _lasystem.sparse_lhs(data);
 
     size_t cdof;
@@ -504,7 +512,7 @@ private:
     int index = offset-1;
     int last  = -1;
 
-    static auto renumber = [&index,&last](auto &t)
+    auto renumber = [&index,&last](auto &t)
     {
       if ( t.row()!= last) 
       {
@@ -535,7 +543,7 @@ private:
     int index = offset-1;
     int last  = -1;
 
-    static auto renumber = [&index,&last](auto &t)
+    auto renumber = [&index,&last](auto &t)
     {
       if ( t.row()!= last) 
       {
@@ -545,7 +553,7 @@ private:
       t.setRow(index);
     };
 
-    static auto transpose = [&](Triplet &t) { t.transpose(); };
+    auto transpose = [&](Triplet &t) { t.transpose(); };
 
     for_each(cdata.begin(), cdata.end(), renumber);
 

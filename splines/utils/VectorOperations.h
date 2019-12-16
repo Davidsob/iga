@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 #include <functional>
 #include <fstream>
 #include <numeric>
@@ -179,5 +180,21 @@ namespace vector_ops
   bool operator==(std::vector<T> const &x, std::vector<T> const &y)
   {
     return norm(x-y) < 1e-8;
+  }
+  
+  template<typename T>
+  std::vector<T> subVector(std::vector<T> const &x, std::vector<int> const &ids)
+  {
+    std::vector<T> sub;
+    for (auto const &i : ids) sub.push_back(x[i]);
+    return sub;
+  }
+
+  template<typename T>
+  std::vector<T> subVector(std::vector<T> const &in, std::vector<size_t> const &ids)
+  {
+    std::vector<T> out; out.reserve(ids.size());
+    for (auto const &i : ids) out.push_back(in[i]);
+    return out;
   }
 }

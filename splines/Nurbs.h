@@ -50,7 +50,12 @@ struct NurbsSolid : public GeometricObject
   using vector = std::vector<double>;
   using matrix = std::vector<std::vector<double>>; // need a point type
 
-  int qid(int iu, int iv) const { return iu + iv*(uknot.size()-p-1); }
+  int qid(int a, int b, int c) const
+  { 
+    auto const cols = uknot.size()-p-1;
+    auto const rows = vknot.size()-q-1;
+    return a + b*(cols) + c*(cols*rows); 
+  }
 
   matrix const &coordinates() const override { return Q; }
 

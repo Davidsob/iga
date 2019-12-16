@@ -5,14 +5,14 @@
 
 #include "splines/utils/Converters.h"
 
-#include "SolverBase.h"
+#include "IgaSolverBase.h"
 #include "IterativeSolver.h"
 
 #include <algorithm>
 
 template<typename LaSystem_t, typename PrimaryVariable>
 class NonlinearSolver
- : public SolverBase, public IterativeSolver
+ : public IgaSolverBase, public IterativeSolver
 {
 public:
 
