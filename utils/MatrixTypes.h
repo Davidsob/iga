@@ -17,6 +17,7 @@ using StaticRowVectorR = Eigen::Matrix<double, 1, N>;
 
 using DynamicMatrixR = Eigen::MatrixXd;
 using DynamicVectorR = Eigen::VectorXd;
+using DynamicRowVectorR = Eigen::RowVectorXd;
 
 struct Triplet : public Eigen::Triplet<double>
 {

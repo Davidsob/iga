@@ -1,0 +1,35 @@
+#pragma once
+
+#include "base/Values.h"
+
+#include "iga/operators/ShapeFunctionOperator.h"
+
+#include "DisplacementIdOperator.h"
+
+#include "utils/MatrixTypes.h"
+
+template<typename Traction>
+class AppliedTraction 
+  : public BoundaryConditionBase 
+{
+  using BId_t = FunctorMappedValue<ShapeFunctionOperator, DisplacementIdOperator, DynamicMatrixR>;
+  using linear_form = LinearWeakForm<BId_t, Traction, DynamicVectorR>;
+
+public:
+  template<typename ...Args>
+  AppliedTraction(Args ...args)
+    : BoundaryConditionBase("AppliedTraction")
+    , _traction(args...)
+    , _traction_form(BId_t(), _load)
+  {}
+
+  virtual ~AppliedTraction() = default;
+
+  WeakFormBase const * getRhs() const override
+  { return dynamic_cast<WeakFormBase const *>(&_traction_form); }
+
+private:
+
+  Traction    const _traction;
+  linear_form const _traction_form;
+};

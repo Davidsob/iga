@@ -1,33 +1,25 @@
-set(library iga)
+set(library shellmechanics)
 
 file(GLOB
 	HEADERS
 	"*.h"
-	"base/*.h"
 	"boundary_conditions/*.h"
-	"constraints/*.h"
 	"operators/*.h"
-	"solvers/*.h"
-	"weakforms/*.h"
+	"variables/*.h"
 )
 
 file(GLOB
 	SOURCES	
 	"*.cpp"
-	"base/*.cpp"
 	"boundary_conditions/*.cpp"
-	"constraints/*.cpp"
 	"operators/*.cpp"
-	"solvers/*.cpp"
-	"weakforms/*.cpp"
+	"variables/*.cpp"
 )
 
 include_directories(
 ${CMAKE_SOURCE_DIR}
 ${TPL_DIR}/eigen-3.3.5
 #${CMAKE_SOURCE_DIR}/base
-${CMAKE_SOURCE_DIR}/splines/
-${CMAKE_SOURCE_DIR}/splines/utils
 )
 
 set(EXTERNAL_LIBS splines)
@@ -39,4 +31,5 @@ message(STATUS "library sources: ${SOURCES}")
 
 add_library(${library} ${HEADERS} ${SOURCES})
 target_link_libraries(${library} ${EXTERNAL_LIBS})
+
 

@@ -78,6 +78,18 @@ struct is_vector_type<double>
 template<typename T> struct transpose_type;
 
 template<>
+struct transpose_type<StaticRowVectorR<6>>
+{
+  using type = StaticVectorR<6>;
+};
+
+template<>
+struct transpose_type<StaticRowVectorR<3>>
+{
+  using type = StaticVectorR<3>;
+};
+
+template<>
 struct transpose_type<StaticRowVectorR<2>>
 {
   using type = StaticVectorR<2>;
@@ -89,8 +101,3 @@ struct transpose_type<StaticRowVectorR<1>>
   using type = StaticVectorR<1>;
 };
 
-template<>
-struct transpose_type<StaticRowVectorR<3>>
-{
-  using type = StaticVectorR<3>;
-};

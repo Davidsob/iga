@@ -4,6 +4,8 @@
 #include "thermal/StoredTemperatureRateVariable.h"
 #include "solidmechanics/StoredDisplacementVariable.h"
 #include "solidmechanics/StoredVelocityVariable.h"
+#include "shellmechanics/variables/StoredSixDofDisplacementVariable.h"
+#include "shellmechanics/variables/StoredSixDofVelocityVariable.h"
 
 namespace StoredVariableTraits
 {
@@ -33,6 +35,18 @@ namespace StoredVariableTraits
     using type = StoredVelocityVariableIncrement<3>;
   };
 
+  template<>
+  struct increment_var<StoredSixDofDisplacementVariable>
+  {
+    using type = StoredSixDofDisplacementVariableIncrement;
+  };
+
+  template<>
+  struct increment_var<StoredSixDofVelocityVariable>
+  {
+    using type = StoredSixDofVelocityVariableIncrement;
+  };
+
   template<typename Var> struct old_var {};
 
   template<>
@@ -59,6 +73,18 @@ namespace StoredVariableTraits
     using type = OldStoredVelocityVariable<3>;
   };
 
+  template<>
+  struct old_var<StoredSixDofDisplacementVariable>
+  {
+    using type = OldStoredSixDofDisplacementVariable;
+  };
+
+  template<>
+  struct old_var<StoredSixDofVelocityVariable>
+  {
+    using type = OldStoredSixDofVelocityVariable;
+  };
+
   template<typename Var> struct velocity_var {};
 
   template<>
@@ -83,6 +109,18 @@ namespace StoredVariableTraits
   struct velocity_var<OldStoredDisplacementVariable<3>>
   {
     using type = OldStoredVelocityVariable<3>;
+  };
+
+  template<>
+  struct velocity_var<StoredSixDofDisplacementVariable>
+  {
+    using type = StoredSixDofVelocityVariable;
+  };
+
+  template<>
+  struct velocity_var<OldStoredSixDofDisplacementVariable>
+  {
+    using type = OldStoredSixDofVelocityVariable;
   };
 }
 

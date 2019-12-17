@@ -41,6 +41,80 @@ private:
   T const _x;
 };
 
+template<typename A, typename B, typename Operator, typename Return>
+class BinaryMappedValue 
+{
+public:
+  using value_t = Return;
+
+  BinaryMappedValue()
+    : _a(), _b() {}
+
+  BinaryMappedValue(A const &a, B const &b)
+    : _a(a), _b(b) {}
+
+  virtual ~BinaryMappedValue() = default;
+
+  template<typename Index>
+  value_t operator()(Index const &i) const
+  { 
+    return Operator(_a(i),_b(i));
+  }
+
+private:
+  A const _a;
+  B const _b;
+};
+
+template<typename A, typename Operator, typename Return>
+class MappedValue 
+{
+public:
+  using value_t = Return;
+
+  MappedValue()
+    : _a() {}
+
+  MappedValue(A const &a)
+    : _a(a) {}
+
+  virtual ~MappedValue() = default;
+
+  template<typename Index>
+  value_t operator()(Index const &i) const
+  { 
+    return Operator(_a(i));
+  }
+
+private:
+  A const _a;
+};
+
+template<typename A, typename Functor, typename Return>
+class FunctorMappedValue 
+{
+public:
+  using value_t = Return;
+
+  FunctorMappedValue()
+    : _a(), _func() {}
+
+  FunctorMappedValue(A const &a)
+    : _a(a), _func() {}
+
+  virtual ~FunctorMappedValue() = default;
+
+  template<typename Index>
+  value_t operator()(Index const &i) const
+  { 
+    return _func(_a(i));
+  }
+
+private:
+  A const _a;
+  Functor const _func;
+};
+
 template<typename T>
 class ScalarScaledValue 
 {
