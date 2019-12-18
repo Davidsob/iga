@@ -1,7 +1,8 @@
 #pragma once
 
-// #include "iga/operators/InterpolatedVariable.h"
-#include "iga/Values.h"
+#include "base/Values.h"
+
+#include "iga/operators/Multiply.h"
 #include "iga/operators/VectorizedVariable.h"
 
 #include "LinearMembraneStrainOperator.h"
@@ -14,7 +15,7 @@ using LinearMembraneStrain
         LinearMembraneStrainOperator,
         VectorizedVariable<SixDofDisplacementVariable>,
         Multiply,
-        StaticVectorR<6>
+        StaticVectorR<3>
         >;
 
 using LinearBendingStrain
@@ -22,7 +23,7 @@ using LinearBendingStrain
         LinearBendingStrainOperator,
         VectorizedVariable<SixDofDisplacementVariable>,
         Multiply,
-        StaticVectorR<6>
+        StaticVectorR<3>
         >;
 
 using LinearTransverseShearStrain
@@ -30,5 +31,5 @@ using LinearTransverseShearStrain
         LinearTransverseStrainOperator,
         VectorizedVariable<SixDofDisplacementVariable>,
         Multiply,
-        StaticVectorR<6>
+        StaticVectorR<2>
         >;

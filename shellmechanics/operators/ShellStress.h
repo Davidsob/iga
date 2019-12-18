@@ -1,8 +1,8 @@
 #pragma once
 
-// #include "iga/operators/InterpolatedVariable.h"
-#include "iga/Values.h"
-#include "iga/Values.h"
+#include "base/Values.h"
+
+#include "iga/operators/Multiply.h"
 #include "iga/operators/VectorizedVariable.h"
 
 #include "materials/linear_elastic/MembraneMaterialTangent.h"
@@ -14,23 +14,23 @@
 using MembraneStress
     = BinaryMappedValue<
         MembraneMaterialTangent,
-        LinearMembraneStrain 
+        LinearMembraneStrain,
         Multiply,
-        StaticVectorR<6>
+        StaticVectorR<3>
         >;
 
 using BendingStress
     = BinaryMappedValue<
         MembraneMaterialTangent,
-        LinearMembraneStrain 
+        LinearBendingStrain,
         Multiply,
-        StaticVectorR<6>
+        StaticVectorR<3>
         >;
 
 using TransverseShearStress
     = BinaryMappedValue<
-        TransverseShearMaterialTangent
-        LinearTransverseShearStrain 
+        TransverseShearMaterialTangent,
+        LinearTransverseShearStrain,
         Multiply,
-        StaticVectorR<6>
+        StaticVectorR<2>
         >;

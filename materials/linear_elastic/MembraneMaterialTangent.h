@@ -7,13 +7,13 @@ class MembraneMaterialTangent
 public:
   using value_t = StaticMatrixR<3,3>;
 
-  MembraneMaterialTangent(double E, double nu)
+  explicit MembraneMaterialTangent(double E, double nu)
     : E(E), nu(nu) {}
 
   ~MembraneMaterialTangent() = default;
 
   template<typename Point>
-  value_t operator()(Point const &p) const
+  value_t const operator()(Point const &p) const
   {
     size_t const ik[] = {0,1,0};
     size_t const jl[] = {0,1,1};

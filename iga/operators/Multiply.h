@@ -1,5 +1,7 @@
 #pragma once
 
+#include "utils/MatrixTypes.h"
+
 struct Multiply
 {
   template<typename A, typename B>

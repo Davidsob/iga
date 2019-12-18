@@ -12,7 +12,7 @@ template<typename Traction>
 class AppliedTraction 
   : public BoundaryConditionBase 
 {
-  using BId_t = FunctorMappedValue<ShapeFunctionOperator, DisplacementIdOperator, DynamicMatrixR>;
+  using BId_t = MappedValue<ShapeFunctionOperator, DisplacementIdOperator, DynamicMatrixR>;
   using linear_form = LinearWeakForm<BId_t, Traction, DynamicVectorR>;
 
 public:

@@ -44,8 +44,8 @@ set(EXTERNAL_LIBS iga splines utils)
 # add_executable(BBar.exe bbar_ex.cxx)
 # target_link_libraries(BBar.exe ${EXTERNAL_LIBS})
 
-add_executable(Integration.exe integration_ex.cxx)
-target_link_libraries(Integration.exe ${EXTERNAL_LIBS})
+# add_executable(Integration.exe integration_ex.cxx)
+# target_link_libraries(Integration.exe ${EXTERNAL_LIBS})
 
 # add_executable(TimBeam.exe tim_beam_ex.cxx)
 # target_link_libraries(TimBeam.exe ${EXTERNAL_LIBS})
@@ -59,8 +59,8 @@ target_link_libraries(Integration.exe ${EXTERNAL_LIBS})
 # add_executable(MRShellEx.exe mr_shell_ex.cxx)
 # target_link_libraries(MRShellEx.exe ${EXTERNAL_LIBS})
 
-add_executable(SixDofShellEx.exe sixdof_shell_ex.cxx)
-target_link_libraries(SixDofShellEx.exe ${EXTERNAL_LIBS})
+# add_executable(SixDofShellEx.exe sixdof_shell_ex.cxx)
+# target_link_libraries(SixDofShellEx.exe ${EXTERNAL_LIBS})
 
 # add_executable(PinchedCylinder.exe pinched_shell_ex.cxx)
 # target_link_libraries(PinchedCylinder.exe ${EXTERNAL_LIBS})
@@ -74,8 +74,8 @@ target_link_libraries(SixDofShellEx.exe ${EXTERNAL_LIBS})
 # add_executable(Sm3D.exe sm3d_ex.cxx)
 # target_link_libraries(Sm3D.exe ${EXTERNAL_LIBS})
 
-# add_executable(NlSm3D.exe nlsm3d_ex.cxx)
-# target_link_libraries(NlSm3D.exe ${EXTERNAL_LIBS})
+add_executable(NlSm3D.exe nlsm3d_ex.cxx)
+target_link_libraries(NlSm3D.exe ${EXTERNAL_LIBS})
 
 add_executable(ShellEx.exe shell_plane_ex.cxx)
 target_link_libraries(ShellEx.exe ${EXTERNAL_LIBS})

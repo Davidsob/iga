@@ -16,7 +16,7 @@ public:
   ~LinearTransverseStrainOperator() = default;
 
   template<typename Point>
-  value_t operator()(Point const &p) const
+  value_t const operator()(Point const &p) const
   {
     static DisplacementIdOperator const uid;
     static RotationIdOperator const rid;

@@ -48,22 +48,23 @@ public:
   using value_t = Return;
 
   BinaryMappedValue()
-    : _a(), _b() {}
+    : _a(), _b(), _op() {}
 
-  BinaryMappedValue(A const &a, B const &b)
-    : _a(a), _b(b) {}
+  BinaryMappedValue(A const a, B const b)
+    : _a(a), _b(b), _op() {}
 
   virtual ~BinaryMappedValue() = default;
 
   template<typename Index>
-  value_t operator()(Index const &i) const
+  value_t const operator()(Index const &i) const
   { 
-    return Operator(_a(i),_b(i));
+    return _op(_a(i),_b(i));
   }
 
 private:
   A const _a;
   B const _b;
+  Operator const _op;
 };
 
 template<typename A, typename Operator, typename Return>
@@ -73,46 +74,22 @@ public:
   using value_t = Return;
 
   MappedValue()
-    : _a() {}
+    : _a(), _op(){}
 
   MappedValue(A const &a)
-    : _a(a) {}
+    : _a(a), _op() {}
 
   virtual ~MappedValue() = default;
 
   template<typename Index>
   value_t operator()(Index const &i) const
   { 
-    return Operator(_a(i));
+    return _op(_a(i));
   }
 
 private:
   A const _a;
-};
-
-template<typename A, typename Functor, typename Return>
-class FunctorMappedValue 
-{
-public:
-  using value_t = Return;
-
-  FunctorMappedValue()
-    : _a(), _func() {}
-
-  FunctorMappedValue(A const &a)
-    : _a(a), _func() {}
-
-  virtual ~FunctorMappedValue() = default;
-
-  template<typename Index>
-  value_t operator()(Index const &i) const
-  { 
-    return _func(_a(i));
-  }
-
-private:
-  A const _a;
-  Functor const _func;
+  Operator const _op;
 };
 
 template<typename T>

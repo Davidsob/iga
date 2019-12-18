@@ -13,7 +13,7 @@ class AppliedPressure
   : public BoundaryConditionBase 
 {
   class PressureOperator;
-  using BId_t = FunctorMappedValue<ShapeFunctionOperator, DisplacementIdOperator, DynamicMatrixR>;
+  using BId_t = MappedValue<ShapeFunctionOperator, DisplacementIdOperator, DynamicMatrixR>;
   using linear_form = LinearWeakForm<BId_t, PressureOperator, DynamicVectorR>;
 
 public:

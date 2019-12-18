@@ -15,7 +15,7 @@ public:
   ~LinearBendingStrainOperator() = default;
 
   template<typename Point>
-  value_t operator()(Point const &p) const
+  value_t const operator()(Point const &p) const
   {
     static RotationIdOperator const rid;
     static Dot const dot;

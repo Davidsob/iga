@@ -13,7 +13,7 @@ public:
   ~TransverseShearMaterialTangent() = default;
 
   template<typename Point>
-  value_t operator()(Point const &p) const
+  value_t const operator()(Point const &p) const
   {
     double const factor = 5.0/6.0;
     auto const mu  = E/(2.0*(1+nu));

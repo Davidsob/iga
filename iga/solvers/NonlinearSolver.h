@@ -81,6 +81,10 @@ public:
     {
       std::cout << "*** INNER SOLVER FAILED TO CONVERGE!!! ***" << std::endl;
       std::cout << "    Error: " << _error << std::endl;
+    } else {
+      std::cout << "*** INNER SOLVER CONVERGED ***" << std::endl;
+      std::cout << "    Steps: " << step   << std::endl;
+      std::cout << "    Error: " << _error << std::endl;
     }
   }
 
