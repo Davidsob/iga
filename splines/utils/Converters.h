@@ -81,6 +81,15 @@ namespace convert
   }
 
   template<>
+  inline Eigen::MatrixXd _converter(std::vector<StaticRowVectorR<6>> const &in)
+  { 
+    Eigen::MatrixXd out(in.size(),in[0].size());
+    size_t row{0};
+    for (auto const &x : in) out.row(row++) = x;
+    return out;
+  }
+
+  template<>
   inline std::vector<double> _converter(Eigen::MatrixXd const &in)
   {
     std::vector<double> out;

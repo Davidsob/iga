@@ -114,7 +114,7 @@ class PrescribedShellDisplacementU
   using base_t = DirichletPointConstraint<SixDofDisplacementVariable>;
 public:
 
-  explicit PrescribedShellDisplacementU(double const x)
+  explicit PrescribedShellDisplacementU(double const x=0)
     : base_t(x,0,"PrescribedShellDisplacementU")
   {}
   ~PrescribedShellDisplacementU() = default;
@@ -126,7 +126,7 @@ class PrescribedShellDisplacementV
   using base_t = DirichletPointConstraint<SixDofDisplacementVariable>;
 public:
   
-  explicit PrescribedShellDisplacementV(double const x)
+  explicit PrescribedShellDisplacementV(double const x=0)
     : base_t(x,1,"PrescribedShellDisplacementV")
   {}
   ~PrescribedShellDisplacementV() = default;
@@ -138,8 +138,44 @@ class PrescribedShellDisplacementW
   using base_t = DirichletPointConstraint<SixDofDisplacementVariable>;
 public:
   
-  explicit PrescribedShellDisplacementW(double const x)
+  explicit PrescribedShellDisplacementW(double const x=0)
     : base_t(x,2,"PrescribedShellDisplacementW")
   {}
   ~PrescribedShellDisplacementW() = default;
+};
+
+class PrescribedShellDisplacementA1
+  : public DirichletPointConstraint<SixDofDisplacementVariable>
+{
+  using base_t = DirichletPointConstraint<SixDofDisplacementVariable>;
+public:
+
+  explicit PrescribedShellDisplacementA1(double const x=0)
+    : base_t(x,3,"PrescribedShellDisplacementA1")
+  {}
+  ~PrescribedShellDisplacementA1() = default;
+};
+
+class PrescribedShellDisplacementA2
+  : public DirichletPointConstraint<SixDofDisplacementVariable>
+{
+  using base_t = DirichletPointConstraint<SixDofDisplacementVariable>;
+public:
+
+  explicit PrescribedShellDisplacementA2(double const x=0)
+    : base_t(x,4,"PrescribedShellDisplacementA2")
+  {}
+  ~PrescribedShellDisplacementA2() = default;
+};
+
+class PrescribedShellDisplacementA3
+  : public DirichletPointConstraint<SixDofDisplacementVariable>
+{
+  using base_t = DirichletPointConstraint<SixDofDisplacementVariable>;
+public:
+
+  explicit PrescribedShellDisplacementA3(double const x=0)
+    : base_t(x,5,"PrescribedShellDisplacementA3")
+  {}
+  ~PrescribedShellDisplacementA3() = default;
 };

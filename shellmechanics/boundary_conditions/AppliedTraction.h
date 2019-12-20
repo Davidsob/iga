@@ -4,7 +4,7 @@
 
 #include "iga/operators/ShapeFunctionOperator.h"
 
-#include "DisplacementIdOperator.h"
+#include "shellmechanics/operators/DisplacementIdOperator.h"
 
 #include "utils/MatrixTypes.h"
 
@@ -20,7 +20,7 @@ public:
   AppliedTraction(Args ...args)
     : BoundaryConditionBase("AppliedTraction")
     , _traction(args...)
-    , _traction_form(BId_t(), _load)
+    , _traction_form(BId_t(), _traction)
   {}
 
   virtual ~AppliedTraction() = default;
