@@ -45,7 +45,7 @@ public:
     return _physicalJacobian(p[0],p[1],p[2]);
   }
 
-  void updateElementMesh(size_t i,size_t j=0,size_t k=0)
+  void updateElementMesh(size_t i=0,size_t j=0,size_t k=0)
   {
     _updateElementMesh(i,j,k);
   }

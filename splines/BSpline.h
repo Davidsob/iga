@@ -17,6 +17,9 @@ struct BSplinePoint : public GeometricObject
   using vector = std::vector<double>;
   using matrix = std::vector<vector>; // need a point type
 
+  explicit BSplinePoint() = default;
+  explicit BSplinePoint(vector const x) : Q({x}) {}
+
   matrix const &coordinates() const override { return Q; }
   matrix Q; 
 

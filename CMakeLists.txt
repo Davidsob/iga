@@ -74,8 +74,11 @@ set(EXTERNAL_LIBS iga splines utils)
 # add_executable(Sm3D.exe sm3d_ex.cxx)
 # target_link_libraries(Sm3D.exe ${EXTERNAL_LIBS})
 
-add_executable(NlSm3D.exe nlsm3d_ex.cxx)
-target_link_libraries(NlSm3D.exe ${EXTERNAL_LIBS})
+# add_executable(NlSm3D.exe nlsm3d_ex.cxx)
+# target_link_libraries(NlSm3D.exe ${EXTERNAL_LIBS})
 
-add_executable(ShellEx.exe shell_plane_ex.cxx)
-target_link_libraries(ShellEx.exe ${EXTERNAL_LIBS})
+add_executable(ShellEx1.exe shell_plane_ex.cxx)
+target_link_libraries(ShellEx1.exe ${EXTERNAL_LIBS})
+
+add_executable(ShellEx2.exe shell_pinched_cylinder_ex.cxx)
+target_link_libraries(ShellEx2.exe ${EXTERNAL_LIBS})

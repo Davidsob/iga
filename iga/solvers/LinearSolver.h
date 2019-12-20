@@ -38,6 +38,9 @@ public:
     _lasystem.discretize(A, b);
     // solve
     std::cout << "Begin linear solve..." << std::endl;
+    std::printf("Lhs(%lu,%lu)\n",A.rows(), A.cols());
+    std::printf("Rhs(%lu)\n",b.size());
+    // IO::spy(DynamicMatrixR(A));
     Eigen::SparseLU<SparseMatrixR> solver;
     solver.compute(A);
     if (solver.info() != Eigen::Success)

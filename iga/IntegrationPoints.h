@@ -48,6 +48,17 @@ namespace iga
 
   template<typename ElementMapper>
   inline std::vector<IntegrationPoint>
+  _integrationPoints(ElementMapper const &mapper)
+  {
+    // for a single point
+    IntegrationPoint ip(mapper);
+    ip.id = 0;
+    ip.weight = 1.0;
+    return {ip};
+  }
+
+  template<typename ElementMapper>
+  inline std::vector<IntegrationPoint>
   _integrationPoints(ElementMapper const &mapper, int order)
   {
     auto const gp{gaussLegendrePoints(order)};

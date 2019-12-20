@@ -1,5 +1,6 @@
 #include "QuadratureMesh.h"
 
+#include "splines/BSpline.h"
 #include "splines/Nurbs.h"
 
 #include "IntegrationPoints.h"
@@ -12,6 +13,22 @@ namespace
   void getIntegrationPoints(Shape const &shape,
     std::vector<std::vector<IntegrationPoint>> &ipts,
     std::vector<std::unique_ptr<ElementMapperBase>> &mappers);
+
+  template<>
+  void getIntegrationPoints
+  ( 
+    BSplinePoint const &shape,
+    std::vector<std::vector<IntegrationPoint>> &ipts,
+    std::vector<std::unique_ptr<ElementMapperBase>> &mappers
+  )
+  {
+    using mapper_t = PointElementMapper;
+
+    mappers.push_back(std::make_unique<mapper_t>(shape));
+    mappers.back()->updateElementMesh();
+    ipts.push_back(iga::integrationPoints(*mappers.back()));
+    for (auto &p : ipts.back()) p.update(); // computes jacobian
+  }
 
   template<>
   void getIntegrationPoints
@@ -102,6 +119,9 @@ namespace
       getIntegrationPoints(*shape,ipts,mappers);
     }
     else if (auto shape = dynamic_cast<NurbsSolid const *>(_obj))
+    {
+      getIntegrationPoints(*shape,ipts,mappers);
+    } else if (auto shape = dynamic_cast<BSplinePoint const *>(_obj))
     {
       getIntegrationPoints(*shape,ipts,mappers);
     }

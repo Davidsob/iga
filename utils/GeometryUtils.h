@@ -7,43 +7,46 @@
 
 namespace GeometryUtils
 {
-  
+  template<size_t Dim> 
   struct Plane
   {
-    explicit Plane(StaticVectorR<2> const &x, StaticVectorR<2> const &n)
+    static constexpr size_t const dim = Dim;
+    explicit Plane(StaticVectorR<Dim> const &x, StaticVectorR<Dim> const &n)
       : x(x), n(n)
     { }
     
     virtual ~Plane() = default;
 
-    StaticVectorR<2> x, n;  
+    StaticVectorR<Dim> x, n;  
   };
 
+  template<size_t Dim> 
   struct Circle
   {
-    explicit Circle(StaticVectorR<2> const &x, double R = 1e-8)
+    static constexpr size_t const dim = Dim;
+    explicit Circle(StaticVectorR<Dim> const &x, double R = 1e-8)
       : x(x), r(R)
     { }
     
     virtual ~Circle() = default;
 
-    StaticVectorR<2> x;
+    StaticVectorR<Dim> x;
     double r;
   };
 
-  template<typename T>
+  template<typename T, typename Plane>
   bool on_plane(T const &x, Plane const &plane, double tol=1e-8)
   {
     return std::abs(plane.n.dot(x - plane.x)) <= tol;
   }
 
-  template<typename T>
+  template<typename T, typename Plane>
   bool in_halfspace(T const &x, Plane const &plane, double tol=1e-8)
   {
     return plane.n.dot(x - plane.x) >= 0.0 || on_plane(x, plane, tol);
   }
 
-  template<typename T>
+  template<typename T, typename Plane>
   bool edge_on_plane(T const &e, Plane const &plane, double tol=1e-8)
   {
     bool on = true;
@@ -55,10 +58,7 @@ namespace GeometryUtils
     return on;
   }
 
-  StaticVectorR<2>
-  normal2(StaticVectorR<2> const &a, StaticVectorR<2> const &b);
-
-  template<typename T>
+  template<typename T, typename Circle>
   bool in_circle(T const &x, Circle const &circle, double tol=1e-8)
   {
     return (x - circle.x).norm() <= circle.r;

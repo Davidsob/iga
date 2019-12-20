@@ -72,10 +72,11 @@ namespace convert
   }
 
   template<>
-  inline std::vector<std::vector<double>> _converter(Eigen::MatrixXd const &in)
-  {
-    std::vector<std::vector<double>> out;
-    for (int i = 0; i < in.rows(); i++) out.push_back(to<std::vector<double>>(Eigen::RowVectorXd(in.row(i))));
+  inline Eigen::MatrixXd _converter(std::vector<Eigen::RowVectorXd> const &in)
+  { 
+    Eigen::MatrixXd out(in.size(),in[0].size());
+    size_t row{0};
+    for (auto const &x : in) out.row(row++) = x;
     return out;
   }
 
@@ -109,6 +110,12 @@ namespace convert
     std::vector<StaticRowVectorR<6>> out;
     for (int i = 0; i < in.rows(); i++) out.push_back(StaticRowVectorR<6>(in.row(i)));
     return out;
+  }
+
+  template<>
+  inline Triplet _converter(StaticVectorR<3> const &in)
+  {
+    return Triplet(size_t(in[0]), size_t(in[1]), in[2]);
   }
 
   template<>

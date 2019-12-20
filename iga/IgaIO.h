@@ -15,7 +15,7 @@ namespace IO
     {
       for (int j = 0; j < A.cols(); j++)
       {
-        std::cout << !algo::equal(A(i,j),0.0); 
+        std::cout << (!algo::equal(A(i,j),0.0) ? "#" : "."); 
       }
       std::cout << std::endl;
     }

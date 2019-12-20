@@ -1,22 +1,18 @@
 #pragma once
 
-#include "ConstraintBase.h"
-
-#include "weakforms/WeakForms.h"
-
-// #include "StoredVoltageVariable.h"
-// #include "StoredTemperatureVariable.h"
-#include "base/SimulationClock.h"
-
 #include "utils/MatrixTypes.h"
 
-#include <cassert>
-
 #include "operators/BIdOperator.h"
+#include "weakforms/WeakForms.h"
+#include "ConstraintBase.h"
+#include "ConstraintTags.h"
+
+#include <cassert>
 
 template<typename T, typename Var, typename Bid = BIdOperator<Var::ndof>>
 class DirichletConstraint
   : public ConstraintBase
+  , public VectorConstraint
 {
 public:
 
@@ -34,6 +30,7 @@ public:
     , _residual(Bid(), _load)
     , _jacobian(Bid())
   {}
+
 
   virtual ~DirichletConstraint() = default;
 

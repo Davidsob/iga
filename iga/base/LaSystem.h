@@ -7,6 +7,7 @@
 #include "iga/GeometricDofManager.h"
 #include "iga/Quadrature.h"
 #include "iga/QuadratureMesh.h"
+#include "iga/constraints/ConstraintTags.h"
 
 #include "iga/boundary_conditions/BoundaryConditionManager.h"
 #include "iga/boundary_conditions/BoundaryConditionBase.h"
@@ -171,7 +172,6 @@ public:
         convert::to<void>(x,dof,data);
       }
     }
-
   }
 
 protected:
@@ -259,72 +259,172 @@ public:
 
   virtual void rhs(DynamicVectorR &b) const
   {
-    auto offset = 0;
-    auto renumber = [&](Triplet &t) { t.setRow(offset++); };
+    assert(0);
+    // auto offset = 0;
+    // auto renumber = [&](Triplet &t) { t.setRow(offset++); };
 
-    auto set_vector =
-      [&](Triplet const &t) { b[t.row()] += t.value(); };
+    // auto set_vector =
+    //   [&](Triplet const &t) { b[t.row()] += t.value(); };
 
-    std::vector<Triplet> rhs;
-    sparse_rhs(rhs);
-    for_each(rhs.begin(), rhs.end(), renumber);
+    // std::vector<Triplet> rhs;
+    // sparse_rhs(rhs);
+    // for_each(rhs.begin(), rhs.end(), renumber);
 
-    auto cdof = rhs.size();
-    b.resize(cdof);
-    std::fill(b.data(), b.data()+cdof, 0);
-    for_each(rhs.begin(), rhs.end(), set_vector);
+    // auto cdof = rhs.size();
+    // b.resize(cdof);
+    // std::fill(b.data(), b.data()+cdof, 0);
+    // for_each(rhs.begin(), rhs.end(), set_vector);
   }
 
   void sparse_lhs(std::vector<Triplet> &data) const override
   {
-    auto const ndof = PrimaryVariable::ndof;
-    for (auto const &pair : _bilinear_forms) // loop of shape engine pairs
+    auto   const ndof = PrimaryVariable::ndof;
+    size_t const offset = unconstrainedDof();
+    size_t constraint_count = 1;
+
+    for (auto const &pair : _point_bilinear_forms) // loop of shape engine pairs
     {
       auto const shape = pair.first;
       auto const form = pair.second.get();
       for (auto const &ip : QuadratureMesh(shape))
       {
-        auto const &dof =  LaSystem_detail::varDof(ip.back().mapper.dof(), ndof);
+        // auto const dof =  LaSystem_detail::varDof(ip.back().mapper.dof(), ndof);
+        quadrature::gauss(ip,data,*form);
+      }
+      constraint_count++;
+    }
+
+    for (auto const &pair : _scalar_bilinear_forms) // loop of shape engine pairs
+    {
+      auto const shape = pair.first;
+      auto const form = pair.second.get();
+      for (auto const &ip : QuadratureMesh(shape))
+      {
+        auto const &dof  =  LaSystem_detail::varDof(ip.back().mapper.dof(), ndof);
+        auto const &cdof = constraintDof(constraint_count, offset);
+        auto const size = dof.size();
+        DynamicMatrixR x(DynamicMatrixR::Zero(1,size));
+        quadrature::gauss(ip,x,*form);
+        convert::to<void>(x,cdof,dof,data);
+      }
+      constraint_count++;
+    }
+
+    for (auto const &pair : _vector_bilinear_forms) // loop of shape engine pairs
+    {
+      auto const shape = pair.first;
+      auto const form = pair.second.get();
+      for (auto const &ip : QuadratureMesh(shape))
+      {
+        auto const &dof  =  LaSystem_detail::varDof(ip.back().mapper.dof(), ndof);
+        auto const &cdof =  constraintDof(constraint_count, offset, dof);
         auto const size = dof.size();
         DynamicMatrixR x(DynamicMatrixR::Zero(size,size));
         quadrature::gauss(ip,x,*form);
-        convert::to<void>(x,dof,dof,data);
+        convert::to<void>(x,cdof,dof,data);
       }
+      constraint_count++;
     }
   }
 
   void sparse_rhs(std::vector<Triplet> &data) const override
   {
     auto const ndof = PrimaryVariable::ndof;
-    for (auto const &pair : _linear_forms) // loop of shape engine pairs
+    size_t const offset = unconstrainedDof();
+    size_t constraint_count = 1;
+
+    for (auto const &pair : _point_linear_forms) // loop of shape engine pairs
+    {
+      auto const shape = pair.first;
+      auto const form = pair.second.get();
+      for (auto const &ip : QuadratureMesh(shape))
+      {
+        quadrature::gauss(ip,data,*form);
+      }
+      constraint_count++;
+    }
+
+    for (auto const &pair : _scalar_linear_forms) // loop of shape engine pairs
+    {
+      auto const shape = pair.first;
+      auto const form = pair.second.get();
+      for (auto const &ip : QuadratureMesh(shape))
+      {
+        auto const &cdof = constraintDof(constraint_count, offset);
+        DynamicVectorR x(DynamicVectorR::Zero(1));
+        quadrature::gauss(ip,x,*form);
+        convert::to<void>(x,cdof,data);
+      }
+      constraint_count++;
+    }
+
+    for (auto const &pair : _vector_linear_forms) // loop of shape engine pairs
     {
       auto const shape = pair.first;
       auto const form = pair.second.get();
       for (auto const &ip : QuadratureMesh(shape))
       {
         auto const &dof =  LaSystem_detail::varDof(ip.back().mapper.dof(), ndof);
+        auto const &cdof =  constraintDof(constraint_count, offset, dof);
         auto const size = dof.size();
         DynamicVectorR x(DynamicVectorR::Zero(size));
         quadrature::gauss(ip,x,*form);
-        convert::to<void>(x,dof,data);
+        convert::to<void>(x,cdof,data);
       }
+      constraint_count++;
     }
   }
 
 protected:
+
+  static std::vector<size_t> constraintDof(size_t id, size_t offset, std::vector<size_t> const &vardof)
+  {
+    std::vector<size_t> cdof; cdof.reserve(vardof.size());
+    for (auto const &dof : vardof) cdof.push_back(id*offset+dof);
+    return cdof;
+  }
+
+  static std::vector<size_t> constraintDof(size_t id, size_t offset)
+  {
+    return {id*offset};
+  }
+
+  static size_t unconstrainedDof() 
+  { return GeometricDofManager::instance().ids.size()*PrimaryVariable::ndof; }
+
   void initialize()
   {
     auto &mgr = GeometricDofManager::instance();
     for (auto const &pair : ConstraintManager::instance())
     {
-      _linear_forms  .push_back({pair.first, std::unique_ptr<LinearEngine_t  >(pair.second->getResidual()->createLinearEngine())});
-      _bilinear_forms.push_back({pair.first, std::unique_ptr<BilinearEngine_t>(pair.second->getJacobian()->createBilinearEngine())});
+      if (dynamic_cast<ScalarConstraint const *>(pair.second))
+      {
+        _scalar_linear_forms  .push_back({pair.first, std::unique_ptr<LinearEngine_t  >(pair.second->getResidual()->createLinearEngine())});
+        _scalar_bilinear_forms.push_back({pair.first, std::unique_ptr<BilinearEngine_t>(pair.second->getJacobian()->createBilinearEngine())});
+      } else if (dynamic_cast<VectorConstraint const *>(pair.second))
+      {
+        _vector_linear_forms  .push_back({pair.first, std::unique_ptr<LinearEngine_t  >(pair.second->getResidual()->createLinearEngine())});
+        _vector_bilinear_forms.push_back({pair.first, std::unique_ptr<BilinearEngine_t>(pair.second->getJacobian()->createBilinearEngine())});
+      } else if(dynamic_cast<PointConstraint const *>(pair.second))
+      {
+        _point_linear_forms  .push_back({pair.first, std::unique_ptr<LinearEngine_t  >(pair.second->getResidual()->createLinearEngine())});
+        _point_bilinear_forms.push_back({pair.first, std::unique_ptr<BilinearEngine_t>(pair.second->getJacobian()->createBilinearEngine())});
+      }
+      else {
+        std::cout << "*** Warning: ";
+        std::cout << pair.second->getName();
+        std::cout << " was not added to the linear system because its constraint type is unknown." << std::endl;
+      }
       mgr.addShape(pair.first); // handled by the element mappers!
     }
   }
 
-  std::vector< EnginePair_t<BilinearEngine_t> > _bilinear_forms;
-  std::vector< EnginePair_t<LinearEngine_t> >   _linear_forms;
+  std::vector< EnginePair_t<BilinearEngine_t> > _point_bilinear_forms;
+  std::vector< EnginePair_t<LinearEngine_t> >   _point_linear_forms;
+  std::vector< EnginePair_t<BilinearEngine_t> > _scalar_bilinear_forms;
+  std::vector< EnginePair_t<LinearEngine_t> >   _scalar_linear_forms;
+  std::vector< EnginePair_t<BilinearEngine_t> > _vector_bilinear_forms;
+  std::vector< EnginePair_t<LinearEngine_t> >   _vector_linear_forms;
 };
 
 
@@ -344,8 +444,11 @@ public:
 
   void discretize(SparseMatrixR &A, DynamicVectorR &b) const
   {
+    std::cout << "Discretizing LHS..." << std::endl;
     lhs(A);
+    std::cout << "Discretizing RHS..." << std::endl;
     rhs(b);
+    std::cout << "Discretization complete." << std::endl;
   }
 
   virtual void lhs(SparseMatrixR &A) const
@@ -435,9 +538,11 @@ public:
 
   void sparse_lhs(std::vector<Triplet> &data, size_t &ndof) const
   {
+    std::cout << "Assembling unconstrained lhs..." << std::endl;
     std::vector<Triplet> cdata;
     _lasystem.sparse_lhs(data);
 
+    std::cout << "Assembling constrained lhs..." << std::endl;
     size_t cdof;
     sparse_clhs(cdata, cdof);
     ndof += unconstrainedDof();
@@ -471,9 +576,11 @@ public:
 
   void sparse_rhs(std::vector<Triplet> &data, size_t &ndof) const
   {
+    std::cout << "Assembling constrained rhs..." << std::endl;
     std::vector<Triplet> cdata;
     _lasystem.sparse_rhs(data);
 
+    std::cout << "Assembling constrained rhs..." << std::endl;
     sparse_crhs(cdata, ndof);
     ndof += unconstrainedDof();
 
@@ -505,6 +612,7 @@ private:
     };
 
     _constrained.sparse_rhs(cdata);
+
     std::sort(cdata.begin(),cdata.end(),cmp);
     cdof = unique_dof(cdata);
     // next renumber all starting with zero
@@ -529,13 +637,14 @@ private:
 
   void sparse_clhs(std::vector<Triplet> &cdata, size_t &cdof) const
   {
-    static auto cmp = [](auto const &a, auto const &b)
+    static auto cmp_row = [](auto const &a, auto const &b)
     {
       return a.row() < b.row();
     };
 
     _constrained.sparse_lhs(cdata);
-    std::sort(cdata.begin(),cdata.end(),cmp);
+    // filter the zeros
+    std::sort(cdata.begin(),cdata.end(),cmp_row);
     cdof = unique_dof(cdata);
 
     // next renumber all starting with zero
