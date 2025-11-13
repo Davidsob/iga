@@ -444,11 +444,8 @@ public:
 
   void discretize(SparseMatrixR &A, DynamicVectorR &b) const
   {
-    std::cout << "Discretizing LHS..." << std::endl;
     lhs(A);
-    std::cout << "Discretizing RHS..." << std::endl;
     rhs(b);
-    std::cout << "Discretization complete." << std::endl;
   }
 
   virtual void lhs(SparseMatrixR &A) const
@@ -538,11 +535,9 @@ public:
 
   void sparse_lhs(std::vector<Triplet> &data, size_t &ndof) const
   {
-    std::cout << "Assembling unconstrained lhs..." << std::endl;
     std::vector<Triplet> cdata;
     _lasystem.sparse_lhs(data);
 
-    std::cout << "Assembling constrained lhs..." << std::endl;
     size_t cdof;
     sparse_clhs(cdata, cdof);
     ndof += unconstrainedDof();
@@ -576,11 +571,9 @@ public:
 
   void sparse_rhs(std::vector<Triplet> &data, size_t &ndof) const
   {
-    std::cout << "Assembling constrained rhs..." << std::endl;
     std::vector<Triplet> cdata;
     _lasystem.sparse_rhs(data);
 
-    std::cout << "Assembling constrained rhs..." << std::endl;
     sparse_crhs(cdata, ndof);
     ndof += unconstrainedDof();
 

@@ -38,7 +38,12 @@ public:
         D(a,b) = mu*(A(i,k)*A(j,l) + A(i,l)*A(j,k)) + lam*A(i,j)*A(k,l);
       }
     }
-
+    std::cout << "\n+++ (" << __LINE__ << ") Enter: " << __PRETTY_FUNCTION__ << std::endl;
+    std::cout << p << std::endl;
+    std::cout << "covar basis = \n" << mapper->covariantBasis(p.para) << std::endl;
+    std::cout << "A = \n" << A << std::endl;
+    std::cout << "D = \n" << D << std::endl;
+    std::cout << "--- (" << __LINE__ << ") Exit: " << __PRETTY_FUNCTION__ << "\n" << std::endl;
     return D;
   }
 

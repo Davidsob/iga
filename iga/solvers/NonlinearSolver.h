@@ -75,6 +75,7 @@ public:
       iterate();
       errorNorm();
       step++;
+      std::printf("# %lu: error = %10.4g\n",step,_error);
     }
 
     if (!converged()) 

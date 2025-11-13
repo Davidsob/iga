@@ -133,14 +133,10 @@ Eigen::VectorXd
 ManifoldElementMapper::
 _normal(double x1, double x2) const
 {
-  std::cout << "\n+++ (" << __LINE__ << ") Enter: " << __PRETTY_FUNCTION__ << std::endl;
-  std::cout << "x1 = " << x1;
-  std::cout << " x2 = " << x2 << std::endl;
   Eigen::MatrixXd const tangents = _tangents(x1,x2);
   Eigen::Vector3d const &e1 = tangents.row(0);
   Eigen::Vector3d const &e2 = tangents.row(1);
   Eigen::Vector3d const normal = e1.cross(e2);
-  std::cout << "--- (" << __LINE__ << ") Exit: " << __PRETTY_FUNCTION__ << "\n" << std::endl;
   return normal.normalized();
 }
 

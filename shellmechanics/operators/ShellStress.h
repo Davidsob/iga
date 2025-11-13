@@ -19,6 +19,14 @@ using MembraneStress
         StaticVectorR<3>
         >;
 
+using MembranePK2Stress
+    = BinaryMappedValue<
+        MembraneMaterialTangent,
+        MembraneGreensStrain,
+        Multiply,
+        StaticVectorR<3>
+        >;
+
 using BendingStress
     = BinaryMappedValue<
         MembraneMaterialTangent,
@@ -27,10 +35,26 @@ using BendingStress
         StaticVectorR<3>
         >;
 
+using BendingPK2Stress
+    = BinaryMappedValue<
+        MembraneMaterialTangent,
+        BendingGreensStrain,
+        Multiply,
+        StaticVectorR<3>
+        >;
+
 using TransverseShearStress
     = BinaryMappedValue<
         TransverseShearMaterialTangent,
         LinearTransverseShearStrain,
+        Multiply,
+        StaticVectorR<2>
+        >;
+
+using TransverseShearPK2Stress
+    = BinaryMappedValue<
+        TransverseShearMaterialTangent,
+        TransverseShearGreensStrain,
         Multiply,
         StaticVectorR<2>
         >;

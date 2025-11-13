@@ -11,7 +11,7 @@ add_subdirectory(solidmechanics) # get down in the weeds and build/link other di
 
 include_directories(
 ${CMAKE_SOURCE_DIR}
-${TPL_DIR}/eigen-3.3.5
+${TPL_DIR}/eigen
 ${CMAKE_SOURCE_DIR}/base
 ${CMAKE_SOURCE_DIR}/iga
 ${CMAKE_SOURCE_DIR}/utils
@@ -82,3 +82,9 @@ target_link_libraries(ShellEx1.exe ${EXTERNAL_LIBS})
 
 add_executable(ShellEx2.exe shell_pinched_cylinder_ex.cxx)
 target_link_libraries(ShellEx2.exe ${EXTERNAL_LIBS})
+
+add_executable(ShellEx3.exe shell_curved_beam_ex.cxx)
+target_link_libraries(ShellEx3.exe ${EXTERNAL_LIBS})
+
+add_executable(NLShellEx1.exe nlshell_plane_ex.cxx)
+target_link_libraries(NLShellEx1.exe ${EXTERNAL_LIBS})

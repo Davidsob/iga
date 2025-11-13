@@ -12,6 +12,9 @@
 #include "LinearMembraneStrainOperator.h"
 #include "LinearBendingStrainOperator.h"
 #include "LinearTransverseStrainOperator.h"
+#include "MembraneGreensStrainOperator.h"
+#include "BendingGreensStrainOperator.h"
+#include "TransverseGreensStrainOperator.h"
 #include "ShellStress.h"
 
 class LinearPenaltyStiffnessOperator
@@ -70,6 +73,7 @@ public:
     value_t const kt{_tf.eval(i)};
     value_t const kp{_pf.eval(i)};
     return _thickness*(km+kt) + (std::pow(_thickness,3.0)/12.0)*kb + penalty*kp;
+    // return _thickness*(km+kt) + (std::pow(_thickness,3.0)/12.0)*kb;
   }
 
 private:
@@ -113,19 +117,20 @@ public:
   template<typename Index>
   value_t const eval(Index const &i) const
   {
-    double const penalty{1e8};
+    // double const penalty{1e8};
     static RotationIdOperator const rid;
-    // compute the residual of the penalty term
-    auto mapper = dynamic_cast<ManifoldElementMapper const *>(&i.mapper);
-    StaticVectorR<3> const n = mapper->covariantBasis(i.para).col(2);
-    StaticVectorR<3> const a = rid(mapper->shape(i.para))*_var(i);
-    value_t const rp{n.dot(a)*_bp(i).transpose()};
     // compute the other residuals
     value_t const rm{_mf.eval(i)};
     value_t const rb{_bf.eval(i)};
     value_t const rt{_tf.eval(i)};
+    // compute the residual of the penalty term
+    // auto mapper = dynamic_cast<ManifoldElementMapper const *>(&i.mapper);
+    // StaticVectorR<3> const n = mapper->covariantBasis(i.para).col(2);
+    // StaticVectorR<3> const a = rid(mapper->shape(i.para))*_var(i);
+    // value_t const rp{n.dot(a)*_bp(i).transpose()};
     // return the negative of the sum of the residals
-    return -(_thickness*(rm+rt) + (std::pow(_thickness,3.0)/12.0)*rb + penalty*rp);
+    // return -(_thickness*(rm+rt) + (std::pow(_thickness,3.0)/12.0)*rb + penalty*rp);
+    return -(_thickness*(rm+rt) + (std::pow(_thickness,3.0)/12.0)*rb);
   }
 
 private:

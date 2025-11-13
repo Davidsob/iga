@@ -2,7 +2,7 @@
 
 rm -rf CMakeFiles *Cache.txt *.cmake
 
-COMPILER_PATH='/opt/rh/devtoolset-7/root/usr/bin/'
+COMPILER_PATH='/usr/bin/'
 
 cmake \
     -DCMAKE_CXX_COMPILER:PATH=$COMPILER_PATH/g++ \
